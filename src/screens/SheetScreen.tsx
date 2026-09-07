@@ -37,13 +37,15 @@ export function SheetScreen({ character, update, onExit, savedAt }: Props) {
   const [muted, setMutedState] = useState(isMuted())
   const active = SECTIONS[index]
 
-  const goto = useCallback((next: number, cue: 'move' | 'confirm' = 'move') => {
-    setIndex((current) => {
+  // El sonido se dispara fuera del updater: StrictMode los invoca dos veces.
+  const goto = useCallback(
+    (next: number, cue: 'move' | 'confirm' = 'move') => {
       const target = (next + SECTIONS.length) % SECTIONS.length
-      if (target !== current) play(cue)
-      return target
-    })
-  }, [])
+      if (target !== index) play(cue)
+      setIndex(target)
+    },
+    [index],
+  )
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
