@@ -43,12 +43,24 @@
   z-index: 1;
   height: 100%;
   display: grid;
+  /* Without this the implicit column stretches to the header's max-content and
+     pushes the buttons off screen as soon as the width gets tight. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
   gap: 8px;
   padding: 22px clamp(16px, 4vw, 54px) 14px;
 }
 
-.screen-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.screen-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.screen-head > :first-child { min-width: 0; }
 
 .screen-head h1 {
   margin: 0;
@@ -98,17 +110,27 @@
   line-height: 1.02;
 }
 
+/* One line, always. The gap .hero-name leaves above fits exactly one; with a
+   long subclass ("Life Domain") it broke into two and rode up over the name.
+   Whatever does not fit gets cut. */
 .hero-card .hero-sub {
   position: absolute;
   left: -6px;
   bottom: 0;
+  max-width: 100%;
   background: var(--accent);
   color: var(--ink);
   font-family: var(--font-label);
   letter-spacing: 0.16em;
   font-size: 17px;
+  /* Explicit: Bebas Neue has very generous ascender and descender metrics, and
+     with `normal` the box is 41px — more than the 26px the name leaves free. */
+  line-height: 1.15;
   padding: 2px 18px 2px 22px;
   transform: skewX(-10deg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .hero-meta { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
@@ -238,11 +260,7 @@
   transform: skewX(-10deg);
 }
 
-@media (max-width: 900px) {
-  .select-body { grid-template-columns: 1fr; }
-  .hero-card { height: 40vh; }
-  .hero-meta { display: none; }
-}
+/* Every size breakpoint lives in responsive.css. */
 
 /* ── Sign in ────────────────────────────────────────────────────────────── */
 .login-screen {

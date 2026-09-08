@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Button, HintBar } from '@/components/ui/controls'
+import { Button, HintBar, OverflowMenu } from '@/components/ui/controls'
 import { isMuted, play, setMuted } from '@/lib/sfx'
 import { isTyping } from '@/lib/keys'
+import { useHorizontalSwipe, useIsPhone } from '@/lib/responsive'
 import { IdentitySection } from '@/sections/IdentitySection'
 import { AbilitiesSection } from '@/sections/AbilitiesSection'
 import { SkillsSection } from '@/sections/SkillsSection'
@@ -42,10 +43,20 @@ const SYNC_LABEL: Record<SyncStatus, string> = {
   error: '▲ Unsaved',
 }
 
+/** On a phone the header has no room for the whole phrase, but the state stays visible. */
+const SYNC_GLYPH: Record<SyncStatus, string> = {
+  idle: '',
+  saving: '●',
+  saved: '●',
+  error: '▲',
+}
+
 export function SheetScreen({ character, update, onExit, sync, syncError, onRetry }: Props) {
   const [index, setIndex] = useState(0)
   const [muted, setMutedState] = useState(isMuted())
   const active = SECTIONS[index]
+  const isPhone = useIsPhone()
+  const navRef = useRef<HTMLElement>(null)
 
   // The sound fires outside the updater: StrictMode invokes them twice.
   const goto = useCallback(
@@ -80,6 +91,20 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
     return () => window.removeEventListener('keydown', onKey)
   }, [goto, index, onExit])
 
+  // The bottom strip is wider than the screen: the active section centres itself,
+  // whether the change came from a tap, the keyboard or a swipe.
+  useEffect(() => {
+    const item = navRef.current?.children[index] as HTMLElement | undefined
+    item?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }, [index])
+
+  // The touch equivalent of the L/R shoulder buttons: swiping changes section.
+  const bodyRef = useHorizontalSwipe<HTMLDivElement>({
+    onLeft: () => goto(index + 1),
+    onRight: () => goto(index - 1),
+    enabled: isPhone,
+  })
+
   const exportJson = () => {
     const blob = new Blob([JSON.stringify(character, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -91,6 +116,25 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
   }
 
   const Section = active.Component
+
+  const retryAction = sync === 'error' && (
+    <Button variant="small ghost danger" onClick={onRetry}>Retry</Button>
+  )
+  const exportAction = (
+    <Button variant="small ghost" onClick={exportJson}>Export</Button>
+  )
+  const soundAction = (
+    <Button
+      variant="small ghost"
+      onClick={() => {
+        const next = !muted
+        setMuted(next)
+        setMutedState(next)
+      }}
+    >
+      {muted ? 'Sound: off' : 'Sound: on'}
+    </Button>
+  )
 
   return (
     <div className="sheet" style={{ ['--accent' as string]: character.identity.accent }}>
@@ -119,29 +163,38 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
         </AnimatePresence>
         <div className="head-actions">
           {sync !== 'idle' && (
-            <span className="save-dot" data-state={sync} title={syncError ?? undefined}>
-              {SYNC_LABEL[sync]}
+            <span
+              className="save-dot"
+              data-state={sync}
+              title={syncError ?? undefined}
+              aria-label={SYNC_LABEL[sync]}
+            >
+              {isPhone ? SYNC_GLYPH[sync] : SYNC_LABEL[sync]}
             </span>
           )}
-          {sync === 'error' && (
-            <Button variant="small ghost danger" onClick={onRetry}>Retry</Button>
+          {isPhone ? (
+            <>
+              <OverflowMenu>
+                {retryAction}
+                {exportAction}
+                {soundAction}
+              </OverflowMenu>
+              <Button variant="small ghost" cue="back" onClick={onExit} title="Back to the party">
+                ◂
+              </Button>
+            </>
+          ) : (
+            <>
+              {retryAction}
+              {exportAction}
+              {soundAction}
+              <Button variant="small ghost" cue="back" onClick={onExit}>◂ Exit</Button>
+            </>
           )}
-          <Button variant="small ghost" onClick={exportJson}>Export</Button>
-          <Button
-            variant="small ghost"
-            onClick={() => {
-              const next = !muted
-              setMuted(next)
-              setMutedState(next)
-            }}
-          >
-            {muted ? 'Sound: off' : 'Sound: on'}
-          </Button>
-          <Button variant="small ghost" cue="back" onClick={onExit}>◂ Exit</Button>
         </div>
       </header>
 
-      <nav className="sheet-nav" aria-label="Character sheet sections">
+      <nav className="sheet-nav" aria-label="Character sheet sections" ref={navRef}>
         {SECTIONS.map((section, i) => (
           <motion.button
             key={section.id}
@@ -149,8 +202,15 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
             className="nav-item"
             data-active={i === index}
             onClick={() => goto(i, 'confirm')}
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: i === index ? 14 : 0 }}
+            // In the sidebar the active section juts out to the right. In the
+            // bottom strip that only throws the gap off, so there it rises
+            // instead, like the active card in the party carousel.
+            initial={{ opacity: 0, x: isPhone ? 0 : -50, y: isPhone ? 12 : 0 }}
+            animate={{
+              opacity: 1,
+              x: isPhone ? 0 : i === index ? 14 : 0,
+              y: isPhone && i === index ? -5 : 0,
+            }}
             transition={{ delay: i * 0.035, type: 'spring', stiffness: 380, damping: 28 }}
           >
             <span className="idx">{i + 1}</span>
@@ -161,7 +221,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
         <div className="nav-spacer" />
       </nav>
 
-      <div className="sheet-body">
+      <div className="sheet-body" ref={bodyRef}>
         <AnimatePresence mode="wait">
           <motion.div
             key={active.id}

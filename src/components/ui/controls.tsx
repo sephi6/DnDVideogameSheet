@@ -1,4 +1,4 @@
-import { type ReactNode, useId } from 'react'
+import { type ReactNode, useEffect, useId, useRef, useState } from 'react'
 import { play } from '@/lib/sfx'
 
 export function Panel({
@@ -261,6 +261,66 @@ export function Chip({
     >
       {children}
     </button>
+  )
+}
+
+/**
+ * Folds the secondary actions away when the header runs out of room. Whether
+ * that is needed is decided by the screen, not by this component.
+ */
+export function OverflowMenu({
+  children,
+  label = 'More actions',
+}: {
+  children: ReactNode
+  label?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    // Capture phase, stopping propagation: otherwise Escape would also reach the
+    // sheet's listener and leave for the party instead of closing the menu.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      setOpen(false)
+    }
+
+    window.addEventListener('pointerdown', onPointerDown)
+    window.addEventListener('keydown', onKey, true)
+    return () => {
+      window.removeEventListener('pointerdown', onPointerDown)
+      window.removeEventListener('keydown', onKey, true)
+    }
+  }, [open])
+
+  return (
+    <div className="overflow" ref={ref}>
+      <button
+        type="button"
+        className="btn small ghost overflow-toggle"
+        aria-label={label}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={() => {
+          play('toggle')
+          setOpen((v) => !v)
+        }}
+      >
+        <span>⋮</span>
+      </button>
+      {open && (
+        <div className="overflow-sheet" role="menu" onClick={() => setOpen(false)}>
+          {children}
+        </div>
+      )}
+    </div>
   )
 }
 
