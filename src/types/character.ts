@@ -136,6 +136,11 @@ export interface Journal {
 
 export interface Character {
   id: string
+  /**
+   * Schema of the stored data. Absent on sheets saved by the Spanish version
+   * (Spanish domain values, metric units); see `src/lib/migrate.ts`.
+   */
+  schemaVersion?: number
   createdAt: string
   updatedAt: string
   identity: Identity

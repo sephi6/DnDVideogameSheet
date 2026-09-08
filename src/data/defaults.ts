@@ -9,6 +9,7 @@ import type {
   SkillKey,
   SpellEntry,
 } from '@/types/character'
+import { SCHEMA_VERSION } from '@/lib/migrate'
 import { CLASSES, SKILLS, findClass, slotsForClass } from './rules'
 
 /** Ids for the entries nested inside the jsonb (attacks, items…). */
@@ -64,6 +65,7 @@ export function createCharacter(partial?: Partial<Character>): Character {
   const cls = findClass('Fighter') ?? CLASSES[0] // Fighter by default
   const base: Character = {
     id: newId(),
+    schemaVersion: SCHEMA_VERSION,
     createdAt: now,
     updatedAt: now,
     identity: {

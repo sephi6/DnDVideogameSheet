@@ -85,6 +85,19 @@ methods (`load` / `save` / `saveMany` / `remove`) and two implementations: `loca
 serializable as-is** (`data` `jsonb` column); `id`, `name` and `owner_id` are denormalized
 into columns so SQL can list them. The row `id` wins over whatever comes in the json.
 
+**Legacy migration — `src/lib/migrate.ts`.** Sheets saved by the Spanish version of the
+app hold Spanish domain values, metric units and portrait paths whose files were renamed
+(`assets/portraits/mago.svg` → `wizard.svg`). `migrateRoster()` is applied by `storage.ts`
+on **every read**, in both adapters, so old sheets display correctly straight away; the
+migrated version is written back the next time the sheet is edited. It only rewrites the
+**enumerated** fields (class, species, background, alignment, conditions, damage types,
+weapon masteries, spell schools, languages, portrait) plus the unit conversions (Speed
+m → ft., item weights kg → lb.). Free text the player typed —attack and item names,
+ranges, notes, journal— is deliberately left alone. `Character.schemaVersion` guards it:
+a sheet already at `SCHEMA_VERSION` is returned untouched, so a converted Speed is never
+converted twice. **Bump `SCHEMA_VERSION` and extend `migrateCharacter()` whenever a stored
+value is renamed or its unit changes.**
+
 **Auth — `src/store/auth.ts` (zustand) + `src/screens/LoginScreen.tsx`.** Email+password,
 magic link as an alternative, and sign-out. `init()` reads the stored session and
 subscribes to `onAuthStateChange` (returns the unsubscribe function). `status` starts at

@@ -1,4 +1,5 @@
 import type { Character } from '@/types/character'
+import { migrateRoster } from '@/lib/migrate'
 import { isSupabaseConfigured, requireSupabase } from '@/lib/supabase'
 
 /**
@@ -28,7 +29,8 @@ function readLocal(): Character[] {
     const raw = localStorage.getItem(KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? (parsed as Character[]) : []
+    // Sheets saved by the Spanish version are brought up to date here.
+    return Array.isArray(parsed) ? migrateRoster(parsed as Character[]) : []
   } catch {
     return []
   }
@@ -109,7 +111,7 @@ export const supabaseAdapter: StorageAdapter = {
       .order('created_at', { ascending: true })
     if (error) throw error
     // The row id wins over whatever id the json carries.
-    return (data ?? []).map((row) => ({ ...(row.data as Character), id: row.id }))
+    return migrateRoster((data ?? []).map((row) => ({ ...(row.data as Character), id: row.id })))
   },
 
   async save(character) {
