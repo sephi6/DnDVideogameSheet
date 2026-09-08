@@ -1,136 +1,119 @@
-# Plan de integración con Supabase
+# Supabase: puesta en marcha
 
-El MVP guarda en `localStorage`. Todo el acceso a datos pasa por un único
-adaptador (`src/lib/storage.ts`), así que conectar Supabase es sustituir esa
-implementación sin tocar pantallas ni secciones.
+La app funciona en dos modos y decide sola cuál usar:
 
-## 1. Esquema propuesto
+| Modo | Cuándo | Qué hace |
+| --- | --- | --- |
+| **Local** | No hay `.env.local` | Guarda en `localStorage`, sin login. Útil para trastear. |
+| **Nube** | Hay `.env.local` | Pide login y lee/escribe en Supabase. |
 
-```sql
--- Personajes. La ficha entera viaja como jsonb: el modelo de datos vive en
--- src/types/character.ts y evoluciona sin migraciones de columnas.
-create table public.characters (
-  id          uuid primary key default gen_random_uuid(),
-  owner_id    uuid not null references auth.users (id) on delete cascade,
-  campaign_id uuid references public.campaigns (id) on delete set null,
-  name        text not null default 'Sin nombre',
-  data        jsonb not null,
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
-);
+---
 
-create index characters_owner_idx on public.characters (owner_id);
+## 1. Credenciales
 
--- Partidas, para que un DM vea las fichas de su mesa.
-create table public.campaigns (
-  id       uuid primary key default gen_random_uuid(),
-  dm_id    uuid not null references auth.users (id) on delete cascade,
-  name     text not null,
-  join_code text unique not null
-);
-
-create table public.campaign_members (
-  campaign_id uuid references public.campaigns (id) on delete cascade,
-  user_id     uuid references auth.users (id) on delete cascade,
-  primary key (campaign_id, user_id)
-);
-```
-
-## 2. Políticas RLS
-
-```sql
-alter table public.characters enable row level security;
-
-create policy "el dueño gestiona su ficha"
-  on public.characters for all
-  using (auth.uid() = owner_id)
-  with check (auth.uid() = owner_id);
-
-create policy "el DM lee las fichas de su partida"
-  on public.characters for select
-  using (
-    campaign_id in (select id from public.campaigns where dm_id = auth.uid())
-  );
-```
-
-## 3. Adaptador
-
-```ts
-// src/lib/storage.supabase.ts
-import { createClient } from '@supabase/supabase-js'
-import type { StorageAdapter } from './storage'
-
-const client = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-)
-
-export const supabaseAdapter: StorageAdapter = {
-  name: 'supabase',
-  async load() {
-    const { data, error } = await client.from('characters').select('data')
-    if (error) throw error
-    return (data ?? []).map((row) => row.data)
-  },
-  async saveAll(characters) {
-    const { data: session } = await client.auth.getUser()
-    const owner = session.user?.id
-    if (!owner) return
-    await client.from('characters').upsert(
-      characters.map((c) => ({
-        id: c.id,
-        owner_id: owner,
-        name: c.identity.name,
-        data: c,
-        updated_at: new Date().toISOString(),
-      })),
-    )
-  },
-}
-```
-
-Después basta con cambiar la última línea de `src/lib/storage.ts`:
-
-```ts
-export const storage: StorageAdapter = supabaseAdapter
-```
-
-> `saveAll` es suficiente para el MVP, pero conviene pasar a guardar por
-> personaje (`upsert` de una fila) en cuanto haya varias mesas: el store ya
-> sabe qué ficha ha cambiado en `updateCharacter`.
-
-## 4. Autenticación
-
-1. Habilitar **Magic Link** (correo) y, si se quiere, Discord como proveedor OAuth
-   —es lo que ya usa la mayoría de mesas—.
-2. Añadir una pantalla `LoginScreen` antes de `CharacterSelect`, con la misma
-   estética de menú (`title-mark` + campo de correo).
-3. `App.tsx` decide: sin sesión → login; con sesión → `hydrate()`.
-
-## 5. Variables de entorno
+Crea `.env.local` en la raíz (no se sube al repositorio):
 
 ```bash
-# .env.local  (nunca se commitea)
-VITE_SUPABASE_URL=https://<proyecto>.supabase.co
-VITE_SUPABASE_ANON_KEY=<clave anon pública>
+VITE_SUPABASE_URL=https://dtybrsbjgatjqllsdhhi.supabase.co
+VITE_SUPABASE_ANON_KEY=sb_publishable_xxxxxxxxxxxxxxxxxxxxxx
 ```
 
-La clave `service_role` **no** debe aparecer en el frontend.
+- **URL**: Dashboard → Settings → Data API → *Project URL*.
+- **Clave**: Dashboard → Settings → API Keys → la **publishable** (`sb_publishable_…`).
+  Es una clave pensada para vivir en el navegador; quien protege los datos es RLS.
+  La `secret` / `service_role` **no** debe aparecer nunca en el frontend.
 
-## 6. Retratos en Storage
+Reinicia `npm run dev` después de crear el archivo: Vite lee las variables al arrancar.
 
-Bucket `portraits`, público de lectura y escritura solo para el dueño:
+## 2. Crear las tablas
 
-```sql
-create policy "sube su propio retrato"
-  on storage.objects for insert
-  with check (bucket_id = 'portraits' and auth.uid()::text = (storage.foldername(name))[1]);
+Dashboard → **SQL Editor** → *New query* → pega entero
+[`supabase/migrations/0001_init.sql`](../supabase/migrations/0001_init.sql) → *Run*.
+
+Crea la tabla `characters`, sus índices, el disparador que mantiene `updated_at`
+y las políticas de RLS.
+
+## 3. Datos de ejemplo
+
+Dos caminos, el que prefieras:
+
+- **Automático**: al entrar por primera vez con la tabla vacía, la app siembra
+  la party de ejemplo (Kaelith, Brann, Nyx y Sor Maren). Solo lo hace una vez;
+  si luego los borras, no vuelven.
+- **Manual**: ejecuta [`supabase/seed.sql`](../supabase/seed.sql) en el SQL Editor.
+  Se puede lanzar varias veces sin duplicar nada.
+
+Ese archivo se genera desde el TypeScript para que no haya dos copias de los
+mismos datos:
+
+```bash
+node scripts/generate-seed.mjs
 ```
 
-El botón **Subir** de la sección Identidad pasaría de guardar un data-url a
-subir el archivo y guardar la URL pública en `identity.portrait`.
+## 4. Activar el acceso por correo
 
-## 7. Tiempo real (opcional, más adelante)
+Dashboard → **Authentication** → *Sign In / Providers* → **Email** activado.
 
-`supabase.channel('characters')` con `postgres_changes` permite que el DM vea
-los puntos de golpe de la party actualizarse en directo durante la sesión.
+Para una mesa privada, lo cómodo es **desactivar «Confirm email»** (en el mismo
+panel): así crear la cuenta entra directamente, sin depender del correo. Si lo
+dejas activado, cada jugador tendrá que pulsar el enlace que reciba antes de
+poder entrar, y el remitente por defecto de Supabase está limitado a unos pocos
+envíos por hora.
+
+La pantalla de acceso ofrece correo + contraseña y, como alternativa, un enlace
+mágico (botón «Enviarme un enlace»), que sí necesita correo funcionando.
+
+> **Cuando todos tengáis cuenta, desactiva los registros abiertos**
+> (*Allow new users to sign up*). Con el modelo de permisos actual, cualquiera
+> que se registre en este proyecto ve y edita todas las fichas.
+
+## 5. Modelo de permisos
+
+Tal y como se pidió, **todos los usuarios autenticados tienen los mismos
+permisos**: leer, crear, editar y borrar *cualquier* ficha. Es lo natural para
+una party donde todo el mundo se fía del resto y el DM toca las fichas de todos.
+
+Lo que eso implica:
+
+- Quien tenga cuenta en el proyecto puede modificar o borrar la ficha de otro.
+- Sin sesión no se ve nada: el rol `anon` no tiene ninguna política.
+- `owner_id` se guarda igualmente (quién creó cada ficha), aunque hoy no
+  restrinja nada. Está ahí para poder cerrar permisos sin migrar datos.
+
+Para cerrarlo más adelante, al final de `0001_init.sql` están las políticas
+estrictas por dueño, comentadas y listas para usar.
+
+## 6. Cómo está montado el código
+
+```
+src/lib/supabase.ts     Cliente y detección de si hay credenciales
+src/lib/storage.ts      Servicios de lectura y escritura (local | supabase)
+src/store/auth.ts       Sesión: entrar, registrarse, enlace mágico, salir
+src/store/roster.ts     Estado de la party, guardado y estado de sincronización
+src/screens/LoginScreen.tsx
+```
+
+Detalles que importan:
+
+- **Se guarda ficha a ficha**, no la party entera, y con medio segundo de
+  margen desde la última tecla. Editar dos personajes no encola un guardado
+  detrás del otro.
+- **La ficha completa va en `data` (jsonb)**. `name` y `owner_id` se
+  desnormalizan para poder listar y filtrar desde SQL sin abrir el json. El
+  modelo puede crecer (`src/types/character.ts`) sin migrar columnas.
+- **Si un guardado falla**, la cabecera de la ficha lo dice y aparece un botón
+  *Reintentar*; el trabajo no se pierde de la pantalla. Un borrado que falla
+  devuelve el personaje a la lista.
+- **La lectura está protegida contra duplicados**: React monta los efectos dos
+  veces en desarrollo, y sin esa guarda la party de ejemplo se sembraba dos veces.
+- **Los ids son UUID** de verdad, para que sean la clave primaria de la tabla.
+
+## 7. Lo que aún no está
+
+- **Retratos en Storage.** Hoy una imagen subida se guarda como data-url dentro
+  del jsonb; se reescala a 1000×1400 antes de guardarla para que la fila no se
+  dispare. Lo suyo sería un bucket `portraits` y guardar solo la URL.
+- **Tiempo real.** `supabase.channel('characters')` con `postgres_changes`
+  permitiría que el DM viera los PG de la party moverse en directo.
+- **Partidas/mesas.** Hoy hay una sola party: todas las fichas de la base. Si
+  hiciera falta separar mesas, tocaría una tabla `campaigns` y filtrar por ella.

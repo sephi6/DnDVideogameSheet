@@ -312,3 +312,7 @@
   .nav-item { width: auto; white-space: nowrap; }
   .nav-item[data-active='true'] { box-shadow: 4px 4px 0 var(--ink); }
 }
+
+.save-dot[data-state='saving'] { color: var(--bone-dim); }
+.save-dot[data-state='saved'] { color: var(--gold); }
+.save-dot[data-state='error'] { color: var(--blood-hot); }

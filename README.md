@@ -12,9 +12,17 @@ npm run dev      # http://localhost:5173
 
 ## Estado
 
-MVP jugable y **local**: los datos se guardan en `localStorage`. Login y
-persistencia en Supabase están diseñados pero aún no conectados
-(ver [`docs/SUPABASE.md`](docs/SUPABASE.md)).
+Ficha completa, login y persistencia en **Supabase** funcionando. Sin
+credenciales configuradas la app sigue arrancando en modo local
+(`localStorage`, sin login), así que se puede clonar y probar sin montar nada.
+
+Para conectarla a Supabase: [`docs/SUPABASE.md`](docs/SUPABASE.md) — son tres
+pasos (credenciales en `.env.local`, ejecutar la migración, activar el acceso
+por correo).
+
+> Con el modelo de permisos actual **todos los usuarios registrados ven y editan
+> todas las fichas**. Es lo que se quiere para una mesa; conviene cerrar los
+> registros abiertos cuando todo el grupo tenga cuenta.
 
 ## Cómo se usa
 
@@ -48,9 +56,12 @@ src/
 ├── types/character.ts   Modelo de la ficha (se serializa tal cual a Supabase)
 ├── lib/derive.ts        Cálculos derivados (modificadores, CD, iniciativa…)
 ├── lib/sfx.ts           Sonidos de menú sintetizados con WebAudio (sin assets)
-├── lib/storage.ts       Adaptador de persistencia — el punto de enganche de Supabase
-├── store/roster.ts      Estado global (zustand) con guardado diferido
-├── screens/             Título · Selección de personaje · Armazón de la ficha
+├── lib/supabase.ts      Cliente de Supabase y detección de credenciales
+├── lib/storage.ts       Servicios de lectura y escritura (local | supabase)
+├── lib/image.ts         Reescalado de los retratos subidos
+├── store/auth.ts        Sesión: entrar, registrarse, enlace mágico, salir
+├── store/roster.ts      Estado de la party, guardado por ficha y sincronización
+├── screens/             Título · Acceso · Selección de personaje · Ficha
 ├── sections/            Las ocho secciones editables
 └── styles/              Tokens y estética (fuentes auto-alojadas)
 ```
@@ -68,9 +79,9 @@ auto-alojadas en `public/fonts/`; `scripts/fetch-fonts.sh` las regenera.
 
 ## Siguientes pasos
 
-1. Login con Supabase (magic link o Discord) y persistencia en la nube.
-2. Retratos reales generados con la guía de prompts.
-3. Vista de DM: ver las fichas de la party en directo.
+1. Retratos reales generados con la guía de prompts.
+2. Subir los retratos a Supabase Storage en vez de guardarlos en el jsonb.
+3. Tiempo real: que el DM vea los PG de la party moverse en directo.
 4. Importar ficha desde JSON (exportar ya funciona, en la cabecera de la ficha).
 
 ## Scripts
@@ -81,3 +92,5 @@ auto-alojadas en `public/fonts/`; `scripts/fetch-fonts.sh` las regenera.
 | `npm run build` | Comprobación de tipos + build de producción |
 | `npm run preview` | Sirve el build |
 | `npm run typecheck` | Solo tipos |
+| `node scripts/generate-seed.mjs` | Regenera `supabase/seed.sql` desde el TypeScript |
+| `node scripts/generate-assets.mjs` | Regenera los retratos provisionales |

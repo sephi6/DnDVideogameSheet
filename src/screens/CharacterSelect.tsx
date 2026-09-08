@@ -15,6 +15,13 @@ interface Props {
   onCreate: () => void
   onDelete: (character: Character) => void
   onDuplicate: (character: Character) => void
+  /** Null cuando la app corre sin Supabase (modo local, sin login). */
+  userEmail: string | null
+  onSignOut: () => void
+  /** Fichas de este navegador que todavía no están en la nube. */
+  pendingLocalImport: number
+  onImportLocal: () => void
+  onSeedDemo: () => void
 }
 
 export function CharacterSelect({
@@ -25,6 +32,11 @@ export function CharacterSelect({
   onCreate,
   onDelete,
   onDuplicate,
+  userEmail,
+  onSignOut,
+  pendingLocalImport,
+  onImportLocal,
+  onSeedDemo,
 }: Props) {
   const railRef = useRef<HTMLDivElement>(null)
   const current = characters[index]
@@ -91,7 +103,17 @@ export function CharacterSelect({
           <span className="slab"><span>Selecciona tu personaje</span></span>
           <h1 style={{ marginTop: 10 }}>La party</h1>
         </div>
-        <div className="row" style={{ gap: 8 }}>
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          {userEmail && (
+            <span className="label session-tag" title={userEmail}>
+              {userEmail}
+            </span>
+          )}
+          {pendingLocalImport > 0 && (
+            <Button variant="ghost small" onClick={onImportLocal}>
+              Subir {pendingLocalImport} local(es)
+            </Button>
+          )}
           <Button variant="ghost small" onClick={onCreate}>+ Nuevo</Button>
           {current && <Button variant="ghost small" onClick={() => onDuplicate(current)}>Duplicar</Button>}
           {current && (
@@ -104,6 +126,9 @@ export function CharacterSelect({
             >
               Borrar
             </Button>
+          )}
+          {userEmail && (
+            <Button variant="ghost small" cue="back" onClick={onSignOut}>Cerrar sesión</Button>
           )}
         </div>
       </header>
@@ -136,7 +161,12 @@ export function CharacterSelect({
               </motion.button>
             )}
           </AnimatePresence>
-          {!current && <div className="empty">No hay personajes. Pulsa «N» para crear uno.</div>}
+          {!current && (
+            <div className="stack" style={{ gap: 12, textAlign: 'center' }}>
+              <div className="empty">La party está vacía. Pulsa «N» para crear un personaje.</div>
+              <Button variant="ghost" onClick={onSeedDemo}>Cargar personajes de ejemplo</Button>
+            </div>
+          )}
         </div>
 
         {current && (

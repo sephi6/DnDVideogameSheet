@@ -2,24 +2,40 @@ import { useEffect, useState } from 'react'
 import { Background } from '@/components/fx/Background'
 import { useWipe } from '@/components/fx/Wipe'
 import { CharacterSelect } from '@/screens/CharacterSelect'
+import { LoginScreen } from '@/screens/LoginScreen'
 import { SheetScreen } from '@/screens/SheetScreen'
 import { TitleScreen } from '@/screens/TitleScreen'
+import { useAuth } from '@/store/auth'
 import { useRoster } from '@/store/roster'
 import type { Character } from '@/types/character'
 
 type Screen = 'title' | 'select' | 'sheet'
 
 export default function App() {
-  const { characters, loaded, savedAt, hydrate, addCharacter, removeCharacter, duplicateCharacter, updateCharacter } =
-    useRoster()
+  const {
+    characters, loaded, sync, syncError, pendingLocalImport,
+    hydrate, reset, addCharacter, removeCharacter, duplicateCharacter, updateCharacter,
+    seedDemo, importLocalRoster, retryFailed,
+  } = useRoster()
+  const { status: authStatus, user, init: initAuth, signOut } = useAuth()
   const [screen, setScreen] = useState<Screen>('title')
   const [index, setIndex] = useState(0)
   const [activeId, setActiveId] = useState<string | null>(null)
   const { run, overlay } = useWipe()
 
+  useEffect(() => initAuth(), [initAuth])
+
+  // Las fichas se leen cuando hay con qué: sin Supabase, en cuanto arranca;
+  // con Supabase, al iniciar sesión. Al salir, se vacían.
   useEffect(() => {
-    void hydrate()
-  }, [hydrate])
+    if (authStatus === 'disabled' || authStatus === 'signed-in') {
+      void hydrate()
+    } else if (authStatus === 'signed-out') {
+      reset()
+      setScreen((current) => (current === 'sheet' ? 'title' : current))
+      setActiveId(null)
+    }
+  }, [authStatus, hydrate, reset])
 
   const active = characters.find((c) => c.id === activeId) ?? null
   const accent =
@@ -45,16 +61,22 @@ export default function App() {
     openSheet(created)
   }
 
+  const needsLogin = authStatus !== 'disabled' && authStatus !== 'signed-in'
+
   return (
     <div style={{ ['--accent' as string]: accent, height: '100%' }}>
       <Background />
       {overlay}
 
-      {screen === 'title' && (
-        <TitleScreen onStart={() => run('Arcana', () => setScreen('select'))} />
+      {screen === 'title' && <TitleScreen onStart={() => run('Arcana', () => setScreen('select'))} />}
+
+      {screen !== 'title' && needsLogin && (
+        authStatus === 'loading' ? <div className="center" style={{ height: '100%' }}>
+          <span className="label">Comprobando sesión…</span>
+        </div> : <LoginScreen />
       )}
 
-      {screen === 'select' && loaded && (
+      {screen === 'select' && !needsLogin && loaded && (
         <CharacterSelect
           characters={characters}
           index={Math.min(index, Math.max(0, characters.length - 1))}
@@ -62,18 +84,30 @@ export default function App() {
           onOpen={openSheet}
           onCreate={createCharacter}
           onDelete={(character) => {
-            removeCharacter(character.id)
+            void removeCharacter(character.id)
             setIndex((i) => Math.max(0, Math.min(i, characters.length - 2)))
           }}
           onDuplicate={(character) => duplicateCharacter(character.id)}
+          userEmail={user?.email ?? null}
+          onSignOut={() => {
+            run('Hasta luego', () => {
+              void signOut()
+              setScreen('title')
+            })
+          }}
+          pendingLocalImport={pendingLocalImport}
+          onImportLocal={() => void importLocalRoster()}
+          onSeedDemo={() => void seedDemo()}
         />
       )}
 
-      {screen === 'sheet' && active && (
+      {screen === 'sheet' && !needsLogin && active && (
         <SheetScreen
           key={active.id}
           character={active}
-          savedAt={savedAt}
+          sync={sync}
+          syncError={syncError}
+          onRetry={() => void retryFailed()}
           update={(recipe) => updateCharacter(active.id, recipe)}
           onExit={backToSelect}
         />

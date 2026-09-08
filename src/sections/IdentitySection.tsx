@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Button,
@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/controls'
 import { ALIGNMENTS, BACKGROUNDS, CLASSES, SPECIES, findClass, proficiencyBonus, slotsForClass } from '@/data/rules'
 import { portraitForClass } from '@/data/defaults'
+import { downscaleImage } from '@/lib/image'
 import { play } from '@/lib/sfx'
 import type { SectionProps } from './types'
 
@@ -20,6 +21,7 @@ const PORTRAIT_LIBRARY = [
 
 export function IdentitySection({ character, update }: SectionProps) {
   const fileInput = useRef<HTMLInputElement>(null)
+  const [portraitError, setPortraitError] = useState<string | null>(null)
   const { identity } = character
 
   const changeClass = (name: string) => {
@@ -54,17 +56,18 @@ export function IdentitySection({ character, update }: SectionProps) {
     })
   }
 
-  const uploadPortrait = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        update((d) => {
-          d.identity.portrait = reader.result as string
-        })
-        play('confirm')
-      }
+  const uploadPortrait = async (file: File) => {
+    try {
+      const dataUrl = await downscaleImage(file)
+      update((d) => {
+        d.identity.portrait = dataUrl
+      })
+      play('confirm')
+    } catch (err) {
+      console.error('[arcana] no se pudo procesar el retrato', err)
+      play('error')
+      setPortraitError('No se pudo procesar esa imagen. Prueba con un PNG o un JPG.')
     }
-    reader.readAsDataURL(file)
   }
 
   return (
@@ -116,10 +119,12 @@ export function IdentitySection({ character, update }: SectionProps) {
           hidden
           onChange={(e) => {
             const file = e.target.files?.[0]
-            if (file) uploadPortrait(file)
+            setPortraitError(null)
+            if (file) void uploadPortrait(file)
             e.target.value = ''
           }}
         />
+        {portraitError && <p className="login-error" style={{ marginTop: 0 }}>{portraitError}</p>}
         <div className="row" style={{ alignItems: 'flex-start', gap: 14 }}>
           <motion.img
             key={identity.portrait ?? 'none'}

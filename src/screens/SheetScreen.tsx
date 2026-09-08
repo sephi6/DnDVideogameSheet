@@ -12,6 +12,7 @@ import { InventorySection } from '@/sections/InventorySection'
 import { FeaturesSection } from '@/sections/FeaturesSection'
 import { JournalSection } from '@/sections/JournalSection'
 import type { SectionProps } from '@/sections/types'
+import type { SyncStatus } from '@/store/roster'
 import type { Character } from '@/types/character'
 
 const SECTIONS: { id: string; label: string; glyph: string; Component: (p: SectionProps) => JSX.Element }[] = [
@@ -29,10 +30,19 @@ interface Props {
   character: Character
   update: (recipe: (draft: Character) => void) => void
   onExit: () => void
-  savedAt: number | null
+  sync: SyncStatus
+  syncError: string | null
+  onRetry: () => void
 }
 
-export function SheetScreen({ character, update, onExit, savedAt }: Props) {
+const SYNC_LABEL: Record<SyncStatus, string> = {
+  idle: '',
+  saving: '● Guardando…',
+  saved: '● Guardado',
+  error: '▲ Sin guardar',
+}
+
+export function SheetScreen({ character, update, onExit, sync, syncError, onRetry }: Props) {
   const [index, setIndex] = useState(0)
   const [muted, setMutedState] = useState(isMuted())
   const active = SECTIONS[index]
@@ -108,7 +118,14 @@ export function SheetScreen({ character, update, onExit, savedAt }: Props) {
           </motion.div>
         </AnimatePresence>
         <div className="head-actions">
-          {savedAt && <span className="save-dot">● Guardado</span>}
+          {sync !== 'idle' && (
+            <span className="save-dot" data-state={sync} title={syncError ?? undefined}>
+              {SYNC_LABEL[sync]}
+            </span>
+          )}
+          {sync === 'error' && (
+            <Button variant="small ghost danger" onClick={onRetry}>Reintentar</Button>
+          )}
           <Button variant="small ghost" onClick={exportJson}>Exportar</Button>
           <Button
             variant="small ghost"

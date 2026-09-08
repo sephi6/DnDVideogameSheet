@@ -1,8 +1,37 @@
 import type { AbilityKey, Character, Proficiency, SkillKey } from '@/types/character'
 import { CLASSES, SKILLS, findClass, slotsForClass } from './rules'
 
+/** Identificadores de las entradas anidadas dentro del jsonb (ataques, objetos…). */
 export function uid(prefix = 'id'): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36).slice(-4)}`
+}
+
+/**
+ * Identificador de una ficha. Es un UUID de verdad porque acaba siendo la
+ * clave primaria de la tabla `characters` en Supabase.
+ */
+export function newId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  // Reserva para contextos no seguros, donde randomUUID no existe.
+  const bytes = new Uint8Array(16)
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    crypto.getRandomValues(bytes)
+  } else {
+    for (let i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256)
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40 // versión 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80 // variante RFC 4122
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/** ¿Este id sirve como clave primaria uuid? Las fichas viejas usaban `pc_xxx`. */
+export function isUuid(id: string): boolean {
+  return UUID_RE.test(id)
 }
 
 function emptySkills(): Record<SkillKey, Proficiency> {
@@ -25,7 +54,7 @@ export function createCharacter(partial?: Partial<Character>): Character {
   const now = new Date().toISOString()
   const cls = CLASSES[6] // Guerrero por defecto
   const base: Character = {
-    id: uid('pc'),
+    id: newId(),
     createdAt: now,
     updatedAt: now,
     identity: {

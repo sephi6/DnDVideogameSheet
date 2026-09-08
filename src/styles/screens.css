@@ -243,3 +243,74 @@
   .hero-card { height: 40vh; }
   .hero-meta { display: none; }
 }
+
+/* ── Acceso ─────────────────────────────────────────────────────────────── */
+.login-screen {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.login-card {
+  width: min(440px, 100%);
+  padding: 26px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.login-head h1 {
+  margin: 10px 0 0;
+  font-size: clamp(26px, 4vw, 38px);
+}
+
+.login-tabs { gap: 8px; }
+.login-tabs .nav-item { font-size: 16px; padding: 5px 10px; }
+
+.login-submit {
+  width: 100%;
+  font-size: 20px;
+  padding: 8px 14px;
+  background: var(--accent);
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.login-submit:disabled { opacity: 0.55; cursor: progress; }
+
+.login-error {
+  margin: 0;
+  border-left: 5px solid var(--blood-hot);
+  background: rgba(224, 17, 51, 0.14);
+  padding: 6px 10px;
+  color: #ffc9d1;
+}
+
+.login-notice {
+  margin: 0;
+  border-left: 5px solid var(--gold);
+  background: rgba(255, 201, 60, 0.12);
+  padding: 6px 10px;
+  color: #ffe9ae;
+}
+
+.login-alt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: 2px solid #2a2731;
+  padding-top: 12px;
+  flex-wrap: wrap;
+}
+
+.session-tag {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gold);
+  font-size: 14px;
+}
