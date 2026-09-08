@@ -20,6 +20,8 @@ Para conectarla a Supabase: [`docs/SUPABASE.md`](docs/SUPABASE.md) — son tres
 pasos (credenciales en `.env.local`, ejecutar la migración, activar el acceso
 por correo).
 
+Para publicarla en Cloudflare Pages: [`docs/DEPLOY.md`](docs/DEPLOY.md).
+
 > Con el modelo de permisos actual **todos los usuarios registrados ven y editan
 > todas las fichas**. Es lo que se quiere para una mesa; conviene cerrar los
 > registros abiertos cuando todo el grupo tenga cuenta.

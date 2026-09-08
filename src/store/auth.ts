@@ -85,7 +85,9 @@ export const useAuth = create<AuthState>((set) => ({
     set({ busy: true, error: null, notice: null })
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: window.location.origin },
+      // El alta de usuarios se hace desde Supabase: el enlace mágico solo entra
+      // a cuentas que ya existen, no crea ninguna.
+      options: { emailRedirectTo: window.location.origin, shouldCreateUser: false },
     })
     set({
       busy: false,

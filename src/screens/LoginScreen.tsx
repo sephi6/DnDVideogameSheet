@@ -6,6 +6,12 @@ import { useAuth } from '@/store/auth'
 
 type Mode = 'entrar' | 'registro'
 
+/**
+ * El alta de usuarios se gestiona desde Supabase. Solo se ofrece «Crear cuenta»
+ * en la interfaz si se activa a propósito con VITE_SIGNUPS_OPEN=true.
+ */
+const SIGNUPS_OPEN = import.meta.env.VITE_SIGNUPS_OPEN === 'true'
+
 export function LoginScreen() {
   const { signIn, signUp, sendMagicLink, busy, error, notice, clearMessages } = useAuth()
   const [mode, setMode] = useState<Mode>('entrar')
@@ -15,7 +21,7 @@ export function LoginScreen() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     play('confirm')
-    if (mode === 'entrar') await signIn(email, password)
+    if (mode === 'entrar' || !SIGNUPS_OPEN) await signIn(email, password)
     else await signUp(email, password)
   }
 
@@ -38,19 +44,21 @@ export function LoginScreen() {
           <h1 className="display">Entra a la party</h1>
         </div>
 
-        <div className="row login-tabs">
-          {(['entrar', 'registro'] as Mode[]).map((m) => (
-            <button
-              key={m}
-              type="button"
-              className="nav-item"
-              data-active={mode === m}
-              onClick={() => switchMode(m)}
-            >
-              <span>{m === 'entrar' ? 'Ya tengo cuenta' : 'Crear cuenta'}</span>
-            </button>
-          ))}
-        </div>
+        {SIGNUPS_OPEN && (
+          <div className="row login-tabs">
+            {(['entrar', 'registro'] as Mode[]).map((m) => (
+              <button
+                key={m}
+                type="button"
+                className="nav-item"
+                data-active={mode === m}
+                onClick={() => switchMode(m)}
+              >
+                <span>{m === 'entrar' ? 'Ya tengo cuenta' : 'Crear cuenta'}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         <form className="stack" onSubmit={submit} style={{ gap: 12 }}>
           <label className="field">
