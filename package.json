@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Fichas de rol de D&D 2024 con navegacion tipo menu de videojuego",
+  "description": "D&D 2024 character sheets with video-game menu navigation",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

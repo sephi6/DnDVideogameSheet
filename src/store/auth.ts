@@ -12,7 +12,7 @@ interface AuthState {
   status: AuthStatus
   user: AuthUser | null
   error: string | null
-  /** Aviso informativo, p. ej. «te hemos enviado un enlace». */
+  /** Informational notice, e.g. "we sent you a link". */
   notice: string | null
   busy: boolean
   init: () => () => void
@@ -30,7 +30,7 @@ export const useAuth = create<AuthState>((set) => ({
   notice: null,
   busy: false,
 
-  /** Lee la sesión guardada y se queda escuchando los cambios. */
+  /** Reads the stored session and keeps listening for changes. */
   init() {
     if (!supabase) {
       set({ status: 'disabled' })
@@ -73,10 +73,10 @@ export const useAuth = create<AuthState>((set) => ({
       set({ busy: false, error: readableError(error) })
       return
     }
-    // Con la confirmación por correo activada no hay sesión hasta que se pulsa el enlace.
+    // With email confirmation on there is no session until the link is clicked.
     set({
       busy: false,
-      notice: data.session ? null : 'Cuenta creada. Confirma el correo y vuelve a entrar.',
+      notice: data.session ? null : 'Account created. Confirm the email and sign in again.',
     })
   },
 
@@ -85,14 +85,14 @@ export const useAuth = create<AuthState>((set) => ({
     set({ busy: true, error: null, notice: null })
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      // El alta de usuarios se hace desde Supabase: el enlace mágico solo entra
-      // a cuentas que ya existen, no crea ninguna.
+      // Sign-ups happen from Supabase: the magic link only signs into accounts
+      // that already exist, it never creates one.
       options: { emailRedirectTo: window.location.origin, shouldCreateUser: false },
     })
     set({
       busy: false,
       error: error ? readableError(error) : null,
-      notice: error ? null : 'Te hemos enviado un enlace de acceso. Revisa el correo.',
+      notice: error ? null : 'We sent you a sign-in link. Check your email.',
     })
   },
 

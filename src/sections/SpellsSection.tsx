@@ -15,8 +15,8 @@ import type { AbilityKey } from '@/types/character'
 import type { SectionProps } from './types'
 
 const LEVEL_NAMES = [
-  'Trucos', 'Nivel 1', 'Nivel 2', 'Nivel 3', 'Nivel 4',
-  'Nivel 5', 'Nivel 6', 'Nivel 7', 'Nivel 8', 'Nivel 9',
+  'Cantrips', 'Level 1', 'Level 2', 'Level 3', 'Level 4',
+  'Level 5', 'Level 6', 'Level 7', 'Level 8', 'Level 9',
 ]
 
 export function SpellsSection({ character, update }: SectionProps) {
@@ -28,9 +28,9 @@ export function SpellsSection({ character, update }: SectionProps) {
   return (
     <div className="stack">
       <div className="grid g3">
-        <Panel title="Aptitud mágica">
+        <Panel title="Spellcasting Ability">
           <SelectField
-            label="Característica"
+            label="Ability"
             value={ABILITIES.find((a) => a.key === spellcasting.ability)?.label ?? '—'}
             options={['—', ...ABILITIES.map((a) => a.label)]}
             onChange={(v) => update((d) => {
@@ -38,10 +38,10 @@ export function SpellsSection({ character, update }: SectionProps) {
             })}
           />
         </Panel>
-        <Panel title="CD de salvación">
+        <Panel title="Spell Save DC">
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 44, color: 'var(--gold)' }}>{dc ?? '—'}</div>
         </Panel>
-        <Panel title="Ataque de conjuro">
+        <Panel title="Spell Attack Bonus">
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 44, color: 'var(--gold)' }}>
             {atk === null ? '—' : formatModifier(atk)}
           </div>
@@ -49,25 +49,25 @@ export function SpellsSection({ character, update }: SectionProps) {
       </div>
 
       <Panel
-        title="Espacios de conjuro"
+        title="Spell Slots"
         actions={
           <Button variant="small ghost" onClick={() => update((d) => { d.spellcasting.slots.forEach((s) => { s.used = 0 }) })}>
-            Descanso largo
+            Long Rest
           </Button>
         }
       >
         {spellcasting.slots.length === 0 ? (
-          <div className="empty">Esta clase no tiene espacios de conjuro</div>
+          <div className="empty">This class has no spell slots</div>
         ) : (
           <div className="grid g4">
             {spellcasting.slots.map((slot) => (
               <div key={slot.level} className="big-stat" style={{ textAlign: 'left' }}>
-                <div className="bs-label">Nivel {slot.level} · {slot.total - slot.used}/{slot.total}</div>
+                <div className="bs-label">Level {slot.level} · {slot.total - slot.used}/{slot.total}</div>
                 <div className="tracker" style={{ marginTop: 6 }}>
                   {Array.from({ length: slot.total }).map((_, i) => (
                     <CheckBox
                       key={i}
-                      label={`Espacio de nivel ${slot.level}, número ${i + 1}`}
+                      label={`Level ${slot.level} slot, number ${i + 1}`}
                       on={i < slot.used}
                       onToggle={() => update((d) => {
                         const s = d.spellcasting.slots.find((x) => x.level === slot.level)
@@ -83,20 +83,20 @@ export function SpellsSection({ character, update }: SectionProps) {
       </Panel>
 
       <Panel
-        title="Conjuros"
+        title="Spells"
         actions={
           <Button
             variant="small"
             onClick={() => update((d) => {
               d.spellcasting.spells.push({
                 id: uid('spell'),
-                name: 'Conjuro nuevo',
+                name: 'New spell',
                 level: 0,
-                school: 'Evocación',
-                castingTime: '1 acción',
-                range: '18 m',
+                school: 'Evocation',
+                castingTime: '1 action',
+                range: '60 feet',
                 components: 'V, S',
-                duration: 'Instantáneo',
+                duration: 'Instantaneous',
                 concentration: false,
                 ritual: false,
                 prepared: true,
@@ -104,19 +104,19 @@ export function SpellsSection({ character, update }: SectionProps) {
               })
             })}
           >
-            + Añadir
+            + Add
           </Button>
         }
       >
-        {spellcasting.spells.length === 0 && <div className="empty">Grimorio vacío</div>}
+        {spellcasting.spells.length === 0 && <div className="empty">Empty spellbook</div>}
         {levels.map((level) => {
           const spells = spellcasting.spells.filter((s) => s.level === level)
           if (spells.length === 0) return null
           return (
             <div key={level}>
               <div className="spell-level-head">
-                <span className="lv">{LEVEL_NAMES[level] ?? `Nivel ${level}`}</span>
-                <span className="muted">{spells.length} conjuro(s)</span>
+                <span className="lv">{LEVEL_NAMES[level] ?? `Level ${level}`}</span>
+                <span className="muted">{spells.length} spell(s)</span>
               </div>
               <div className="stack" style={{ gap: 10 }}>
                 <AnimatePresence initial={false}>
@@ -146,7 +146,7 @@ export function SpellsSection({ character, update }: SectionProps) {
                             if (s) s.prepared = !s.prepared
                           })}
                         >
-                          {spell.prepared ? 'Preparado' : 'Guardado'}
+                          {spell.prepared ? 'Prepared' : 'Known'}
                         </Chip>
                         <Button variant="small ghost danger" cue="back" onClick={() => update((d) => {
                           d.spellcasting.spells = d.spellcasting.spells.filter((x) => x.id !== spell.id)
@@ -156,7 +156,7 @@ export function SpellsSection({ character, update }: SectionProps) {
                       </div>
                       <div className="entry-grid">
                         <SelectField
-                          label="Nivel"
+                          label="Level"
                           value={LEVEL_NAMES[spell.level]}
                           options={LEVEL_NAMES}
                           onChange={(v) => update((d) => {
@@ -165,7 +165,7 @@ export function SpellsSection({ character, update }: SectionProps) {
                           })}
                         />
                         <SelectField
-                          label="Escuela"
+                          label="School"
                           value={spell.school}
                           options={SPELL_SCHOOLS}
                           onChange={(v) => update((d) => {
@@ -173,19 +173,19 @@ export function SpellsSection({ character, update }: SectionProps) {
                             if (s) s.school = v
                           })}
                         />
-                        <TextField label="Tiempo de lanzamiento" value={spell.castingTime} onChange={(v) => update((d) => {
+                        <TextField label="Casting Time" value={spell.castingTime} onChange={(v) => update((d) => {
                           const s = d.spellcasting.spells.find((x) => x.id === spell.id)
                           if (s) s.castingTime = v
                         })} />
-                        <TextField label="Alcance" value={spell.range} onChange={(v) => update((d) => {
+                        <TextField label="Range" value={spell.range} onChange={(v) => update((d) => {
                           const s = d.spellcasting.spells.find((x) => x.id === spell.id)
                           if (s) s.range = v
                         })} />
-                        <TextField label="Componentes" value={spell.components} onChange={(v) => update((d) => {
+                        <TextField label="Components" value={spell.components} onChange={(v) => update((d) => {
                           const s = d.spellcasting.spells.find((x) => x.id === spell.id)
                           if (s) s.components = v
                         })} />
-                        <TextField label="Duración" value={spell.duration} onChange={(v) => update((d) => {
+                        <TextField label="Duration" value={spell.duration} onChange={(v) => update((d) => {
                           const s = d.spellcasting.spells.find((x) => x.id === spell.id)
                           if (s) s.duration = v
                         })} />
@@ -195,7 +195,7 @@ export function SpellsSection({ character, update }: SectionProps) {
                           const s = d.spellcasting.spells.find((x) => x.id === spell.id)
                           if (s) s.concentration = !s.concentration
                         })}>
-                          Concentración
+                          Concentration
                         </Chip>
                         <Chip on={spell.ritual} onToggle={() => update((d) => {
                           const s = d.spellcasting.spells.find((x) => x.id === spell.id)
@@ -205,7 +205,7 @@ export function SpellsSection({ character, update }: SectionProps) {
                         </Chip>
                       </div>
                       <TextAreaField
-                        label="Descripción"
+                        label="Description"
                         rows={2}
                         value={spell.description}
                         onChange={(v) => update((d) => {
@@ -222,7 +222,7 @@ export function SpellsSection({ character, update }: SectionProps) {
         })}
         <div style={{ marginTop: 14 }}>
           <TextAreaField
-            label="Notas mágicas"
+            label="Spellcasting notes"
             value={spellcasting.notes}
             onChange={(v) => update((d) => { d.spellcasting.notes = v })}
           />

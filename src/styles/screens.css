@@ -1,4 +1,4 @@
-/* ── Pantalla de título ─────────────────────────────────────────────────── */
+/* ── Title screen ───────────────────────────────────────────────────────── */
 .title-screen {
   position: relative;
   z-index: 1;
@@ -37,7 +37,7 @@
   color: var(--bone-dim);
 }
 
-/* ── Selección de personaje ─────────────────────────────────────────────── */
+/* ── Character select ───────────────────────────────────────────────────── */
 .select-screen {
   position: relative;
   z-index: 1;
@@ -134,7 +134,7 @@
 .hero-stat .v { font-family: var(--font-label); font-size: 30px; line-height: 1; color: var(--gold); }
 .hero-stat .k { font-family: var(--font-label); font-size: 13px; letter-spacing: 0.16em; color: var(--bone-dim); }
 
-/* Carrusel de cartas */
+/* Card carousel */
 .roster-rail {
   display: flex;
   gap: 14px;
@@ -189,7 +189,7 @@
   font-size: 40px;
 }
 
-/* Barra de ayudas de teclado */
+/* Keyboard hint bar */
 .hint-bar {
   display: flex;
   gap: 18px;
@@ -215,7 +215,7 @@
   margin-right: 6px;
 }
 
-/* Transición de barrido entre pantallas */
+/* Wipe transition between screens */
 .wipe {
   position: fixed;
   inset: -20% -30%;
@@ -244,7 +244,7 @@
   .hero-meta { display: none; }
 }
 
-/* ── Acceso ─────────────────────────────────────────────────────────────── */
+/* ── Sign in ────────────────────────────────────────────────────────────── */
 .login-screen {
   position: relative;
   z-index: 1;

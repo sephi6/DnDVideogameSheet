@@ -16,14 +16,14 @@ import type { SyncStatus } from '@/store/roster'
 import type { Character } from '@/types/character'
 
 const SECTIONS: { id: string; label: string; glyph: string; Component: (p: SectionProps) => JSX.Element }[] = [
-  { id: 'identidad', label: 'Identidad', glyph: '✦', Component: IdentitySection },
-  { id: 'aptitudes', label: 'Aptitudes', glyph: '◈', Component: AbilitiesSection },
-  { id: 'habilidades', label: 'Habilidades', glyph: '✧', Component: SkillsSection },
-  { id: 'combate', label: 'Combate', glyph: '⚔', Component: CombatSection },
-  { id: 'conjuros', label: 'Conjuros', glyph: '✺', Component: SpellsSection },
-  { id: 'equipo', label: 'Equipo', glyph: '◆', Component: InventorySection },
-  { id: 'rasgos', label: 'Rasgos', glyph: '❖', Component: FeaturesSection },
-  { id: 'diario', label: 'Diario', glyph: '✍', Component: JournalSection },
+  { id: 'identity', label: 'Identity', glyph: '✦', Component: IdentitySection },
+  { id: 'abilities', label: 'Abilities', glyph: '◈', Component: AbilitiesSection },
+  { id: 'skills', label: 'Skills', glyph: '✧', Component: SkillsSection },
+  { id: 'combat', label: 'Combat', glyph: '⚔', Component: CombatSection },
+  { id: 'spells', label: 'Spells', glyph: '✺', Component: SpellsSection },
+  { id: 'equipment', label: 'Equipment', glyph: '◆', Component: InventorySection },
+  { id: 'features', label: 'Features', glyph: '❖', Component: FeaturesSection },
+  { id: 'journal', label: 'Journal', glyph: '✍', Component: JournalSection },
 ]
 
 interface Props {
@@ -37,9 +37,9 @@ interface Props {
 
 const SYNC_LABEL: Record<SyncStatus, string> = {
   idle: '',
-  saving: '● Guardando…',
-  saved: '● Guardado',
-  error: '▲ Sin guardar',
+  saving: '● Saving…',
+  saved: '● Saved',
+  error: '▲ Unsaved',
 }
 
 export function SheetScreen({ character, update, onExit, sync, syncError, onRetry }: Props) {
@@ -47,7 +47,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
   const [muted, setMutedState] = useState(isMuted())
   const active = SECTIONS[index]
 
-  // El sonido se dispara fuera del updater: StrictMode los invoca dos veces.
+  // The sound fires outside the updater: StrictMode invokes them twice.
   const goto = useCallback(
     (next: number, cue: 'move' | 'confirm' = 'move') => {
       const target = (next + SECTIONS.length) % SECTIONS.length
@@ -85,7 +85,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${character.identity.name.replace(/\s+/g, '-').toLowerCase() || 'ficha'}.json`
+    a.download = `${character.identity.name.replace(/\s+/g, '-').toLowerCase() || 'character-sheet'}.json`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -99,7 +99,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
         <div className="who">
           <div className="n">{character.identity.name}</div>
           <div className="c">
-            Nv {character.identity.level} {character.identity.className}
+            Lv {character.identity.level} {character.identity.className}
           </div>
         </div>
       </div>
@@ -124,9 +124,9 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
             </span>
           )}
           {sync === 'error' && (
-            <Button variant="small ghost danger" onClick={onRetry}>Reintentar</Button>
+            <Button variant="small ghost danger" onClick={onRetry}>Retry</Button>
           )}
-          <Button variant="small ghost" onClick={exportJson}>Exportar</Button>
+          <Button variant="small ghost" onClick={exportJson}>Export</Button>
           <Button
             variant="small ghost"
             onClick={() => {
@@ -135,13 +135,13 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
               setMutedState(next)
             }}
           >
-            {muted ? 'Sonido: off' : 'Sonido: on'}
+            {muted ? 'Sound: off' : 'Sound: on'}
           </Button>
-          <Button variant="small ghost" cue="back" onClick={onExit}>◂ Salir</Button>
+          <Button variant="small ghost" cue="back" onClick={onExit}>◂ Exit</Button>
         </div>
       </header>
 
-      <nav className="sheet-nav" aria-label="Secciones de la ficha">
+      <nav className="sheet-nav" aria-label="Character sheet sections">
         {SECTIONS.map((section, i) => (
           <motion.button
             key={section.id}
@@ -178,9 +178,9 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
       <div className="sheet-hints">
         <HintBar
           hints={[
-            ['↑ ↓', 'Navegar'],
-            ['1-8', 'Ir a sección'],
-            ['Esc', 'Volver a la party'],
+            ['↑ ↓', 'Navigate'],
+            ['1-8', 'Go to section'],
+            ['Esc', 'Back to the party'],
           ]}
         />
       </div>

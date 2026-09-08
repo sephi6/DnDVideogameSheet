@@ -1,133 +1,134 @@
-# Despliegue en Cloudflare Workers
+# Deploying to Cloudflare Workers
 
-ARCANA se publica como sitio estático en **Cloudflare Workers** (static assets) con
-**integración Git**: cada `push` a `main` construye y publica una versión nueva; cada Pull
-Request genera su propia URL de preview.
+ARCANA is published as a static site on **Cloudflare Workers** (static assets) with
+**Git integration**: every `push` to `main` builds and publishes a new version; every
+Pull Request gets its own preview URL.
 
-> **Nota histórica:** este documento describía Cloudflare *Pages*. El proyecto real
-> (`dndvideogamesheet`) se creó como **Worker**, que es lo que Cloudflare ofrece hoy por
-> defecto para sitios nuevos. Las diferencias que importan están marcadas más abajo.
+> **Historical note:** this document used to describe Cloudflare *Pages*. The real
+> project (`dndvideogamesheet`) was created as a **Worker**, which is what Cloudflare
+> offers by default for new sites today. The differences that matter are marked below.
 
-> **Sobre «que no se pueda bajar el código»:** una SPA es 100 % código de cliente. El
-> navegador siempre puede descargar y leer el bundle; eso no se puede impedir y no es un
-> fallo. Lo que sí se hace: el build va minificado y **sin source maps**, se quitan
-> `console`/`debugger`, y Cloudflare sirve una CSP estricta. La **clave publishable** de
-> Supabase viaja en el bundle **a propósito**; quien protege los datos es **RLS + registro
-> cerrado**, no ocultar el código.
+> **On "making the code impossible to download":** a SPA is 100 % client-side code. The
+> browser can always download and read the bundle; that cannot be prevented and is not a
+> bug. What is done instead: the build is minified and **without source maps**,
+> `console`/`debugger` are stripped, and Cloudflare serves a strict CSP. Supabase's
+> **publishable key** travels in the bundle **on purpose**; the data is protected by
+> **RLS + closed sign-ups**, not by hiding the code.
 
 ---
 
-## 1. Endurecer Supabase (antes del primer deploy)
+## 1. Harden Supabase (before the first deploy)
 
-1. **SQL Editor** → si aún no está: ejecutar `supabase/migrations/0001_init.sql` y, si
-   quieres la party de ejemplo, `supabase/seed.sql`. Comprobar que `characters` tiene
-   **RLS activado**.
-2. **Authentication → Sign In / Providers → Email** → **desactivar «Allow new users to
-   sign up»**.
-   - Con el modelo de permisos actual, cualquier usuario autenticado ve y edita **todas**
-     las fichas. En una URL pública esto solo es seguro con el registro cerrado.
-3. **Dar de alta a la mesa a mano:** Authentication → **Users → Add user**, marcando
-   *Auto Confirm User*. (Alternativa: dejar «Confirm email» ON y que cada jugador use el
-   enlace del correo la primera vez.)
+1. **SQL Editor** → if it is not done yet: run `supabase/migrations/0001_init.sql` and,
+   if you want the example party, `supabase/seed.sql`. Check that `characters` has
+   **RLS enabled**.
+2. **Authentication → Sign In / Providers → Email** → **turn off "Allow new users to
+   sign up"**.
+   - With the current permission model, any authenticated user sees and edits **every**
+     sheet. On a public URL this is only safe with sign-ups closed.
+3. **Add the table's players by hand:** Authentication → **Users → Add user**, ticking
+   *Auto Confirm User*. (Alternative: leave "Confirm email" ON and have each player use
+   the emailed link the first time.)
 4. **Authentication → URL Configuration:**
-   - *Site URL:* `https://<worker>.<subdominio>.workers.dev` — este valor se conoce
-     **después** del primer deploy; vuelve a este paso entonces.
-   - *Redirect URLs:* añade `https://<worker>.<subdominio>.workers.dev/**` y conserva
-     `http://localhost:5173/**` para desarrollo. Necesario para el enlace mágico.
+   - *Site URL:* `https://<worker>.<subdomain>.workers.dev` — this value is only known
+     **after** the first deploy; come back to this step then.
+   - *Redirect URLs:* add `https://<worker>.<subdomain>.workers.dev/**` and keep
+     `http://localhost:5173/**` for development. Needed for the magic link.
 
 ---
 
-## 2. Crear el proyecto en Cloudflare
+## 2. Create the project in Cloudflare
 
 Dashboard → **Workers & Pages → Create → Workers → Import a repository** → repo
 `sephi6/DnDVideogameSheet`.
 
-**Configuración de build:**
+**Build configuration:**
 
-| Campo | Valor |
+| Field | Value |
 | --- | --- |
 | Production branch | `main` |
 | Build command | `npm run build` |
 | Deploy command | `npx wrangler deploy` |
 | Root directory | `/` |
 
-El directorio de salida y el modo SPA **no se configuran en el dashboard**: los fija
-`wrangler.jsonc` en la raíz del repo (`assets.directory: "./dist"` y
+The output directory and SPA mode **are not configured in the dashboard**: they are set
+by `wrangler.jsonc` at the repo root (`assets.directory: "./dist"` and
 `assets.not_found_handling: "single-page-application"`).
 
-**Variables de entorno** (añádelas en **Production** y en **Preview**):
+**Environment variables** (add them in **Production** and in **Preview**):
 
-| Variable | Valor |
+| Variable | Value |
 | --- | --- |
 | `VITE_SUPABASE_URL` | `https://dtybrsbjgatjqllsdhhi.supabase.co` |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | la clave `sb_publishable_…` (Settings → API Keys) |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | the `sb_publishable_…` key (Settings → API Keys) |
 | `NODE_VERSION` | `22` |
 
-> ⚠️ En un Worker hay **dos sitios distintos** donde poner variables. Las `VITE_*` se
-> incrustan en tiempo de **build**, así que van en **Settings → Build → Variables and
-> secrets** (variables de compilación), *no* en las variables de runtime del Worker. Si se
-> ponen en el sitio equivocado el build no las ve, no falla, y la app queda publicada en
-> modo local (sin login, guardando en `localStorage`).
+> ⚠️ In a Worker there are **two different places** to put variables. The `VITE_*` ones
+> are baked in at **build** time, so they go in **Settings → Build → Variables and
+> secrets** (build variables), *not* in the Worker's runtime variables. Put in the wrong
+> place the build never sees them, does not fail, and the app ends up published in local
+> mode (no login, saving to `localStorage`).
 
-> No definas `VITE_SIGNUPS_OPEN`: sin ella, la app no ofrece «Crear cuenta».
+> Do not define `VITE_SIGNUPS_OPEN`: without it, the app does not offer "Create account".
 
-**Save and Deploy.** Cuando termine, copia la URL `*.workers.dev` y completa el paso 1.4.
+**Save and Deploy.** When it finishes, copy the `*.workers.dev` URL and complete step 1.4.
 
-Después de cambiar cualquier `VITE_*` hay que **relanzar el deploy** (Deployments → *Retry
-deployment*, o un push nuevo): el build ya construido no las recoge.
+After changing any `VITE_*` you have to **re-run the deploy** (Deployments → *Retry
+deployment*, or a fresh push): an already built bundle does not pick them up.
 
-### SPA: por qué no hay `_redirects`
+### SPA: why there is no `_redirects`
 
-Cloudflare **Pages** resuelve el enrutado de una SPA con una regla `/*  /index.html  200`
-en `public/_redirects`. **Workers rechaza esa regla**: el deploy falla con
+Cloudflare **Pages** handles SPA routing with a `/*  /index.html  200` rule in
+`public/_redirects`. **Workers rejects that rule**: the deploy fails with
 
 ```
 Invalid _redirects configuration
 Infinite loop detected in this rule.
 ```
 
-(error 10021 de la API). En Workers el equivalente es `assets.not_found_handling:
-"single-page-application"` en `wrangler.jsonc`, que es lo que usa este repo. `public/_headers`
-sí funciona igual en ambos, así que la CSP y las cabeceras de caché siguen aplicándose.
+(API error 10021). On Workers the equivalent is `assets.not_found_handling:
+"single-page-application"` in `wrangler.jsonc`, which is what this repo uses.
+`public/_headers` does work the same on both, so the CSP and cache headers still apply.
 
-Si algún día se vuelve a Pages: borrar `wrangler.jsonc` y recrear `public/_redirects` con
-esa línea.
-
----
-
-## 3. Publicar versiones nuevas
-
-`git push` a `main` → build + deploy automático. Un Pull Request recibe una URL de preview
-independiente; al hacer merge, `main` se redepliega.
-
-Para volver a una versión anterior: el Worker → Deployments → *Rollback*.
+If the project ever moves back to Pages: delete `wrangler.jsonc` and recreate
+`public/_redirects` with that line.
 
 ---
 
-## 4. Verificación
+## 3. Publishing new versions
 
-**Local, antes de subir:**
+`git push` to `main` → automatic build + deploy. A Pull Request gets its own preview
+URL; on merge, `main` is redeployed.
+
+To go back to an earlier version: the Worker → Deployments → *Rollback*.
+
+---
+
+## 4. Verification
+
+**Locally, before pushing:**
 ```bash
 npm run build
 npm run preview        # http://localhost:4173
-ls dist/assets         # NO debe haber ficheros *.map
+ls dist/assets         # there must be NO *.map files
 ```
-- DevTools → Console limpia; Network: la única llamada externa es a `*.supabase.co`.
+- DevTools → clean Console; Network: the only external call is to `*.supabase.co`.
 
-**Tras el deploy:**
+**After the deploy:**
 ```bash
-curl -sI https://<worker>.<subdominio>.workers.dev | grep -iE 'content-security-policy|x-frame-options|strict-transport'
+curl -sI https://<worker>.<subdomain>.workers.dev | grep -iE 'content-security-policy|x-frame-options|strict-transport'
 ```
-- Una ruta inventada (`/loquesea`) debe devolver la app, no un 404 → confirma el modo SPA.
-- Sin sesión → sale la pantalla de acceso y no se ve ninguna ficha (RLS deniega a `anon`).
-- Intentar registrarse → **falla** (registro cerrado en Supabase).
-- Entrar con una cuenta creada a mano → crear/editar una ficha → recargar → sigue ahí.
-- Un commit trivial a `main` + push → Cloudflare construye y publica solo.
+- A made-up route (`/whatever`) must return the app, not a 404 → confirms SPA mode.
+- With no session → the sign-in screen shows and no sheet is visible (RLS denies `anon`).
+- Trying to sign up → **fails** (sign-ups closed in Supabase).
+- Signing in with a hand-made account → create/edit a sheet → reload → still there.
+- A trivial commit to `main` + push → Cloudflare builds and publishes on its own.
 
 ---
 
-## Pendiente (más adelante)
+## Pending (later on)
 
-- **RLS por dueño** (`auth.uid() = owner_id`): políticas ya escritas y comentadas al final
-  de `supabase/migrations/0001_init.sql`. Al activarlas, revisar filas con `owner_id` nulo.
-- Dominio propio → *Custom domains* del Worker.
+- **Per-owner RLS** (`auth.uid() = owner_id`): the policies are already written and
+  commented out at the end of `supabase/migrations/0001_init.sql`. When enabling them,
+  review rows with a null `owner_id`.
+- A custom domain → the Worker's *Custom domains*.

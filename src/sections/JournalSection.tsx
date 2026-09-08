@@ -4,13 +4,13 @@ import type { Journal } from '@/types/character'
 import type { SectionProps } from './types'
 
 const FIELDS: { key: keyof Journal; label: string; rows: number; placeholder: string }[] = [
-  { key: 'personality', label: 'Rasgos de personalidad', rows: 3, placeholder: '¿Cómo se comporta cuando nadie mira?' },
-  { key: 'ideals', label: 'Ideales', rows: 2, placeholder: 'Aquello por lo que merece la pena morir' },
-  { key: 'bonds', label: 'Vínculos', rows: 2, placeholder: 'Personas, lugares, deudas' },
-  { key: 'flaws', label: 'Defectos', rows: 2, placeholder: 'La grieta por donde se rompe' },
-  { key: 'allies', label: 'Aliados y organizaciones', rows: 3, placeholder: 'Contactos, gremios, enemigos jurados' },
-  { key: 'backstory', label: 'Historia', rows: 8, placeholder: 'De dónde viene y por qué está aquí' },
-  { key: 'notes', label: 'Notas de partida', rows: 8, placeholder: 'Pistas, nombres, cosas que no hay que olvidar' },
+  { key: 'personality', label: 'Personality Traits', rows: 3, placeholder: 'How do they act when nobody is watching?' },
+  { key: 'ideals', label: 'Ideals', rows: 2, placeholder: 'What is worth dying for' },
+  { key: 'bonds', label: 'Bonds', rows: 2, placeholder: 'People, places, debts' },
+  { key: 'flaws', label: 'Flaws', rows: 2, placeholder: 'The crack where they break' },
+  { key: 'allies', label: 'Allies and Organizations', rows: 3, placeholder: 'Contacts, guilds, sworn enemies' },
+  { key: 'backstory', label: 'Backstory', rows: 8, placeholder: 'Where they come from and why they are here' },
+  { key: 'notes', label: 'Session notes', rows: 8, placeholder: 'Clues, names, things not to forget' },
 ]
 
 export function JournalSection({ character, update }: SectionProps) {

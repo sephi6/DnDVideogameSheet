@@ -13,7 +13,7 @@ interface RosterState {
   loaded: boolean
   sync: SyncStatus
   syncError: string | null
-  /** Fichas guardadas en este navegador que aún no están en la nube. */
+  /** Sheets stored in this browser that are not in the cloud yet. */
   pendingLocalImport: number
   hydrate: () => Promise<void>
   reset: () => void
@@ -29,14 +29,13 @@ interface RosterState {
 const SAVE_DEBOUNCE_MS = 500
 const SEEDED_KEY = 'arcana:cloud-seeded'
 
-/** Un temporizador por ficha: escribir en una no retrasa el guardado de otra. */
+/** One timer per sheet: typing in one does not delay another one's save. */
 const timers = new Map<string, ReturnType<typeof setTimeout>>()
-/** Fichas cuyo último guardado falló; se reintentan desde la interfaz. */
+/** Sheets whose last save failed; they are retried from the interface. */
 const failed = new Set<string>()
 /**
- * Lectura en curso. React monta los efectos dos veces en StrictMode, y sin
- * esto las dos pasadas veían la base vacía y sembraban la party de ejemplo
- * por duplicado.
+ * Load in flight. React mounts effects twice in StrictMode, and without this
+ * both passes saw an empty database and seeded the example party twice.
  */
 let hydration: Promise<void> | null = null
 
@@ -53,7 +52,7 @@ async function writeNow(id: string, set: Set_, get: Get_) {
     set(failed.size === 0 ? { sync: 'saved', syncError: null } : { sync: 'error' })
   } catch (err) {
     failed.add(id)
-    console.error('[arcana] fallo al guardar la ficha', err)
+    console.error('[arcana] failed to save the sheet', err)
     set({ sync: 'error', syncError: readableError(err) })
   }
 }
@@ -70,12 +69,12 @@ function scheduleSave(id: string, set: Set_, get: Get_) {
   )
 }
 
-/** Las fichas viejas de localStorage llevaban ids tipo `pc_x`; la nube pide uuid. */
+/** Old localStorage sheets carried `pc_x` style ids; the cloud wants uuids. */
 function withValidId(character: Character): Character {
   return isUuid(character.id) ? character : { ...character, id: newId() }
 }
 
-/** Una única lectura de la base, con siembra de la party de ejemplo si está vacía. */
+/** A single read of the database, seeding the example party if it is empty. */
 async function hydrateOnce(set: Set_) {
   set({ loaded: false, sync: 'idle', syncError: null })
   try {
@@ -87,8 +86,8 @@ async function hydrateOnce(set: Set_) {
       return
     }
 
-    // Base vacía. En local sembramos siempre; en la nube, solo la primera vez,
-    // para no resucitar los personajes de ejemplo cada vez que se borran.
+    // Empty database. Locally we always seed; in the cloud only the first time,
+    // so the example characters do not come back every time they are deleted.
     const alreadySeeded = usingCloud && localStorage.getItem(SEEDED_KEY) === '1'
     if (alreadySeeded) {
       set({ characters: [], loaded: true, pendingLocalImport: readLocalRoster().length })
@@ -101,7 +100,7 @@ async function hydrateOnce(set: Set_) {
     if (usingCloud) localStorage.setItem(SEEDED_KEY, '1')
     set({ sync: 'saved' })
   } catch (err) {
-    console.error('[arcana] no se pudieron leer las fichas', err)
+    console.error('[arcana] could not read the sheets', err)
     set({ characters: [], loaded: true, sync: 'error', syncError: readableError(err) })
   }
 }
@@ -124,7 +123,7 @@ export const useRoster = create<RosterState>((set, get) => ({
     return hydration
   },
 
-  /** Al cerrar sesión no puede quedarse la party de la sesión anterior en pantalla. */
+  /** On sign-out the previous session's party must not stay on screen. */
   reset() {
     for (const timer of timers.values()) clearTimeout(timer)
     timers.clear()
@@ -146,7 +145,7 @@ export const useRoster = create<RosterState>((set, get) => ({
     copy.id = newId()
     copy.createdAt = new Date().toISOString()
     copy.updatedAt = copy.createdAt
-    copy.identity.name = `${source.identity.name} (copia)`
+    copy.identity.name = `${source.identity.name} (copy)`
     set({ characters: [...get().characters, copy] })
     scheduleSave(copy.id, set, get)
   },
@@ -164,8 +163,8 @@ export const useRoster = create<RosterState>((set, get) => ({
       failed.delete(id)
       set({ sync: 'saved' })
     } catch (err) {
-      console.error('[arcana] no se pudo borrar la ficha', err)
-      // Se devuelve a la lista: si el borrado no cuajó, la ficha sigue existiendo.
+      console.error('[arcana] could not delete the sheet', err)
+      // Put it back in the list: if the delete did not land, the sheet still exists.
       set({ characters: previous, sync: 'error', syncError: readableError(err) })
     }
   },
@@ -198,10 +197,10 @@ export const useRoster = create<RosterState>((set, get) => ({
     const local = readLocalRoster().map(withValidId)
     if (local.length === 0) return
     const existing = new Set(get().characters.map((c) => c.id))
-    const nuevos = local.filter((c) => !existing.has(c.id))
-    set({ characters: [...get().characters, ...nuevos], sync: 'saving', syncError: null })
+    const incoming = local.filter((c) => !existing.has(c.id))
+    set({ characters: [...get().characters, ...incoming], sync: 'saving', syncError: null })
     try {
-      await storage.saveMany(nuevos)
+      await storage.saveMany(incoming)
       set({ sync: 'saved', pendingLocalImport: 0 })
     } catch (err) {
       set({ sync: 'error', syncError: readableError(err) })

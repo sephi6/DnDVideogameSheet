@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Descarga las fuentes de Google Fonts y las deja auto-alojadas en public/fonts,
-# regenerando src/styles/fonts.css con rutas locales.
+# Downloads the fonts from Google Fonts and self-hosts them in public/fonts,
+# regenerating src/styles/fonts.css with local paths.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
@@ -14,9 +14,9 @@ for url in $(grep -oE "https://fonts.gstatic.com[^)]+" "$tmp" | sort -u); do
   sed -i "s#${url}#/fonts/${name}.woff2#g" "$tmp"
 done
 {
-  echo "/* Fuentes auto-alojadas (SIL Open Font License 1.1): Archivo Black, Barlow Condensed, Bebas Neue."
-  echo "   Regenerar con scripts/fetch-fonts.sh si hace falta actualizarlas. */"
+  echo "/* Self-hosted fonts (SIL Open Font License 1.1): Archivo Black, Barlow Condensed, Bebas Neue."
+  echo "   Regenerate with scripts/fetch-fonts.sh if they need updating. */"
   cat "$tmp"
 } > src/styles/fonts.css
 rm -f "$tmp"
-echo "Fuentes actualizadas."
+echo "Fonts updated."

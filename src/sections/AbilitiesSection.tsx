@@ -40,11 +40,11 @@ export function AbilitiesSection({ character, update }: SectionProps) {
             </div>
             <div className="save-row">
               <ProficiencyPip
-                label={`Salvación de ${ability.label}`}
+                label={`${ability.label} saving throw`}
                 level={character.saves[ability.key]}
                 onCycle={() => update((d) => { d.saves[ability.key] = cycle(d.saves[ability.key]) })}
               />
-              <span className="label" style={{ fontSize: 13 }}>Salvación</span>
+              <span className="label" style={{ fontSize: 13 }}>Save</span>
               <span style={{ fontFamily: 'var(--font-label)', fontSize: 22, color: 'var(--gold)' }}>
                 {formatModifier(saveBonus(character, ability.key))}
               </span>
@@ -54,21 +54,21 @@ export function AbilitiesSection({ character, update }: SectionProps) {
       </div>
 
       <div className="grid g3">
-        <Panel title="Competencia">
+        <Panel title="Proficiency">
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 40, color: 'var(--gold)' }}>
             +{pb(character)}
           </div>
           <p className="muted" style={{ margin: 0 }}>
-            Nivel {character.identity.level} · se suma a lo que domines.
+            Level {character.identity.level} · added to whatever you are proficient in.
           </p>
         </Panel>
 
-        <Panel title="Pasivas">
+        <Panel title="Passive scores">
           <div className="stack" style={{ gap: 6 }}>
             {([
-              ['perception', 'Percepción pasiva'],
-              ['insight', 'Perspicacia pasiva'],
-              ['investigation', 'Investigación pasiva'],
+              ['perception', 'Passive Perception'],
+              ['insight', 'Passive Insight'],
+              ['investigation', 'Passive Investigation'],
             ] as const).map(([key, label]) => (
               <div key={key} className="row" style={{ justifyContent: 'space-between' }}>
                 <span className="label" style={{ fontSize: 14 }}>{label}</span>
@@ -80,7 +80,7 @@ export function AbilitiesSection({ character, update }: SectionProps) {
           </div>
         </Panel>
 
-        <Panel title="Salvaciones">
+        <Panel title="Saving Throws">
           <div className="stack" style={{ gap: 4 }}>
             {ABILITIES.map((a: { key: AbilityKey; label: string }) => (
               <div key={a.key} className="row" style={{ justifyContent: 'space-between' }}>

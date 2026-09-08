@@ -15,10 +15,10 @@ interface Props {
   onCreate: () => void
   onDelete: (character: Character) => void
   onDuplicate: (character: Character) => void
-  /** Null cuando la app corre sin Supabase (modo local, sin login). */
+  /** Null when the app runs without Supabase (local mode, no login). */
   userEmail: string | null
   onSignOut: () => void
-  /** Fichas de este navegador que todavía no están en la nube. */
+  /** Sheets in this browser that are not in the cloud yet. */
   pendingLocalImport: number
   onImportLocal: () => void
   onSeedDemo: () => void
@@ -100,8 +100,8 @@ export function CharacterSelect({
     <div className="select-screen" style={{ ['--accent' as string]: accent }}>
       <header className="screen-head">
         <div>
-          <span className="slab"><span>Selecciona tu personaje</span></span>
-          <h1 style={{ marginTop: 10 }}>La party</h1>
+          <span className="slab"><span>Select your character</span></span>
+          <h1 style={{ marginTop: 10 }}>The party</h1>
         </div>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {userEmail && (
@@ -111,24 +111,24 @@ export function CharacterSelect({
           )}
           {pendingLocalImport > 0 && (
             <Button variant="ghost small" onClick={onImportLocal}>
-              Subir {pendingLocalImport} local(es)
+              Upload {pendingLocalImport} local one(s)
             </Button>
           )}
-          <Button variant="ghost small" onClick={onCreate}>+ Nuevo</Button>
-          {current && <Button variant="ghost small" onClick={() => onDuplicate(current)}>Duplicar</Button>}
+          <Button variant="ghost small" onClick={onCreate}>+ New</Button>
+          {current && <Button variant="ghost small" onClick={() => onDuplicate(current)}>Duplicate</Button>}
           {current && (
             <Button
               variant="ghost small danger"
               cue="back"
               onClick={() => {
-                if (confirm(`¿Borrar a ${current.identity.name}? No se puede deshacer.`)) onDelete(current)
+                if (confirm(`Delete ${current.identity.name}? This cannot be undone.`)) onDelete(current)
               }}
             >
-              Borrar
+              Delete
             </Button>
           )}
           {userEmail && (
-            <Button variant="ghost small" cue="back" onClick={onSignOut}>Cerrar sesión</Button>
+            <Button variant="ghost small" cue="back" onClick={onSignOut}>Sign out</Button>
           )}
         </div>
       </header>
@@ -155,7 +155,7 @@ export function CharacterSelect({
                 <img src={current.identity.portrait ?? 'assets/portraits/default.svg'} alt="" />
                 <span className="hero-name">{current.identity.name}</span>
                 <span className="hero-sub">
-                  Nv {current.identity.level} · {current.identity.className}
+                  Lv {current.identity.level} · {current.identity.className}
                   {current.identity.subclass ? ` · ${current.identity.subclass}` : ''}
                 </span>
               </motion.button>
@@ -163,8 +163,8 @@ export function CharacterSelect({
           </AnimatePresence>
           {!current && (
             <div className="stack" style={{ gap: 12, textAlign: 'center' }}>
-              <div className="empty">La party está vacía. Pulsa «N» para crear un personaje.</div>
-              <Button variant="ghost" onClick={onSeedDemo}>Cargar personajes de ejemplo</Button>
+              <div className="empty">The party is empty. Press "N" to create a character.</div>
+              <Button variant="ghost" onClick={onSeedDemo}>Load example characters</Button>
             </div>
           )}
         </div>
@@ -195,11 +195,11 @@ export function CharacterSelect({
                 ))}
               </div>
               <div className="hero-stats">
-                <div className="hero-stat"><div className="k">PG</div><div className="v">{current.combat.hpCurrent}/{current.combat.hpMax}</div></div>
-                <div className="hero-stat"><div className="k">CA</div><div className="v">{current.combat.armorClass}</div></div>
-                <div className="hero-stat"><div className="k">Vel</div><div className="v">{current.combat.speed}m</div></div>
+                <div className="hero-stat"><div className="k">HP</div><div className="v">{current.combat.hpCurrent}/{current.combat.hpMax}</div></div>
+                <div className="hero-stat"><div className="k">AC</div><div className="v">{current.combat.armorClass}</div></div>
+                <div className="hero-stat"><div className="k">Speed</div><div className="v">{current.combat.speed} ft.</div></div>
               </div>
-              <Button onClick={() => onOpen(current)} cue="confirm">Abrir ficha ▸</Button>
+              <Button onClick={() => onOpen(current)} cue="confirm">Open sheet ▸</Button>
             </motion.div>
           </div>
         )}
@@ -240,9 +240,9 @@ export function CharacterSelect({
         </div>
         <HintBar
           hints={[
-            ['← →', 'Cambiar'],
-            ['Enter', 'Abrir ficha'],
-            ['N', 'Nuevo personaje'],
+            ['← →', 'Switch'],
+            ['Enter', 'Open sheet'],
+            ['N', 'New character'],
           ]}
         />
       </div>

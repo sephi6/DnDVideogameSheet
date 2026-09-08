@@ -1,4 +1,4 @@
-/* ── Armazón de la ficha ────────────────────────────────────────────────── */
+/* ── Sheet frame ────────────────────────────────────────────────────────── */
 .sheet {
   position: relative;
   z-index: 1;
@@ -72,7 +72,7 @@
   white-space: nowrap;
 }
 
-/* Menú lateral */
+/* Side menu */
 .sheet-nav {
   grid-area: nav;
   display: flex;
@@ -123,7 +123,7 @@
 
 .nav-spacer { flex: 1; min-height: 8px; }
 
-/* Cuerpo */
+/* Body */
 .sheet-body {
   grid-area: body;
   min-height: 0;
@@ -134,7 +134,7 @@
 
 .sheet-hints { grid-area: hints; }
 
-/* Rejillas de contenido */
+/* Content grids */
 .grid { display: grid; gap: 12px; }
 .g2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .g3 { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
@@ -145,7 +145,7 @@
 
 .card { padding: 14px; }
 
-/* Bloque de característica */
+/* Ability block */
 .ability-block {
   border: 3px solid var(--ink);
   background: linear-gradient(160deg, #1a1821, #0b0a0e);
@@ -183,7 +183,7 @@
   padding-top: 6px;
 }
 
-/* Habilidades */
+/* Skills */
 .skill-row {
   display: grid;
   grid-template-columns: auto 1fr auto auto;
@@ -219,7 +219,7 @@
 .pip[data-level='1'] { background: var(--accent); border-color: var(--ink); }
 .pip[data-level='2'] { background: var(--gold); border-color: var(--ink); box-shadow: 0 0 0 2px var(--accent); }
 
-/* Contadores grandes (PG, CA...) */
+/* Big counters (HP, AC…) */
 .big-stat {
   border: 3px solid var(--ink);
   background: linear-gradient(160deg, #1a1821, #0b0a0e);
@@ -263,7 +263,7 @@
 .box[data-on='true'] { background: var(--accent); border-color: var(--ink); }
 .box.gold[data-on='true'] { background: var(--gold); }
 
-/* Listas editables (ataques, objetos, conjuros, rasgos) */
+/* Editable lists (attacks, items, spells, features) */
 .entry {
   border: 2px solid #2e2b36;
   border-left: 5px solid var(--accent);

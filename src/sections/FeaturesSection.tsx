@@ -14,9 +14,9 @@ import { uid } from '@/data/defaults'
 import type { SectionProps } from './types'
 
 const RECHARGE_LABELS = {
-  none: 'Sin recarga',
-  short: 'Descanso corto',
-  long: 'Descanso largo',
+  none: 'No recharge',
+  short: 'Short Rest',
+  long: 'Long Rest',
 } as const
 
 export function FeaturesSection({ character, update }: SectionProps) {
@@ -25,14 +25,14 @@ export function FeaturesSection({ character, update }: SectionProps) {
   return (
     <div className="stack">
       <Panel
-        title="Rasgos y dotes"
+        title="Features and Feats"
         actions={
           <Button
             variant="small"
             onClick={() => update((d) => {
               d.features.entries.push({
                 id: uid('feat'),
-                name: 'Rasgo nuevo',
+                name: 'New feature',
                 source: character.identity.className,
                 description: '',
                 usesMax: 0,
@@ -41,7 +41,7 @@ export function FeaturesSection({ character, update }: SectionProps) {
               })
             })}
           >
-            + Añadir
+            + Add
           </Button>
         }
       >
@@ -73,16 +73,16 @@ export function FeaturesSection({ character, update }: SectionProps) {
                   </Button>
                 </div>
                 <div className="entry-grid">
-                  <TextField label="Origen" value={entry.source} onChange={(v) => update((d) => {
+                  <TextField label="Source" value={entry.source} onChange={(v) => update((d) => {
                     const f = d.features.entries.find((x) => x.id === entry.id)
                     if (f) f.source = v
                   })} />
-                  <NumberField label="Usos máximos" value={entry.usesMax} min={0} max={99} onChange={(v) => update((d) => {
+                  <NumberField label="Maximum uses" value={entry.usesMax} min={0} max={99} onChange={(v) => update((d) => {
                     const f = d.features.entries.find((x) => x.id === entry.id)
                     if (f) { f.usesMax = v; f.usesSpent = Math.min(f.usesSpent, v) }
                   })} />
                   <SelectField
-                    label="Recarga"
+                    label="Recharge"
                     value={RECHARGE_LABELS[entry.recharge]}
                     options={Object.values(RECHARGE_LABELS)}
                     onChange={(v) => update((d) => {
@@ -95,12 +95,12 @@ export function FeaturesSection({ character, update }: SectionProps) {
                 </div>
                 {entry.usesMax > 0 && (
                   <div>
-                    <span className="label">Usos gastados</span>
+                    <span className="label">Uses spent</span>
                     <div className="tracker" style={{ marginTop: 6 }}>
                       {Array.from({ length: entry.usesMax }).map((_, i) => (
                         <CheckBox
                           key={i}
-                          label={`Uso ${i + 1} de ${entry.name}`}
+                          label={`Use ${i + 1} of ${entry.name}`}
                           on={i < entry.usesSpent}
                           onToggle={() => update((d) => {
                             const f = d.features.entries.find((x) => x.id === entry.id)
@@ -112,7 +112,7 @@ export function FeaturesSection({ character, update }: SectionProps) {
                   </div>
                 )}
                 <TextAreaField
-                  label="Descripción"
+                  label="Description"
                   rows={2}
                   value={entry.description}
                   onChange={(v) => update((d) => {
@@ -123,12 +123,12 @@ export function FeaturesSection({ character, update }: SectionProps) {
               </motion.div>
             ))}
           </AnimatePresence>
-          {features.entries.length === 0 && <div className="empty">Sin rasgos registrados</div>}
+          {features.entries.length === 0 && <div className="empty">No features recorded</div>}
         </div>
       </Panel>
 
       <div className="grid g2">
-        <Panel title="Idiomas">
+        <Panel title="Languages">
           <div className="row" style={{ flexWrap: 'wrap', gap: 6 }}>
             {LANGUAGES.map((lang) => (
               <Chip
@@ -146,11 +146,11 @@ export function FeaturesSection({ character, update }: SectionProps) {
           </div>
         </Panel>
 
-        <Panel title="Competencias">
+        <Panel title="Proficiencies">
           <div className="stack" style={{ gap: 10 }}>
-            <TextAreaField label="Armaduras" rows={2} value={features.armor} onChange={(v) => update((d) => { d.features.armor = v })} />
-            <TextAreaField label="Armas" rows={2} value={features.weapons} onChange={(v) => update((d) => { d.features.weapons = v })} />
-            <TextAreaField label="Herramientas" rows={2} value={features.tools} onChange={(v) => update((d) => { d.features.tools = v })} />
+            <TextAreaField label="Armor" rows={2} value={features.armor} onChange={(v) => update((d) => { d.features.armor = v })} />
+            <TextAreaField label="Weapons" rows={2} value={features.weapons} onChange={(v) => update((d) => { d.features.weapons = v })} />
+            <TextAreaField label="Tools" rows={2} value={features.tools} onChange={(v) => update((d) => { d.features.tools = v })} />
           </div>
         </Panel>
       </div>
