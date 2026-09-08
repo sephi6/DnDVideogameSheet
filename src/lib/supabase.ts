@@ -1,7 +1,11 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 const url = import.meta.env.VITE_SUPABASE_URL?.trim()
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim()
+// La nomenclatura nueva de Supabase es «publishable key» (sb_publishable_…).
+// Se acepta también el nombre antiguo VITE_SUPABASE_ANON_KEY por compatibilidad.
+const key = (
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? import.meta.env.VITE_SUPABASE_ANON_KEY
+)?.trim()
 
 /**
  * Si no hay credenciales la app sigue funcionando contra localStorage, sin
@@ -21,7 +25,7 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
 
 /** Igual que `supabase` pero para los sitios donde ya sabemos que está configurado. */
 export function requireSupabase(): SupabaseClient {
-  if (!supabase) throw new Error('Supabase no está configurado: falta .env.local')
+  if (!supabase) throw new Error('Supabase no está configurado: falta .env.local con la URL y la publishable key')
   return supabase
 }
 

@@ -15,13 +15,15 @@ Crea `.env.local` en la raíz (no se sube al repositorio):
 
 ```bash
 VITE_SUPABASE_URL=https://dtybrsbjgatjqllsdhhi.supabase.co
-VITE_SUPABASE_ANON_KEY=sb_publishable_xxxxxxxxxxxxxxxxxxxxxx
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxxxxxxxxxxxxxxxx
 ```
 
 - **URL**: Dashboard → Settings → Data API → *Project URL*.
 - **Clave**: Dashboard → Settings → API Keys → la **publishable** (`sb_publishable_…`).
   Es una clave pensada para vivir en el navegador; quien protege los datos es RLS.
   La `secret` / `service_role` **no** debe aparecer nunca en el frontend.
+- El nombre antiguo `VITE_SUPABASE_ANON_KEY` sigue funcionando por compatibilidad,
+  pero `VITE_SUPABASE_PUBLISHABLE_KEY` tiene prioridad si están los dos.
 
 Reinicia `npm run dev` después de crear el archivo: Vite lee las variables al arrancar.
 
