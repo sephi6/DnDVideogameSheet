@@ -1,4 +1,0 @@
-# SPA: cualquier ruta que no sea un fichero estático sirve index.html.
-# Cloudflare Pages sirve primero los assets reales, así que /assets/* no se ve afectado.
-# Necesario para que el retorno del enlace mágico de Supabase (detectSessionInUrl) resuelva.
-/*    /index.html   200
