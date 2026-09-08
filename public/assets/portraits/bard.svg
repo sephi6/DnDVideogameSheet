@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 560" width="400" height="560" role="img" aria-label="Retrato de bardo">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 560" width="400" height="560" role="img" aria-label="bard portrait">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0.6" y2="1">
       <stop offset="0" stop-color="#141317"/>
@@ -23,6 +23,6 @@
     </g>
     <rect x="8" y="8" width="384" height="544" fill="none" stroke="#d8478f" stroke-width="3" opacity="0.55"/>
     <text x="200" y="512" text-anchor="middle" font-family="Impact, 'Arial Black', sans-serif" font-size="42"
-          letter-spacing="6" fill="#d8478f" opacity="0.9">BARDO</text>
+          letter-spacing="6" fill="#d8478f" opacity="0.9">BARD</text>
   </g>
 </svg>

@@ -5,11 +5,11 @@ import { carriedWeight, carryCapacity } from '@/lib/derive'
 import type { SectionProps } from './types'
 
 const COINS = [
-  { key: 'pp', label: 'Platino' },
-  { key: 'gp', label: 'Oro' },
+  { key: 'pp', label: 'Platinum' },
+  { key: 'gp', label: 'Gold' },
   { key: 'ep', label: 'Electrum' },
-  { key: 'sp', label: 'Plata' },
-  { key: 'cp', label: 'Cobre' },
+  { key: 'sp', label: 'Silver' },
+  { key: 'cp', label: 'Copper' },
 ] as const
 
 export function InventorySection({ character, update }: SectionProps) {
@@ -21,7 +21,7 @@ export function InventorySection({ character, update }: SectionProps) {
   return (
     <div className="stack">
       <div className="grid g2">
-        <Panel title="Monedas">
+        <Panel title="Coins">
           <div className="coin-grid">
             {COINS.map((coin) => (
               <div key={coin.key} className={`coin ${coin.key}`}>
@@ -38,11 +38,11 @@ export function InventorySection({ character, update }: SectionProps) {
           </div>
         </Panel>
 
-        <Panel title="Carga">
+        <Panel title="Carrying Capacity">
           <div className="row" style={{ justifyContent: 'space-between' }}>
-            <span className="label">Peso transportado</span>
+            <span className="label">Weight carried</span>
             <span style={{ fontFamily: 'var(--font-label)', fontSize: 26, color: weight > capacity ? 'var(--blood-hot)' : 'var(--gold)' }}>
-              {weight.toFixed(1)} / {capacity.toFixed(0)} kg
+              {weight.toFixed(1)} / {capacity.toFixed(0)} lb.
             </span>
           </div>
           <div className="hp-bar">
@@ -53,7 +53,7 @@ export function InventorySection({ character, update }: SectionProps) {
             />
           </div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 12 }}>
-            <span className="label">Objetos sintonizados</span>
+            <span className="label">Attuned items</span>
             <span style={{ fontFamily: 'var(--font-label)', fontSize: 26, color: attuned > 3 ? 'var(--blood-hot)' : 'var(--gold)' }}>
               {attuned} / 3
             </span>
@@ -62,14 +62,14 @@ export function InventorySection({ character, update }: SectionProps) {
       </div>
 
       <Panel
-        title="Equipo"
+        title="Equipment"
         actions={
           <Button
             variant="small"
             onClick={() => update((d) => {
               d.inventory.items.push({
                 id: uid('item'),
-                name: 'Objeto nuevo',
+                name: 'New item',
                 quantity: 1,
                 weight: 0,
                 attuned: false,
@@ -78,7 +78,7 @@ export function InventorySection({ character, update }: SectionProps) {
               })
             })}
           >
-            + Añadir
+            + Add
           </Button>
         }
       >
@@ -129,13 +129,13 @@ export function InventorySection({ character, update }: SectionProps) {
                     const it = d.inventory.items.find((x) => x.id === item.id)
                     if (it) it.equipped = !it.equipped
                   })}>
-                    Equipado
+                    Equipped
                   </Chip>
                   <Chip on={item.attuned} onToggle={() => update((d) => {
                     const it = d.inventory.items.find((x) => x.id === item.id)
                     if (it) it.attuned = !it.attuned
                   })}>
-                    Sintonizado
+                    Attuned
                   </Chip>
                   <Button variant="small ghost danger" cue="back" onClick={() => update((d) => {
                     d.inventory.items = d.inventory.items.filter((x) => x.id !== item.id)
@@ -145,7 +145,7 @@ export function InventorySection({ character, update }: SectionProps) {
                 </div>
                 <input
                   className="input"
-                  placeholder="Notas del objeto"
+                  placeholder="Item notes"
                   value={item.notes}
                   onChange={(e) => update((d) => {
                     const it = d.inventory.items.find((x) => x.id === item.id)
@@ -155,11 +155,11 @@ export function InventorySection({ character, update }: SectionProps) {
               </motion.div>
             ))}
           </AnimatePresence>
-          {inventory.items.length === 0 && <div className="empty">Mochila vacía</div>}
+          {inventory.items.length === 0 && <div className="empty">Empty pack</div>}
         </div>
         <div style={{ marginTop: 14 }}>
           <TextAreaField
-            label="Notas de equipo"
+            label="Equipment notes"
             value={inventory.notes}
             onChange={(v) => update((d) => { d.inventory.notes = v })}
           />

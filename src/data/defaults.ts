@@ -9,37 +9,38 @@ import type {
   SkillKey,
   SpellEntry,
 } from '@/types/character'
+import { SCHEMA_VERSION } from '@/lib/migrate'
 import { CLASSES, SKILLS, findClass, slotsForClass } from './rules'
 
-/** Identificadores de las entradas anidadas dentro del jsonb (ataques, objetos…). */
+/** Ids for the entries nested inside the jsonb (attacks, items…). */
 export function uid(prefix = 'id'): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36).slice(-4)}`
 }
 
 /**
- * Identificador de una ficha. Es un UUID de verdad porque acaba siendo la
- * clave primaria de la tabla `characters` en Supabase.
+ * Id of a character sheet. A real UUID, because it ends up being the primary
+ * key of the `characters` table in Supabase.
  */
 export function newId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID()
   }
-  // Reserva para contextos no seguros, donde randomUUID no existe.
+  // Fallback for insecure contexts, where randomUUID does not exist.
   const bytes = new Uint8Array(16)
   if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
     crypto.getRandomValues(bytes)
   } else {
     for (let i = 0; i < 16; i++) bytes[i] = Math.floor(Math.random() * 256)
   }
-  bytes[6] = (bytes[6] & 0x0f) | 0x40 // versión 4
-  bytes[8] = (bytes[8] & 0x3f) | 0x80 // variante RFC 4122
+  bytes[6] = (bytes[6] & 0x0f) | 0x40 // version 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80 // RFC 4122 variant
   const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-/** ¿Este id sirve como clave primaria uuid? Las fichas viejas usaban `pc_xxx`. */
+/** Does this id work as a uuid primary key? Old sheets used `pc_xxx`. */
 export function isUuid(id: string): boolean {
   return UUID_RE.test(id)
 }
@@ -49,10 +50,9 @@ function emptySkills(): Record<SkillKey, Proficiency> {
 }
 
 const PORTRAIT_SLUGS: Record<string, string> = {
-  'Bárbaro': 'barbaro', 'Bardo': 'bardo', 'Brujo': 'brujo', 'Clérigo': 'clerigo',
-  'Druida': 'druida', 'Explorador': 'explorador', 'Guerrero': 'guerrero',
-  'Hechicero': 'hechicero', 'Mago': 'mago', 'Monje': 'monje',
-  'Paladín': 'paladin', 'Pícaro': 'picaro',
+  Barbarian: 'barbarian', Bard: 'bard', Cleric: 'cleric', Druid: 'druid',
+  Fighter: 'fighter', Monk: 'monk', Paladin: 'paladin', Ranger: 'ranger',
+  Rogue: 'rogue', Sorcerer: 'sorcerer', Warlock: 'warlock', Wizard: 'wizard',
 }
 
 export function portraitForClass(className: string): string {
@@ -62,19 +62,20 @@ export function portraitForClass(className: string): string {
 
 export function createCharacter(partial?: Partial<Character>): Character {
   const now = new Date().toISOString()
-  const cls = CLASSES[6] // Guerrero por defecto
+  const cls = findClass('Fighter') ?? CLASSES[0] // Fighter by default
   const base: Character = {
     id: newId(),
+    schemaVersion: SCHEMA_VERSION,
     createdAt: now,
     updatedAt: now,
     identity: {
-      name: 'Sin nombre',
+      name: 'Unnamed',
       player: '',
       className: cls.name,
       subclass: '',
       level: 1,
-      species: 'Humano',
-      background: 'Soldado',
+      species: 'Human',
+      background: 'Soldier',
       alignment: 'Neutral',
       xp: 0,
       portrait: portraitForClass(cls.name),
@@ -86,7 +87,7 @@ export function createCharacter(partial?: Partial<Character>): Character {
     skills: emptySkills(),
     combat: {
       armorClass: 10,
-      speed: 9,
+      speed: 30,
       initiativeBonus: 0,
       hpMax: 10,
       hpCurrent: 10,
@@ -112,21 +113,21 @@ export function createCharacter(partial?: Partial<Character>): Character {
       items: [],
       notes: '',
     },
-    features: { entries: [], languages: ['Común'], armor: '', weapons: '', tools: '' },
+    features: { entries: [], languages: ['Common'], armor: '', weapons: '', tools: '' },
     journal: { personality: '', ideals: '', bonds: '', flaws: '', backstory: '', allies: '', notes: '' },
   }
   return { ...base, ...partial }
 }
 
 /**
- * Fecha fija para la party de ejemplo: así `scripts/generate-seed.mjs` produce
- * siempre el mismo `supabase/seed.sql` y no ensucia el diff en cada ejecución.
+ * Fixed date for the example party, so `scripts/generate-seed.mjs` always
+ * produces the same `supabase/seed.sql` and does not dirty the diff on every run.
  */
 const DEMO_TIMESTAMP = '2026-01-01T00:00:00.000Z'
 
-// ── Fábricas de entradas anidadas, con valores por defecto razonables ────────
+// ── Factories for the nested entries, with sensible defaults ─────────────────
 
-/** Arma. Los ids se asignan en `build` a partir del slug del personaje. */
+/** A weapon. Ids are assigned in `build` from the character slug. */
 function wp(
   name: string,
   ability: AbilityKey,
@@ -140,7 +141,7 @@ function wp(
     proficient: true,
     damage,
     damageType,
-    range: 'Cuerpo a cuerpo',
+    range: 'Melee',
     mastery: '—',
     notes: '',
     ...extra,
@@ -157,10 +158,10 @@ function sp(
     name,
     level,
     school,
-    castingTime: '1 acción',
-    range: 'Toque',
+    castingTime: '1 action',
+    range: 'Touch',
     components: 'V, S',
-    duration: 'Instantáneo',
+    duration: 'Instantaneous',
     concentration: false,
     ritual: false,
     prepared: true,
@@ -183,7 +184,7 @@ function ft(
 }
 
 interface DemoSpec {
-  /** Prefijo determinista para los ids de ataques, conjuros, objetos y rasgos. */
+  /** Deterministic prefix for the ids of attacks, spells, items and features. */
   slug: string
   species: string
   background: string
@@ -200,7 +201,7 @@ interface DemoSpec {
   exhaustion?: number
   attacks?: Omit<Attack, 'id'>[]
   spells?: Omit<SpellEntry, 'id'>[]
-  /** Espacios gastados por nivel de conjuro, p. ej. `{ 1: 2 }`. */
+  /** Slots spent per spell level, e.g. `{ 1: 2 }`. */
   slotsUsed?: Record<number, number>
   spellNotes?: string
   coins?: Partial<Character['inventory']['coins']>
@@ -288,17 +289,17 @@ function build(name: string, className: string, level: number, spec: DemoSpec): 
 }
 
 /**
- * Party de ejemplo. Todas las secciones vienen rellenas (ataques, conjuros,
- * equipo, rasgos y diario) para poder probar la ficha entera con datos reales.
+ * Example party. Every section comes filled in (attacks, spells, gear, features
+ * and journal) so the whole sheet can be tried out with real data.
  */
 export function demoRoster(): Character[] {
   return [
-    build('Kaelith Vroun', 'Mago', 3, {
+    build('Kaelith Vroun', 'Wizard', 3, {
       slug: 'kaelith',
-      species: 'Elfo',
-      background: 'Sabio',
-      subclass: 'Evocación',
-      tagline: 'La biblioteca arde y él sigue leyendo',
+      species: 'Elf',
+      background: 'Sage',
+      subclass: 'Evoker',
+      tagline: 'The library burns and he keeps reading',
       abilities: { str: 8, dex: 14, con: 13, int: 17, wis: 12, cha: 10 },
       skills: ['arcana', 'history', 'investigation'],
       ac: 12,
@@ -306,161 +307,161 @@ export function demoRoster(): Character[] {
       hpCurrent: 14,
       slotsUsed: { 1: 2 },
       attacks: [
-        wp('Daga', 'dex', '1d4', 'Perforante', { range: 'Cuerpo a cuerpo o 6/18 m', mastery: 'Sajar' }),
-        wp('Bastón arcano', 'str', '1d6', 'Contundente', { notes: 'A dos manos: 1d8.' }),
-        wp('Rayo de escarcha', 'int', '1d8', 'Frío', {
-          range: '18 m',
+        wp('Dagger', 'dex', '1d4', 'Piercing', { range: 'Melee or 20/60 ft.', mastery: 'Nick' }),
+        wp('Quarterstaff', 'str', '1d6', 'Bludgeoning', { mastery: 'Topple', notes: 'Two-handed: 1d8.' }),
+        wp('Ray of Frost', 'int', '1d8', 'Cold', {
+          range: '60 feet',
           mastery: '—',
           proficient: true,
-          notes: 'Truco. La velocidad del objetivo baja 3 m.',
+          notes: "Cantrip. The target's Speed drops by 10 feet.",
         }),
       ],
       spells: [
-        sp('Rayo de escarcha', 0, 'Evocación', { range: '18 m', description: 'Ataque de conjuro; 1d8 de frío y −3 m de velocidad.' }),
-        sp('Prestidigitación', 0, 'Transmutación', { range: '3 m', duration: 'Hasta 1 hora', description: 'Truquitos sensoriales sin importancia mecánica.' }),
-        sp('Luz', 0, 'Evocación', { components: 'V, M', duration: '1 hora', description: 'Un objeto irradia luz brillante en 6 m.' }),
-        sp('Proyectil mágico', 1, 'Evocación', { range: '36 m', description: 'Tres dardos de 1d4+1 de fuerza que impactan sin fallar.' }),
-        sp('Escudo', 1, 'Abjuración', { castingTime: '1 reacción', range: 'Personal', duration: '1 asalto', description: '+5 a la CA hasta tu siguiente turno; anula Proyectil mágico.' }),
-        sp('Detectar magia', 1, 'Adivinación', { components: 'V, S', concentration: true, ritual: true, duration: 'Conc., 10 min', prepared: false, description: 'Percibes auras mágicas a 9 m.' }),
-        sp('Rayo abrasador', 2, 'Evocación', { range: '36 m', description: 'Tres rayos de 2d6 de fuego; añade el mod. de lanzamiento con Evocación potente.' }),
-        sp('Levitar', 2, 'Transmutación', { components: 'V, S, M', concentration: true, duration: 'Conc., 10 min', prepared: false, description: 'Un objeto o criatura flota hasta 6 m.' }),
+        sp('Ray of Frost', 0, 'Evocation', { range: '60 feet', description: 'Spell attack; 1d8 Cold damage and −10 feet of Speed.' }),
+        sp('Prestidigitation', 0, 'Transmutation', { range: '10 feet', duration: 'Up to 1 hour', description: 'Harmless sensory tricks with no mechanical weight.' }),
+        sp('Light', 0, 'Evocation', { components: 'V, M', duration: '1 hour', description: 'An object sheds Bright Light in a 20-foot radius.' }),
+        sp('Magic Missile', 1, 'Evocation', { range: '120 feet', description: 'Three darts of 1d4+1 Force damage that always hit.' }),
+        sp('Shield', 1, 'Abjuration', { castingTime: '1 reaction', range: 'Self', duration: '1 round', description: '+5 AC until your next turn; negates Magic Missile.' }),
+        sp('Detect Magic', 1, 'Divination', { range: 'Self', concentration: true, ritual: true, duration: 'Conc., 10 min', prepared: false, description: 'You sense magical auras within 30 feet.' }),
+        sp('Scorching Ray', 2, 'Evocation', { range: '120 feet', description: 'Three rays of 2d6 Fire damage; add your spellcasting modifier with Empowered Evocation.' }),
+        sp('Levitate', 2, 'Transmutation', { range: '60 feet', components: 'V, S, M', concentration: true, duration: 'Conc., 10 min', prepared: false, description: 'An object or creature floats up to 20 feet upward.' }),
       ],
-      spellNotes: 'Grimorio con 12 conjuros más sin preparar. Foco de lanzamiento: cristal tallado.',
+      spellNotes: 'Spellbook holds 12 more spells left unprepared. Spellcasting focus: a cut crystal.',
       coins: { gp: 42, sp: 15 },
       items: [
-        it('Grimorio', { equipped: true, weight: 1.5, notes: 'Cubierta de cuero azul con cierre de latón.' }),
-        it('Cristal de lanzamiento', { equipped: true, notes: 'Foco arcano.' }),
-        it('Bolsa de componentes', { weight: 1 }),
-        it('Túnica de viajero', { equipped: true }),
-        it('Poción de curación', { quantity: 2, notes: '2d4+2 al beberla (acción adicional).' }),
-        it('Raciones', { quantity: 5, weight: 1 }),
-        it('Antorcha', { quantity: 3 }),
+        it('Spellbook', { equipped: true, weight: 3, notes: 'Blue leather cover with a brass clasp.' }),
+        it('Crystal', { equipped: true, weight: 1, notes: 'Arcane focus.' }),
+        it('Component Pouch', { weight: 2 }),
+        it('Robe', { equipped: true, weight: 4 }),
+        it('Potion of Healing', { quantity: 2, weight: 0.5, notes: '2d4+2 when drunk (Bonus Action).' }),
+        it('Rations', { quantity: 5, weight: 2 }),
+        it('Torch', { quantity: 3, weight: 1 }),
       ],
       features: [
-        ft('Recuperación arcana', 'Mago', 'Una vez al día tras un descanso corto recuperas espacios de conjuro con niveles sumados hasta 2.', { usesMax: 1, recharge: 'long' }),
-        ft('Evocación potente', 'Evocación', 'Añades tu modificador de Inteligencia al daño de un objetivo de tus trucos de evocación.', {}),
-        ft('Esculpir conjuros', 'Evocación', 'Al evocar de área, eliges hasta 1 + nivel del conjuro criaturas que superan la salvación y no reciben daño.', {}),
-        ft('Linaje feérico', 'Elfo', 'Ventaja contra ser encantado; la magia no te duerme.', {}),
+        ft('Arcane Recovery', 'Wizard', 'Once per day after a Short Rest you recover spell slots with a combined level of up to 2.', { usesMax: 1, recharge: 'long' }),
+        ft('Empowered Evocation', 'Evoker', 'You add your Intelligence modifier to the damage of one target of your Evocation cantrips.', {}),
+        ft('Sculpt Spells', 'Evoker', 'When you cast an area Evocation spell, you choose up to 1 + the spell level creatures that automatically succeed on the save and take no damage.', {}),
+        ft('Fey Ancestry', 'Elf', "Advantage on saves against the Charmed condition; magic can't put you to sleep.", {}),
       ],
-      languages: ['Común', 'Élfico', 'Dracónico', 'Infracomún'],
-      armorProf: 'Ninguna',
-      weaponProf: 'Armas simples',
-      toolProf: 'Suministros de caligrafía',
+      languages: ['Common', 'Elvish', 'Draconic', 'Deep Speech'],
+      armorProf: 'None',
+      weaponProf: 'Simple weapons',
+      toolProf: "Calligrapher's Supplies",
       journal: {
-        personality: 'Habla despacio y cita libros que nadie más ha leído.',
-        ideals: 'El conocimiento que no se comparte se pudre.',
-        bonds: 'La biblioteca de Vroun ardió por su culpa. Está reconstruyéndola de memoria.',
-        flaws: 'Antepone un dato curioso a su propia seguridad.',
-        backstory: 'Tercer hijo de una casa menor, cambió el título por un puesto de archivero. Encontró en los sótanos un tratado de evocación que no debería existir.',
-        allies: 'Maestra Oriel, del Colegio de Cristal. El librero Fenn, que le debe favores.',
-        notes: 'Persigue las páginas dispersas del tratado de Aldaric.',
+        personality: 'Speaks slowly and quotes books nobody else has read.',
+        ideals: 'Knowledge that is not shared rots.',
+        bonds: 'The library of Vroun burned because of him. He is rebuilding it from memory.',
+        flaws: 'Puts an interesting fact ahead of his own safety.',
+        backstory: 'Third son of a minor house, he traded the title for an archivist post. In the cellars he found a treatise on evocation that should not exist.',
+        allies: 'Master Oriel, of the Crystal College. Fenn the bookseller, who owes him favours.',
+        notes: 'Chasing the scattered pages of the Aldaric treatise.',
       },
     }),
-    build('Brann Hierroviejo', 'Bárbaro', 3, {
+    build('Brann Oldiron', 'Barbarian', 3, {
       slug: 'brann',
-      species: 'Goliat',
-      background: 'Soldado',
-      subclass: 'Senda del Berserker',
-      tagline: 'Habla poco. Rompe mucho.',
+      species: 'Goliath',
+      background: 'Soldier',
+      subclass: 'Path of the Berserker',
+      tagline: 'Talks little. Breaks plenty.',
       abilities: { str: 17, dex: 13, con: 16, int: 8, wis: 12, cha: 10 },
       skills: ['athletics', 'intimidation', 'survival', 'perception'],
       ac: 15,
       hp: 34,
       hpCurrent: 26,
-      speed: 12,
+      speed: 40,
       heroicInspiration: true,
       attacks: [
-        wp('Gran hacha', 'str', '1d12', 'Cortante', { mastery: 'Hendidura', notes: 'A dos manos. +2 al daño por Furia.' }),
-        wp('Hacha de mano', 'str', '1d6', 'Cortante', { range: 'Cuerpo a cuerpo o 6/18 m', mastery: 'Sajar' }),
-        wp('Puño', 'str', '1', 'Contundente', { mastery: '—' }),
+        wp('Greataxe', 'str', '1d12', 'Slashing', { mastery: 'Cleave', notes: 'Two-handed. +2 damage while Raging.' }),
+        wp('Handaxe', 'str', '1d6', 'Slashing', { range: 'Melee or 20/60 ft.', mastery: 'Vex' }),
+        wp('Unarmed Strike', 'str', '1', 'Bludgeoning', { mastery: '—' }),
       ],
       coins: { gp: 12, sp: 40 },
       items: [
-        it('Gran hacha', { equipped: true, weight: 3 }),
-        it('Hacha de mano', { quantity: 2, weight: 1 }),
-        it('Armadura de pieles', { equipped: true, weight: 6 }),
-        it('Petate de aventurero', { weight: 5 }),
-        it('Cuerda de cáñamo (15 m)', { weight: 3 }),
-        it('Raciones', { quantity: 10, weight: 1 }),
-        it('Medalla del regimiento', { notes: 'Del Segundo de Piedracorva. Todos muertos menos él.' }),
+        it('Greataxe', { equipped: true, weight: 7 }),
+        it('Handaxe', { quantity: 2, weight: 2 }),
+        it('Hide Armor', { equipped: true, weight: 12 }),
+        it("Explorer's Pack", { weight: 55 }),
+        it('Hempen Rope (50 feet)', { weight: 5 }),
+        it('Rations', { quantity: 10, weight: 2 }),
+        it('Regimental medal', { notes: 'From the Second of Ravenstone. All dead but him.' }),
       ],
       features: [
-        ft('Furia', 'Bárbaro', 'Acción adicional. Ventaja en pruebas y salvaciones de Fuerza, +2 al daño cuerpo a cuerpo y resistencia a contundente, cortante y perforante. Dura 1 minuto.', { usesMax: 3, usesSpent: 1, recharge: 'long' }),
-        ft('Ataque temerario', 'Bárbaro', 'Al atacar con Fuerza, tiras con ventaja; a cambio los ataques contra ti tienen ventaja hasta tu siguiente turno.', {}),
-        ft('Sentir el peligro', 'Bárbaro', 'Ventaja en salvaciones de Destreza contra efectos que puedas ver (trampas, conjuros).', {}),
-        ft('Frenesí', 'Senda del Berserker', 'Mientras estás en Furia, puedes hacer un ataque cuerpo a cuerpo extra como acción adicional en cada turno.', {}),
-        ft('Constitución de piedra', 'Goliat', 'Como acción adicional ganas 1d12 + nivel de PG temporales. Descanso largo.', { usesMax: 1, recharge: 'long' }),
+        ft('Rage', 'Barbarian', 'Bonus Action. Advantage on Strength checks and saves, +2 melee damage, and Resistance to Bludgeoning, Piercing and Slashing damage. Lasts 1 minute.', { usesMax: 3, usesSpent: 1, recharge: 'long' }),
+        ft('Reckless Attack', 'Barbarian', 'When you attack with Strength you roll with Advantage; in exchange, attacks against you have Advantage until your next turn.', {}),
+        ft('Danger Sense', 'Barbarian', 'Advantage on Dexterity saves against effects you can see (traps, spells).', {}),
+        ft('Frenzy', 'Path of the Berserker', 'While Raging you can make one extra melee attack as a Bonus Action on each of your turns.', {}),
+        ft("Stone's Endurance", 'Goliath', 'As a Reaction you reduce damage taken by 1d12 plus your Constitution modifier. Long Rest.', { usesMax: 1, recharge: 'long' }),
       ],
-      languages: ['Común', 'Gigante'],
-      armorProf: 'Armadura ligera y media, escudos',
-      weaponProf: 'Armas simples y marciales',
-      toolProf: 'Un juego de dados de hueso',
+      languages: ['Common', 'Giant'],
+      armorProf: 'Light and Medium armor, Shields',
+      weaponProf: 'Simple and Martial weapons',
+      toolProf: 'A set of bone dice',
       journal: {
-        personality: 'Cuenta a los enemigos antes de la pelea. En voz alta.',
-        ideals: 'La palabra dada es un peso. No se suelta.',
-        bonds: 'El Segundo de Piedracorva cayó en el paso de Kettur. Él llegó tarde.',
-        flaws: 'No sabe retirarse. Nunca ha sabido.',
-        backstory: 'Bajó de las montañas para servir de escolta y acabó en un regimiento. Cuando lo aniquilaron, siguió peleando solo hasta que unos aventureros lo recogieron medio muerto.',
-        allies: 'La clériga Sor Maren le cosió el costado y no le cobró.',
-        notes: 'Busca al oficial que ordenó el avance en Kettur.',
+        personality: 'Counts the enemies before the fight. Out loud.',
+        ideals: 'A given word is a weight. You do not put it down.',
+        bonds: 'The Second of Ravenstone fell at the Kettur pass. He arrived too late.',
+        flaws: 'Does not know how to retreat. Never has.',
+        backstory: 'He came down from the mountains to work as an escort and ended up in a regiment. When it was wiped out he kept fighting alone until some adventurers picked him up half dead.',
+        allies: 'The cleric Sister Maren stitched his side up and never charged him.',
+        notes: 'Looking for the officer who ordered the advance at Kettur.',
       },
     }),
-    build('Nyx', 'Pícaro', 3, {
+    build('Nyx', 'Rogue', 3, {
       slug: 'nyx',
       species: 'Tiefling',
       background: 'Criminal',
-      subclass: 'Ladrón',
-      tagline: 'Nunca la viste entrar',
+      subclass: 'Thief',
+      tagline: 'You never saw her come in',
       abilities: { str: 10, dex: 17, con: 13, int: 13, wis: 12, cha: 14 },
       skills: ['stealth', 'sleightOfHand', 'deception', 'perception', 'acrobatics', 'investigation'],
       ac: 14,
       hp: 21,
       attacks: [
-        wp('Estoque', 'dex', '1d8', 'Perforante', { mastery: 'Sajar', notes: 'Sutil.' }),
-        wp('Daga arrojadiza', 'dex', '1d4', 'Perforante', { range: 'Cuerpo a cuerpo o 6/18 m', mastery: 'Sajar' }),
-        wp('Arco corto', 'dex', '1d6', 'Perforante', { range: '24/96 m', mastery: 'Verter' }),
+        wp('Rapier', 'dex', '1d8', 'Piercing', { mastery: 'Vex', notes: 'Finesse.' }),
+        wp('Thrown Dagger', 'dex', '1d4', 'Piercing', { range: 'Melee or 20/60 ft.', mastery: 'Nick' }),
+        wp('Shortbow', 'dex', '1d6', 'Piercing', { range: '80/320 ft.', mastery: 'Vex' }),
       ],
-      spellNotes: 'Sin lanzamiento de conjuros. El truco de Taumaturgia viene del linaje infernal (1/día).',
+      spellNotes: 'No spellcasting. The Thaumaturgy cantrip comes from her fiendish legacy (1/day).',
       coins: { gp: 60, pp: 3 },
       items: [
-        it('Estoque', { equipped: true, weight: 1 }),
-        it('Daga', { quantity: 4, weight: 0.5, notes: 'Dos al cinto, una en la bota, una en la manga.' }),
-        it('Arco corto y 20 flechas', { weight: 1 }),
-        it('Armadura de cuero', { equipped: true, weight: 4.5 }),
-        it('Herramientas de ladrón', { equipped: true, notes: 'Competencia; ganzúas, espejo, limas.' }),
-        it('Kit de disfraz', { weight: 1.5 }),
-        it('Cuerda de seda (15 m)', { weight: 2.5 }),
-        it('Sello de cera falsificado', { notes: 'Casa Verrin. Sirve para una carta, no para dos.' }),
+        it('Rapier', { equipped: true, weight: 2 }),
+        it('Dagger', { quantity: 4, weight: 1, notes: 'Two at the belt, one in the boot, one up the sleeve.' }),
+        it('Shortbow and 20 Arrows', { weight: 3 }),
+        it('Leather Armor', { equipped: true, weight: 10 }),
+        it("Thieves' Tools", { equipped: true, weight: 1, notes: 'Proficient; picks, mirror, files.' }),
+        it('Disguise Kit', { weight: 3 }),
+        it('Silk Rope (50 feet)', { weight: 5 }),
+        it('Forged wax seal', { notes: 'House Verrin. Good for one letter, not two.' }),
       ],
       features: [
-        ft('Ataque furtivo (2d6)', 'Pícaro', 'Una vez por turno, +2d6 de daño a un ataque con ventaja o con un aliado adyacente al objetivo, usando un arma sutil o a distancia.', {}),
-        ft('Pericia', 'Pícaro', 'Competencia doble en Sigilo y Juego de manos.', {}),
-        ft('Acción astuta', 'Pícaro', 'Cada turno puedes Correr, Retirarte o Esconderte como acción adicional.', {}),
-        ft('Argot de ladrones', 'Pícaro', 'Jerga cifrada que solo entienden otros que la conozcan.', {}),
-        ft('Robo veloz', 'Ladrón', 'Puedes usar herramientas de ladrón o robar un objeto como parte de la acción adicional de Acción astuta.', {}),
-        ft('Manos rápidas', 'Ladrón', 'Usar un objeto como acción adicional.', {}),
-        ft('Legado infernal', 'Tiefling', 'Resistencia al fuego. Conoces Taumaturgia; a nivel 3, Reprensión infernal 1/día.', { usesMax: 1, recharge: 'long' }),
+        ft('Sneak Attack (2d6)', 'Rogue', 'Once per turn, +2d6 damage on an attack made with Advantage or with an ally next to the target, using a Finesse or Ranged weapon.', {}),
+        ft('Expertise', 'Rogue', 'Double proficiency in Stealth and Sleight of Hand.', {}),
+        ft('Cunning Action', 'Rogue', 'Each turn you can Dash, Disengage or Hide as a Bonus Action.', {}),
+        ft("Thieves' Cant", 'Rogue', 'A coded jargon only others who know it can understand.', {}),
+        ft('Fast Hands', 'Thief', "You can use Thieves' Tools or take the Utilize action as part of the Bonus Action granted by Cunning Action.", {}),
+        ft('Second-Story Work', 'Thief', 'You gain a Climb Speed equal to your Speed, and your running jumps go further by a number of feet equal to your Dexterity modifier.', {}),
+        ft('Fiendish Legacy', 'Tiefling', 'Resistance to Fire damage. You know Thaumaturgy; at level 3, Hellish Rebuke 1/day.', { usesMax: 1, recharge: 'long' }),
       ],
-      languages: ['Común', 'Infernal', 'Infracomún', 'Jerga de ladrones'],
-      armorProf: 'Armadura ligera',
-      weaponProf: 'Armas simples, ballestas de mano, espadas largas, estoques, espadas cortas',
-      toolProf: 'Herramientas de ladrón, kit de disfraz',
+      languages: ['Common', 'Infernal', 'Deep Speech', "Thieves' Cant"],
+      armorProf: 'Light armor',
+      weaponProf: 'Simple weapons, Hand Crossbows, Longswords, Rapiers, Shortswords',
+      toolProf: "Thieves' Tools, Disguise Kit",
       journal: {
-        personality: 'Responde a las preguntas con otra pregunta.',
-        ideals: 'Los cerrojos son una opinión, no una ley.',
-        bonds: 'Le debe la vida a un carterista viejo que ya no puede trabajar. Le manda dinero.',
-        flaws: 'No puede dejar pasar una caja fuerte cerrada.',
-        backstory: 'Creció en los tejados del Barrio de la Sal. El gremio la quiso; ella prefirió trabajar por libre y aún lo está pagando.',
-        allies: 'Corvo, el viejo carterista. Un contacto en la aduana que le avisa de las redadas.',
-        notes: 'La Casa Verrin puso precio a su cabeza tras el asunto del collar.',
+        personality: 'Answers questions with another question.',
+        ideals: 'Locks are an opinion, not a law.',
+        bonds: 'She owes her life to an old pickpocket who can no longer work. She sends him money.',
+        flaws: 'Cannot walk past a locked safe.',
+        backstory: 'She grew up on the rooftops of the Salt Quarter. The guild wanted her; she preferred to freelance and is still paying for it.',
+        allies: 'Corvo, the old pickpocket. A customs contact who warns her about raids.',
+        notes: 'House Verrin put a price on her head after the necklace business.',
       },
     }),
-    build('Sor Maren', 'Clérigo', 3, {
+    build('Sister Maren', 'Cleric', 3, {
       slug: 'maren',
       species: 'Aasimar',
-      background: 'Acólito',
-      subclass: 'Dominio de la Vida',
-      tagline: 'La luz no pide permiso',
+      background: 'Acolyte',
+      subclass: 'Life Domain',
+      tagline: 'The light does not ask permission',
       abilities: { str: 13, dex: 10, con: 14, int: 11, wis: 17, cha: 13 },
       skills: ['insight', 'medicine', 'religion', 'persuasion'],
       ac: 18,
@@ -468,56 +469,56 @@ export function demoRoster(): Character[] {
       hpCurrent: 24,
       slotsUsed: { 1: 1 },
       attacks: [
-        wp('Maza', 'str', '1d6', 'Contundente', { mastery: 'Aturdir' }),
-        wp('Ballesta ligera', 'dex', '1d8', 'Perforante', { range: '24/96 m', mastery: 'Ralentizar' }),
-        wp('Llama sagrada', 'wis', '2d8', 'Radiante', {
-          range: '18 m',
+        wp('Mace', 'str', '1d6', 'Bludgeoning', { mastery: 'Sap' }),
+        wp('Light Crossbow', 'dex', '1d8', 'Piercing', { range: '80/320 ft.', mastery: 'Slow' }),
+        wp('Sacred Flame', 'wis', '2d8', 'Radiant', {
+          range: '60 feet',
           mastery: '—',
-          notes: 'Truco. Salvación de Destreza, sin cobertura.',
+          notes: 'Cantrip. Dexterity save, ignores Cover.',
         }),
       ],
       spells: [
-        sp('Llama sagrada', 0, 'Evocación', { range: '18 m', description: 'Salvación de Destreza o 2d8 de radiante. Ignora la cobertura.' }),
-        sp('Taumaturgia', 0, 'Transmutación', { range: '9 m', duration: 'Hasta 1 min', description: 'Voz atronadora, temblores leves, puertas que se abren solas.' }),
-        sp('Orientación', 0, 'Adivinación', { concentration: true, duration: 'Conc., 1 min', description: '+1d4 a una prueba de característica del objetivo.' }),
-        sp('Curar heridas', 1, 'Abjuración', { description: 'Cura 2d8 + mod. de lanzamiento (con Discípulo de la vida, +2 extra).' }),
-        sp('Bendición', 1, 'Encantamiento', { components: 'V, S, M', concentration: true, duration: 'Conc., 1 min', description: 'Hasta tres criaturas suman 1d4 a tiradas de ataque y salvaciones.' }),
-        sp('Escudo de la fe', 1, 'Abjuración', { castingTime: '1 acción adicional', range: '18 m', concentration: true, duration: 'Conc., 10 min', prepared: false, description: '+2 a la CA del objetivo.' }),
-        sp('Arma espiritual', 2, 'Evocación', { castingTime: '1 acción adicional', range: '18 m', duration: '1 min', description: 'Arma espectral: 1d8 + mod. de fuerza radiante; la mueves y atacas como acción adicional.' }),
-        sp('Restablecimiento menor', 2, 'Abjuración', { description: 'Cura una enfermedad o un estado: cegado, ensordecido, paralizado o envenenado.' }),
-        sp('Ayuda', 2, 'Abjuración', { range: '9 m', duration: '8 horas', description: 'Tres criaturas suben su PG máximo y actual en 5. Siempre preparada (dominio).' }),
+        sp('Sacred Flame', 0, 'Evocation', { range: '60 feet', description: 'Dexterity save or 2d8 Radiant damage. Ignores Cover.' }),
+        sp('Thaumaturgy', 0, 'Transmutation', { range: '30 feet', duration: 'Up to 1 min', description: 'A booming voice, faint tremors, doors that swing open on their own.' }),
+        sp('Guidance', 0, 'Divination', { concentration: true, duration: 'Conc., 1 min', description: "+1d4 to one of the target's ability checks." }),
+        sp('Cure Wounds', 1, 'Abjuration', { description: 'Restores 2d8 + spellcasting modifier (with Disciple of Life, +2 more).' }),
+        sp('Bless', 1, 'Enchantment', { components: 'V, S, M', concentration: true, duration: 'Conc., 1 min', description: 'Up to three creatures add 1d4 to attack rolls and saving throws.' }),
+        sp('Shield of Faith', 1, 'Abjuration', { castingTime: '1 Bonus Action', range: '60 feet', concentration: true, duration: 'Conc., 10 min', prepared: false, description: "+2 AC to the target." }),
+        sp('Spiritual Weapon', 2, 'Evocation', { castingTime: '1 Bonus Action', range: '60 feet', duration: '1 min', description: 'A spectral weapon: 1d8 + modifier Force damage; you move it and attack as a Bonus Action.' }),
+        sp('Lesser Restoration', 2, 'Abjuration', { description: 'Ends one disease or one condition: Blinded, Deafened, Paralyzed or Poisoned.' }),
+        sp('Aid', 2, 'Abjuration', { range: '30 feet', duration: '8 hours', description: 'Three creatures raise their Hit Point maximum and current Hit Points by 5. Always prepared (domain).' }),
       ],
-      spellNotes: 'Prepara 7 conjuros/día (SAB +3, nivel 3). Los del Dominio de la Vida están siempre preparados.',
+      spellNotes: 'Prepares 7 spells/day (WIS +3, level 3). Life Domain spells are always prepared.',
       coins: { gp: 18 },
       items: [
-        it('Maza', { equipped: true, weight: 2 }),
-        it('Escudo', { equipped: true, weight: 3, notes: '+2 CA (ya incluido).' }),
-        it('Cota de malla', { equipped: true, weight: 27.5 }),
-        it('Símbolo sagrado', { equipped: true, notes: 'Sol de peltre. Foco de lanzamiento.' }),
-        it('Kit de sanador', { notes: '10 usos. Estabiliza sin tirada.' }),
-        it('Agua bendita (vial)', { quantity: 2 }),
-        it('Vestiduras de acólito', {}),
-        it('Raciones', { quantity: 7, weight: 1 }),
+        it('Mace', { equipped: true, weight: 4 }),
+        it('Shield', { equipped: true, weight: 6, notes: '+2 AC (already included).' }),
+        it('Chain Mail', { equipped: true, weight: 55 }),
+        it('Holy Symbol', { equipped: true, weight: 1, notes: 'A pewter sun. Spellcasting focus.' }),
+        it("Healer's Kit", { weight: 3, notes: '10 uses. Stabilizes with no roll.' }),
+        it('Holy Water (flask)', { quantity: 2, weight: 1 }),
+        it("Acolyte's vestments", { weight: 4 }),
+        it('Rations', { quantity: 7, weight: 2 }),
       ],
       features: [
-        ft('Canalizar divinidad', 'Clérigo', 'Dos usos por descanso. Alimenta Expulsar muertos vivientes y Preservar la vida.', { usesMax: 2, recharge: 'short' }),
-        ft('Expulsar muertos vivientes', 'Clérigo', 'Cada muerto viviente a 9 m debe superar una salvación de Sabiduría o huir 1 minuto.', {}),
-        ft('Preservar la vida', 'Dominio de la Vida', 'Gastas Canalizar divinidad para repartir 5 × nivel de PG entre criaturas a 9 m, hasta la mitad de su máximo.', {}),
-        ft('Discípulo de la vida', 'Dominio de la Vida', 'Tus conjuros de curación de nivel 1+ sanan 2 + el nivel del conjuro de PG extra.', {}),
-        ft('Radiante celestial', 'Aasimar', 'Como acción adicional, transformación 1/descanso largo: alas o estallido radiante, y +daño radiante.', { usesMax: 1, recharge: 'long' }),
+        ft('Channel Divinity', 'Cleric', 'Two uses per rest. Fuels Turn Undead and Preserve Life.', { usesMax: 2, recharge: 'short' }),
+        ft('Turn Undead', 'Cleric', 'Each Undead within 30 feet must succeed on a Wisdom save or flee for 1 minute.', {}),
+        ft('Preserve Life', 'Life Domain', 'Spend Channel Divinity to split 5 × your level in Hit Points among creatures within 30 feet, up to half their maximum.', {}),
+        ft('Disciple of Life', 'Life Domain', 'Your level 1+ healing spells restore 2 + the spell level extra Hit Points.', {}),
+        ft('Celestial Revelation', 'Aasimar', 'As a Bonus Action, transform 1/Long Rest: wings or radiant burst, plus extra Radiant damage.', { usesMax: 1, recharge: 'long' }),
       ],
-      languages: ['Común', 'Celestial'],
-      armorProf: 'Armadura ligera y media, escudos',
-      weaponProf: 'Armas simples',
-      toolProf: 'Ninguna',
+      languages: ['Common', 'Celestial'],
+      armorProf: 'Light and Medium armor, Shields',
+      weaponProf: 'Simple weapons',
+      toolProf: 'None',
       journal: {
-        personality: 'Escucha entero antes de responder. Siempre.',
-        ideals: 'Nadie se queda atrás por lo que cuesta salvarlo.',
-        bonds: 'El templo de Elyon la crió. Volverá cuando termine esto.',
-        flaws: 'Se cree responsable de heridas que no podía haber evitado.',
-        backstory: 'Dejada de niña en las escaleras de un templo, creció entre enfermos y moribundos. La marca celestial le salió a los quince y con ella la certeza de que no era para quedarse en casa.',
-        allies: 'El hermano Tobin, que le manda cartas. Brann, que le debe un costado.',
-        notes: 'Una fiebre recorre las aldeas del río Verde y no responde a la magia.',
+        personality: 'Listens all the way through before answering. Always.',
+        ideals: 'Nobody is left behind over what it costs to save them.',
+        bonds: 'The temple of Elyon raised her. She will go back when this is over.',
+        flaws: 'Holds herself responsible for wounds she could not have prevented.',
+        backstory: 'Left as a child on temple steps, she grew up among the sick and the dying. The celestial mark showed at fifteen, and with it the certainty that she was not meant to stay home.',
+        allies: 'Brother Tobin, who writes to her. Brann, who owes her a side.',
+        notes: 'A fever is running through the Green River villages and it does not answer to magic.',
       },
     }),
   ]

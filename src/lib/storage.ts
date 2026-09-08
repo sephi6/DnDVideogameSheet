@@ -1,20 +1,21 @@
 import type { Character } from '@/types/character'
+import { migrateRoster } from '@/lib/migrate'
 import { isSupabaseConfigured, requireSupabase } from '@/lib/supabase'
 
 /**
- * Servicios de lectura y escritura de fichas.
+ * Read and write services for character sheets.
  *
- * Hay dos implementaciones intercambiables: localStorage (cuando no hay
- * credenciales de Supabase) y Supabase. Las pantallas no saben cuál está
- * activa; hablan siempre con `storage`.
+ * Two interchangeable implementations: localStorage (when there are no
+ * Supabase credentials) and Supabase. The screens do not know which one is
+ * active; they always talk to `storage`.
  */
 export interface StorageAdapter {
   readonly name: 'local' | 'supabase'
-  /** Todas las fichas visibles para quien esté dentro. */
+  /** Every sheet visible to whoever is signed in. */
   load(): Promise<Character[]>
-  /** Crea o actualiza una ficha completa. */
+  /** Creates or updates a whole sheet. */
   save(character: Character): Promise<void>
-  /** Guarda varias de una vez (siembra e importación). */
+  /** Saves several at once (seeding and importing). */
   saveMany(characters: Character[]): Promise<void>
   remove(id: string): Promise<void>
 }
@@ -28,7 +29,8 @@ function readLocal(): Character[] {
     const raw = localStorage.getItem(KEY)
     if (!raw) return []
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? (parsed as Character[]) : []
+    // Sheets saved by the Spanish version are brought up to date here.
+    return Array.isArray(parsed) ? migrateRoster(parsed as Character[]) : []
   } catch {
     return []
   }
@@ -38,7 +40,7 @@ function writeLocal(characters: Character[]) {
   try {
     localStorage.setItem(KEY, JSON.stringify(characters))
   } catch (err) {
-    console.warn('[arcana] no se pudo guardar en localStorage', err)
+    console.warn('[arcana] could not save to localStorage', err)
     throw err
   }
 }
@@ -69,7 +71,7 @@ export const localAdapter: StorageAdapter = {
   },
 }
 
-/** Fichas guardadas en este navegador antes de conectar Supabase. */
+/** Sheets stored in this browser before Supabase was connected. */
 export function readLocalRoster(): Character[] {
   return readLocal()
 }
@@ -86,8 +88,8 @@ interface CharacterRow {
 }
 
 /**
- * La ficha entera viaja en la columna `data` (jsonb); `name` y `owner_id` se
- * desnormalizan para poder listar y filtrar desde SQL sin abrir el json.
+ * The whole sheet travels in the `data` column (jsonb); `name` and `owner_id`
+ * are denormalized so SQL can list and filter without opening the json.
  */
 function toRow(character: Character, ownerId: string | null): Omit<CharacterRow, 'created_at' | 'updated_at'> {
   return {
@@ -108,8 +110,8 @@ export const supabaseAdapter: StorageAdapter = {
       .select('id, data, created_at')
       .order('created_at', { ascending: true })
     if (error) throw error
-    // El id de la fila manda sobre el que venga dentro del json.
-    return (data ?? []).map((row) => ({ ...(row.data as Character), id: row.id }))
+    // The row id wins over whatever id the json carries.
+    return migrateRoster((data ?? []).map((row) => ({ ...(row.data as Character), id: row.id })))
   },
 
   async save(character) {

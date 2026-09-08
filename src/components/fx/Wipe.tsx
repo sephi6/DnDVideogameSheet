@@ -5,7 +5,7 @@ type Phase = 'cover' | 'reveal'
 
 const COVER_MS = 340
 const REVEAL_MS = 420
-/** Si la animación no avisa de que ha terminado, el barrido se cierra igual. */
+/** If the animation never reports it finished, the wipe closes anyway. */
 const FAILSAFE_MS = 1200
 
 function prefersReducedMotion() {
@@ -13,8 +13,8 @@ function prefersReducedMotion() {
 }
 
 /**
- * Barrido rojo en diagonal entre pantallas: cubre, ejecuta el cambio y descubre.
- * Es el equivalente al corte de escena de los menús de Persona.
+ * Diagonal red wipe between screens: it covers, runs the change and uncovers.
+ * The equivalent of the scene cut in the Persona menus.
  */
 export function useWipe() {
   const [wipe, setWipe] = useState<{ label: string; phase: Phase } | null>(null)
@@ -28,7 +28,7 @@ export function useWipe() {
     }
   }
 
-  /** Ejecuta el cambio de pantalla pendiente, una sola vez. */
+  /** Runs the pending screen change, exactly once. */
   const runPending = useCallback(() => {
     const pending = action.current
     action.current = null
@@ -37,7 +37,7 @@ export function useWipe() {
 
   const run = useCallback(
     (label: string, fn: () => void) => {
-      // Con movimiento reducido no hay barrido: el cambio es inmediato.
+      // With reduced motion there is no wipe: the change is immediate.
       if (prefersReducedMotion()) {
         fn()
         return
@@ -48,8 +48,8 @@ export function useWipe() {
     [],
   )
 
-  // El efecto secundario vive aquí, nunca dentro de un updater de estado:
-  // React invoca los updaters dos veces en StrictMode y la acción se perdería.
+  // The side effect lives here, never inside a state updater: React invokes
+  // updaters twice in StrictMode and the action would be lost.
   const onPhaseEnd = useCallback(() => {
     clearFailsafe()
     setWipe((current) => {
@@ -62,8 +62,8 @@ export function useWipe() {
     if (!wipe) return
     if (wipe.phase === 'reveal') runPending()
 
-    // Red de seguridad: si la pestaña está en segundo plano, o la animación
-    // no llega a completarse, la navegación no se queda colgada.
+    // Safety net: if the tab is in the background, or the animation never
+    // completes, navigation must not hang.
     clearFailsafe()
     failsafe.current = setTimeout(onPhaseEnd, FAILSAFE_MS)
     return clearFailsafe

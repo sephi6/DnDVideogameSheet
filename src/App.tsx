@@ -25,8 +25,8 @@ export default function App() {
 
   useEffect(() => initAuth(), [initAuth])
 
-  // Las fichas se leen cuando hay con qué: sin Supabase, en cuanto arranca;
-  // con Supabase, al iniciar sesión. Al salir, se vacían.
+  // Sheets are read as soon as there is something to read from: without
+  // Supabase, right at start-up; with Supabase, on sign-in. On sign-out, cleared.
   useEffect(() => {
     if (authStatus === 'disabled' || authStatus === 'signed-in') {
       void hydrate()
@@ -72,7 +72,7 @@ export default function App() {
 
       {screen !== 'title' && needsLogin && (
         authStatus === 'loading' ? <div className="center" style={{ height: '100%' }}>
-          <span className="label">Comprobando sesión…</span>
+          <span className="label">Checking session…</span>
         </div> : <LoginScreen />
       )}
 
@@ -90,7 +90,7 @@ export default function App() {
           onDuplicate={(character) => duplicateCharacter(character.id)}
           userEmail={user?.email ?? null}
           onSignOut={() => {
-            run('Hasta luego', () => {
+            run('See you', () => {
               void signOut()
               setScreen('title')
             })

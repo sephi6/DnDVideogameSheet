@@ -1,6 +1,6 @@
-// Configuración del Worker que sirve ARCANA como sitio estático.
-// El SPA se resuelve con `not_found_handling`, NO con un `_redirects` de tipo 200:
-// Workers rechaza la regla `/* /index.html 200` (error 10021, «infinite loop»).
+// Worker config that serves ARCANA as a static site.
+// SPA routing is handled by `not_found_handling`, NOT by a 200-type `_redirects`:
+// Workers rejects the `/* /index.html 200` rule (error 10021, "infinite loop").
 {
   "name": "dndvideogamesheet",
   "compatibility_date": "2025-11-01",

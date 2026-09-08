@@ -186,7 +186,7 @@ export function Button({
   )
 }
 
-/** Casilla marcable: golpes de espada, dados de golpe, salvaciones de muerte. */
+/** Tickable box: sword strokes, Hit Dice, death saving throws. */
 export function CheckBox({
   on,
   onToggle,
@@ -213,7 +213,7 @@ export function CheckBox({
   )
 }
 
-/** Círculo de competencia de tres estados: nada → competente → experto. */
+/** Three-state proficiency pip: none → proficient → expertise. */
 export function ProficiencyPip({
   level,
   onCycle,
@@ -223,7 +223,7 @@ export function ProficiencyPip({
   onCycle: () => void
   label: string
 }) {
-  const titles = ['Sin competencia', 'Competente', 'Experto'] as const
+  const titles = ['Not proficient', 'Proficient', 'Expertise'] as const
   return (
     <button
       type="button"

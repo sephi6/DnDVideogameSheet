@@ -1,4 +1,4 @@
-/** Modelo de datos de la ficha. Pensado para serializarse tal cual a Supabase (jsonb). */
+/** Data model of the character sheet. Meant to serialize as-is to Supabase (jsonb). */
 
 export type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
 
@@ -8,7 +8,7 @@ export type SkillKey =
   | 'nature' | 'perception' | 'performance' | 'persuasion' | 'religion'
   | 'sleightOfHand' | 'stealth' | 'survival'
 
-/** 0 = sin competencia, 1 = competente, 2 = experto (doble bonificador). */
+/** 0 = not proficient, 1 = proficient, 2 = expertise (double the bonus). */
 export type Proficiency = 0 | 1 | 2
 
 export interface Attack {
@@ -19,7 +19,7 @@ export interface Attack {
   damage: string
   damageType: string
   range: string
-  /** Maestría de arma (regla nueva de 2024): Sajar, Empujar, Ralentizar... */
+  /** Weapon mastery (new rule in 2024): Nick, Push, Slow… */
   mastery: string
   notes: string
 }
@@ -49,6 +49,7 @@ export interface InventoryItem {
   id: string
   name: string
   quantity: number
+  /** Weight in pounds. */
   weight: number
   attuned: boolean
   equipped: boolean
@@ -75,16 +76,17 @@ export interface Identity {
   background: string
   alignment: string
   xp: number
-  /** Ruta del retrato (`/assets/...`) o data-url subida por el jugador. */
+  /** Portrait path (`assets/...`) or a data-url uploaded by the player. */
   portrait: string | null
-  /** Color de acento del menú para este personaje. */
+  /** Menu accent color for this character. */
   accent: string
-  /** Lema corto que aparece en la pantalla de selección. */
+  /** Short tagline shown on the character select screen. */
   tagline: string
 }
 
 export interface Combat {
   armorClass: number
+  /** Speed in feet. */
   speed: number
   initiativeBonus: number
   hpMax: number
@@ -134,6 +136,11 @@ export interface Journal {
 
 export interface Character {
   id: string
+  /**
+   * Schema of the stored data. Absent on sheets saved by the Spanish version
+   * (Spanish domain values, metric units); see `src/lib/migrate.ts`.
+   */
+  schemaVersion?: number
   createdAt: string
   updatedAt: string
   identity: Identity

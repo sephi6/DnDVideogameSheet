@@ -8,9 +8,9 @@ export default defineConfig(({ command }) => ({
     alias: { '@': path.resolve(__dirname, 'src') },
   },
   server: { port: 5173 },
-  // No publicar el código fuente original junto al bundle.
+  // Do not ship the original source alongside the bundle.
   build: { sourcemap: false },
-  // En producción se quitan console/debugger para no filtrar detalles internos
-  // (los errores siguen mostrándose en la interfaz). En `dev` se conservan.
+  // In production console/debugger are dropped so internal details do not leak
+  // (errors are still shown in the interface). In `dev` they are kept.
   esbuild: command === 'build' ? { drop: ['console', 'debugger'] } : {},
 }))

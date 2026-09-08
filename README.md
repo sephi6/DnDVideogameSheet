@@ -1,98 +1,99 @@
-# ARCANA — fichas de D&D 2024 con menú de videojuego
+# ARCANA — D&D 2024 character sheets with a video-game menu
 
-Aplicación web para que los jugadores de una mesa de **Dungeons & Dragons 2024**
-lleven su ficha. La gracia no es la ficha: es **moverse por ella como por el menú
-de un videojuego** —referencia declarada: Persona 5—. Cartas que se inclinan,
-barridos rojos entre pantallas, blips de menú y navegación con teclado.
+Web app for the players at a **Dungeons & Dragons 2024** table to keep their
+character sheets. The point is not the sheet: it is **moving through it like a
+video-game menu** —declared reference: Persona 5—. Cards that tilt, red wipes
+between screens, menu blips and keyboard navigation.
 
 ```bash
 npm install
 npm run dev      # http://localhost:5173
 ```
 
-## Estado
+## Status
 
-Ficha completa, login y persistencia en **Supabase** funcionando. Sin
-credenciales configuradas la app sigue arrancando en modo local
-(`localStorage`, sin login), así que se puede clonar y probar sin montar nada.
+Full sheet, login and persistence on **Supabase** all working. With no
+credentials configured the app still boots in local mode (`localStorage`, no
+login), so it can be cloned and tried out without setting anything up.
 
-Para conectarla a Supabase: [`docs/SUPABASE.md`](docs/SUPABASE.md) — son tres
-pasos (credenciales en `.env.local`, ejecutar la migración, activar el acceso
-por correo).
+To connect it to Supabase: [`docs/SUPABASE.md`](docs/SUPABASE.md) — three steps
+(credentials in `.env.local`, run the migration, enable email access).
 
-Para publicarla en Cloudflare Workers: [`docs/DEPLOY.md`](docs/DEPLOY.md).
+To publish it on Cloudflare Workers: [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
-> Con el modelo de permisos actual **todos los usuarios registrados ven y editan
-> todas las fichas**. Es lo que se quiere para una mesa; conviene cerrar los
-> registros abiertos cuando todo el grupo tenga cuenta.
+> With the current permission model **every registered user sees and edits every
+> sheet**. That is what a table wants; it is worth closing open sign-ups once the
+> whole group has an account.
 
-## Cómo se usa
+## How to use it
 
-| Pantalla | Teclas |
+| Screen | Keys |
 | --- | --- |
-| Título | cualquier tecla |
-| Selección de personaje | `←` `→` cambiar · `Enter` abrir · `N` nuevo |
-| Ficha | `↑` `↓` navegar · `1`–`8` ir a sección · `Esc` volver |
+| Title | any key |
+| Character select | `←` `→` switch · `Enter` open · `N` new |
+| Sheet | `↑` `↓` navigate · `1`–`8` go to section · `Esc` back |
 
-Todo el ratón funciona igual de bien; el teclado está para que se sienta a mando.
+The mouse works just as well; the keyboard is there so it feels like a gamepad.
 
-Las ocho secciones de la ficha: **Identidad, Aptitudes, Habilidades, Combate,
-Conjuros, Equipo, Rasgos y Diario**. Todo es editable y se guarda solo (hay un
-indicador «Guardado» en la cabecera). Cada personaje tiene su **color de acento**,
-que tiñe el menú entero al seleccionarlo.
+The eight sections of the sheet: **Identity, Abilities, Skills, Combat, Spells,
+Equipment, Features and Journal**. Everything is editable and saves itself
+(there is a "Saved" indicator in the header). Each character has its own
+**accent color**, which tints the whole menu when selected.
 
-## Reglas de 2024 que ya contempla
+## 2024 rules already covered
 
-- Bonificador de competencia por nivel y competencia/**pericia** en habilidades y salvaciones.
-- **Inspiración heroica** y **agotamiento** por niveles (−2 a pruebas de d20 por nivel).
-- **Maestrías de arma** en cada ataque.
-- Espacios de conjuro calculados por clase (lanzador completo, medio y **pacto** del Brujo).
-- Las 12 clases, 10 especies y 16 trasfondos del PHB 2024.
+- Proficiency Bonus by level and proficiency/**expertise** in skills and saving throws.
+- **Heroic Inspiration** and **Exhaustion** levels (−2 to D20 Tests and −5 feet of Speed per level).
+- **Weapon masteries** on every attack.
+- Spell slots worked out per class (full caster, half caster and the Warlock's **Pact Magic**).
+- The 12 classes, 10 species and 16 backgrounds of the 2024 PHB.
+- Feet and pounds throughout: Speed, ranges, item weights and Carrying Capacity
+  (Strength × 15 lb.).
 
-## Estructura
+## Structure
 
 ```
 src/
-├── data/rules.ts        Datos de reglas (clases, habilidades, espacios de conjuro…)
-├── data/defaults.ts     Fábrica de personajes y party de ejemplo
-├── types/character.ts   Modelo de la ficha (se serializa tal cual a Supabase)
-├── lib/derive.ts        Cálculos derivados (modificadores, CD, iniciativa…)
-├── lib/sfx.ts           Sonidos de menú sintetizados con WebAudio (sin assets)
-├── lib/supabase.ts      Cliente de Supabase y detección de credenciales
-├── lib/storage.ts       Servicios de lectura y escritura (local | supabase)
-├── lib/image.ts         Reescalado de los retratos subidos
-├── store/auth.ts        Sesión: entrar, registrarse, enlace mágico, salir
-├── store/roster.ts      Estado de la party, guardado por ficha y sincronización
-├── screens/             Título · Acceso · Selección de personaje · Ficha
-├── sections/            Las ocho secciones editables
-└── styles/              Tokens y estética (fuentes auto-alojadas)
+├── data/rules.ts        Rules data (classes, skills, spell slots…)
+├── data/defaults.ts     Character factory and example party
+├── types/character.ts   Sheet model (serialized as-is to Supabase)
+├── lib/derive.ts        Derived values (modifiers, DC, initiative…)
+├── lib/sfx.ts           Menu sounds synthesized with WebAudio (no assets)
+├── lib/supabase.ts      Supabase client and credential detection
+├── lib/storage.ts       Read and write services (local | supabase)
+├── lib/image.ts         Downscaling of uploaded portraits
+├── store/auth.ts        Session: sign in, sign up, magic link, sign out
+├── store/roster.ts      Party state, per-sheet saving and sync status
+├── screens/             Title · Sign in · Character select · Sheet
+├── sections/            The eight editable sections
+└── styles/              Tokens and look (self-hosted fonts)
 ```
 
 ## Assets
 
-Los retratos de `public/assets/portraits/` son **emblemas provisionales generados
-por código** (`node scripts/generate-assets.mjs`). Están pensados para
-sustituirse por ilustraciones hechas con ChatGPT: las instrucciones detalladas
-—biblia de estilo, prompts, medidas y colores por clase— están en
+The portraits in `public/assets/portraits/` are **provisional emblems generated
+by code** (`node scripts/generate-assets.mjs`). They are meant to be replaced by
+illustrations made with ChatGPT: the detailed instructions —style bible, prompts,
+sizes and per-class colors— are in
 [`docs/ASSET_PROMPTS.md`](docs/ASSET_PROMPTS.md).
 
-Las fuentes (Archivo Black, Barlow Condensed, Bebas Neue — todas OFL) están
-auto-alojadas en `public/fonts/`; `scripts/fetch-fonts.sh` las regenera.
+The fonts (Archivo Black, Barlow Condensed, Bebas Neue — all OFL) are
+self-hosted in `public/fonts/`; `scripts/fetch-fonts.sh` regenerates them.
 
-## Siguientes pasos
+## Next steps
 
-1. Retratos reales generados con la guía de prompts.
-2. Subir los retratos a Supabase Storage en vez de guardarlos en el jsonb.
-3. Tiempo real: que el DM vea los PG de la party moverse en directo.
-4. Importar ficha desde JSON (exportar ya funciona, en la cabecera de la ficha).
+1. Real portraits made with the prompt guide.
+2. Upload the portraits to Supabase Storage instead of storing them in the jsonb.
+3. Real time: let the DM watch the party's Hit Points move live.
+4. Import a sheet from JSON (export already works, in the sheet header).
 
 ## Scripts
 
-| Comando | Qué hace |
+| Command | What it does |
 | --- | --- |
-| `npm run dev` | Servidor de desarrollo |
-| `npm run build` | Comprobación de tipos + build de producción |
-| `npm run preview` | Sirve el build |
-| `npm run typecheck` | Solo tipos |
-| `node scripts/generate-seed.mjs` | Regenera `supabase/seed.sql` desde el TypeScript |
-| `node scripts/generate-assets.mjs` | Regenera los retratos provisionales |
+| `npm run dev` | Development server |
+| `npm run build` | Type check + production build |
+| `npm run preview` | Serves the build |
+| `npm run typecheck` | Types only |
+| `node scripts/generate-seed.mjs` | Regenerates `supabase/seed.sql` from the TypeScript |
+| `node scripts/generate-assets.mjs` | Regenerates the provisional portraits |

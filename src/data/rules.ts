@@ -1,33 +1,33 @@
 import type { AbilityKey, SkillKey } from '@/types/character'
 
 export const ABILITIES: { key: AbilityKey; label: string; short: string }[] = [
-  { key: 'str', label: 'Fuerza', short: 'FUE' },
-  { key: 'dex', label: 'Destreza', short: 'DES' },
-  { key: 'con', label: 'Constitución', short: 'CON' },
-  { key: 'int', label: 'Inteligencia', short: 'INT' },
-  { key: 'wis', label: 'Sabiduría', short: 'SAB' },
-  { key: 'cha', label: 'Carisma', short: 'CAR' },
+  { key: 'str', label: 'Strength', short: 'STR' },
+  { key: 'dex', label: 'Dexterity', short: 'DEX' },
+  { key: 'con', label: 'Constitution', short: 'CON' },
+  { key: 'int', label: 'Intelligence', short: 'INT' },
+  { key: 'wis', label: 'Wisdom', short: 'WIS' },
+  { key: 'cha', label: 'Charisma', short: 'CHA' },
 ]
 
 export const SKILLS: { key: SkillKey; label: string; ability: AbilityKey }[] = [
-  { key: 'acrobatics', label: 'Acrobacias', ability: 'dex' },
-  { key: 'animalHandling', label: 'Trato con animales', ability: 'wis' },
-  { key: 'arcana', label: 'Arcanos', ability: 'int' },
-  { key: 'athletics', label: 'Atletismo', ability: 'str' },
-  { key: 'deception', label: 'Engaño', ability: 'cha' },
-  { key: 'history', label: 'Historia', ability: 'int' },
-  { key: 'insight', label: 'Perspicacia', ability: 'wis' },
-  { key: 'intimidation', label: 'Intimidación', ability: 'cha' },
-  { key: 'investigation', label: 'Investigación', ability: 'int' },
-  { key: 'medicine', label: 'Medicina', ability: 'wis' },
-  { key: 'nature', label: 'Naturaleza', ability: 'int' },
-  { key: 'perception', label: 'Percepción', ability: 'wis' },
-  { key: 'performance', label: 'Interpretación', ability: 'cha' },
-  { key: 'persuasion', label: 'Persuasión', ability: 'cha' },
-  { key: 'religion', label: 'Religión', ability: 'int' },
-  { key: 'sleightOfHand', label: 'Juego de manos', ability: 'dex' },
-  { key: 'stealth', label: 'Sigilo', ability: 'dex' },
-  { key: 'survival', label: 'Supervivencia', ability: 'wis' },
+  { key: 'acrobatics', label: 'Acrobatics', ability: 'dex' },
+  { key: 'animalHandling', label: 'Animal Handling', ability: 'wis' },
+  { key: 'arcana', label: 'Arcana', ability: 'int' },
+  { key: 'athletics', label: 'Athletics', ability: 'str' },
+  { key: 'deception', label: 'Deception', ability: 'cha' },
+  { key: 'history', label: 'History', ability: 'int' },
+  { key: 'insight', label: 'Insight', ability: 'wis' },
+  { key: 'intimidation', label: 'Intimidation', ability: 'cha' },
+  { key: 'investigation', label: 'Investigation', ability: 'int' },
+  { key: 'medicine', label: 'Medicine', ability: 'wis' },
+  { key: 'nature', label: 'Nature', ability: 'int' },
+  { key: 'perception', label: 'Perception', ability: 'wis' },
+  { key: 'performance', label: 'Performance', ability: 'cha' },
+  { key: 'persuasion', label: 'Persuasion', ability: 'cha' },
+  { key: 'religion', label: 'Religion', ability: 'int' },
+  { key: 'sleightOfHand', label: 'Sleight of Hand', ability: 'dex' },
+  { key: 'stealth', label: 'Stealth', ability: 'dex' },
+  { key: 'survival', label: 'Survival', ability: 'wis' },
 ]
 
 export interface ClassInfo {
@@ -36,73 +36,75 @@ export interface ClassInfo {
   primary: AbilityKey[]
   saves: AbilityKey[]
   spellAbility: AbilityKey | null
-  /** Lanzador completo, medio, de pacto o ninguno: define la tabla de espacios. */
+  /** Full, half, third or pact caster (or none): picks the spell slot table. */
   caster: 'full' | 'half' | 'third' | 'pact' | 'none'
   accent: string
 }
 
+/** The 12 classes of the 2024 Player's Handbook. */
 export const CLASSES: ClassInfo[] = [
-  { name: 'Bárbaro', hitDie: 12, primary: ['str'], saves: ['str', 'con'], spellAbility: null, caster: 'none', accent: '#e03a2f' },
-  { name: 'Bardo', hitDie: 8, primary: ['cha'], saves: ['dex', 'cha'], spellAbility: 'cha', caster: 'full', accent: '#d8478f' },
-  { name: 'Brujo', hitDie: 8, primary: ['cha'], saves: ['wis', 'cha'], spellAbility: 'cha', caster: 'pact', accent: '#8b46d6' },
-  { name: 'Clérigo', hitDie: 8, primary: ['wis'], saves: ['wis', 'cha'], spellAbility: 'wis', caster: 'full', accent: '#e8c15a' },
-  { name: 'Druida', hitDie: 8, primary: ['wis'], saves: ['int', 'wis'], spellAbility: 'wis', caster: 'full', accent: '#4fae62' },
-  { name: 'Explorador', hitDie: 10, primary: ['dex', 'wis'], saves: ['str', 'dex'], spellAbility: 'wis', caster: 'half', accent: '#3f8f6d' },
-  { name: 'Guerrero', hitDie: 10, primary: ['str', 'dex'], saves: ['str', 'con'], spellAbility: null, caster: 'none', accent: '#b9411f' },
-  { name: 'Hechicero', hitDie: 6, primary: ['cha'], saves: ['con', 'cha'], spellAbility: 'cha', caster: 'full', accent: '#e2593f' },
-  { name: 'Mago', hitDie: 6, primary: ['int'], saves: ['int', 'wis'], spellAbility: 'int', caster: 'full', accent: '#3f7bd6' },
-  { name: 'Monje', hitDie: 8, primary: ['dex', 'wis'], saves: ['str', 'dex'], spellAbility: null, caster: 'none', accent: '#37b6c4' },
-  { name: 'Paladín', hitDie: 10, primary: ['str', 'cha'], saves: ['wis', 'cha'], spellAbility: 'cha', caster: 'half', accent: '#dcae3c' },
-  { name: 'Pícaro', hitDie: 8, primary: ['dex'], saves: ['dex', 'int'], spellAbility: null, caster: 'none', accent: '#6f7cd1' },
+  { name: 'Barbarian', hitDie: 12, primary: ['str'], saves: ['str', 'con'], spellAbility: null, caster: 'none', accent: '#e03a2f' },
+  { name: 'Bard', hitDie: 8, primary: ['cha'], saves: ['dex', 'cha'], spellAbility: 'cha', caster: 'full', accent: '#d8478f' },
+  { name: 'Cleric', hitDie: 8, primary: ['wis'], saves: ['wis', 'cha'], spellAbility: 'wis', caster: 'full', accent: '#e8c15a' },
+  { name: 'Druid', hitDie: 8, primary: ['wis'], saves: ['int', 'wis'], spellAbility: 'wis', caster: 'full', accent: '#4fae62' },
+  { name: 'Fighter', hitDie: 10, primary: ['str', 'dex'], saves: ['str', 'con'], spellAbility: null, caster: 'none', accent: '#b9411f' },
+  { name: 'Monk', hitDie: 8, primary: ['dex', 'wis'], saves: ['str', 'dex'], spellAbility: null, caster: 'none', accent: '#37b6c4' },
+  { name: 'Paladin', hitDie: 10, primary: ['str', 'cha'], saves: ['wis', 'cha'], spellAbility: 'cha', caster: 'half', accent: '#dcae3c' },
+  { name: 'Ranger', hitDie: 10, primary: ['dex', 'wis'], saves: ['str', 'dex'], spellAbility: 'wis', caster: 'half', accent: '#3f8f6d' },
+  { name: 'Rogue', hitDie: 8, primary: ['dex'], saves: ['dex', 'int'], spellAbility: null, caster: 'none', accent: '#6f7cd1' },
+  { name: 'Sorcerer', hitDie: 6, primary: ['cha'], saves: ['con', 'cha'], spellAbility: 'cha', caster: 'full', accent: '#e2593f' },
+  { name: 'Warlock', hitDie: 8, primary: ['cha'], saves: ['wis', 'cha'], spellAbility: 'cha', caster: 'pact', accent: '#8b46d6' },
+  { name: 'Wizard', hitDie: 6, primary: ['int'], saves: ['int', 'wis'], spellAbility: 'int', caster: 'full', accent: '#3f7bd6' },
 ]
 
+/** The 10 species of the 2024 Player's Handbook. */
 export const SPECIES = [
-  'Aasimar', 'Dracónido', 'Elfo', 'Enano', 'Gnomo', 'Goliat',
-  'Humano', 'Mediano', 'Orco', 'Tiefling',
+  'Aasimar', 'Dragonborn', 'Dwarf', 'Elf', 'Gnome', 'Goliath',
+  'Halfling', 'Human', 'Orc', 'Tiefling',
 ]
 
+/** The 16 backgrounds of the 2024 Player's Handbook. */
 export const BACKGROUNDS = [
-  'Acólito', 'Artesano', 'Artista', 'Bandido de caminos', 'Charlatán',
-  'Criminal', 'Ermitaño', 'Escriba', 'Granjero', 'Guardia', 'Guía',
-  'Marinero', 'Mercader', 'Noble', 'Sabio', 'Soldado',
+  'Acolyte', 'Artisan', 'Charlatan', 'Criminal', 'Entertainer', 'Farmer',
+  'Guard', 'Guide', 'Hermit', 'Merchant', 'Noble', 'Sage', 'Sailor',
+  'Scribe', 'Soldier', 'Wayfarer',
 ]
 
 export const ALIGNMENTS = [
-  'Legal bueno', 'Neutral bueno', 'Caótico bueno',
-  'Legal neutral', 'Neutral', 'Caótico neutral',
-  'Legal malvado', 'Neutral malvado', 'Caótico malvado',
+  'Lawful Good', 'Neutral Good', 'Chaotic Good',
+  'Lawful Neutral', 'Neutral', 'Chaotic Neutral',
+  'Lawful Evil', 'Neutral Evil', 'Chaotic Evil',
 ]
 
-/** Condiciones del PHB 2024. */
+/** Conditions of the 2024 PHB. Exhaustion has its own tracker. */
 export const CONDITIONS = [
-  'Agarrado', 'Apresado', 'Asustado', 'Aturdido', 'Cegado', 'Derribado',
-  'Encantado', 'Ensordecido', 'Envenenado', 'Incapacitado', 'Invisible',
-  'Inconsciente', 'Paralizado', 'Petrificado', 'Restringido',
+  'Blinded', 'Charmed', 'Deafened', 'Frightened', 'Grappled', 'Incapacitated',
+  'Invisible', 'Paralyzed', 'Petrified', 'Poisoned', 'Prone', 'Restrained',
+  'Stunned', 'Unconscious',
 ]
 
 export const DAMAGE_TYPES = [
-  'Cortante', 'Perforante', 'Contundente', 'Ácido', 'Frío', 'Fuego',
-  'Fuerza', 'Necrótico', 'Psíquico', 'Radiante', 'Relámpago', 'Trueno', 'Veneno',
+  'Acid', 'Bludgeoning', 'Cold', 'Fire', 'Force', 'Lightning', 'Necrotic',
+  'Piercing', 'Poison', 'Psychic', 'Radiant', 'Slashing', 'Thunder',
 ]
 
-/** Propiedades de maestría de armas (novedad de 2024). */
+/** Weapon mastery properties (new in 2024). */
 export const WEAPON_MASTERIES = [
-  '—', 'Aturdir', 'Derribar', 'Empujar', 'Enredar', 'Fallo cercano',
-  'Hendidura', 'Ralentizar', 'Sajar', 'Verter',
+  '—', 'Cleave', 'Graze', 'Nick', 'Push', 'Sap', 'Slow', 'Topple', 'Vex',
 ]
 
 export const SPELL_SCHOOLS = [
-  'Abjuración', 'Conjuración', 'Adivinación', 'Encantamiento',
-  'Evocación', 'Ilusión', 'Nigromancia', 'Transmutación',
+  'Abjuration', 'Conjuration', 'Divination', 'Enchantment',
+  'Evocation', 'Illusion', 'Necromancy', 'Transmutation',
 ]
 
 export const LANGUAGES = [
-  'Común', 'Common Sign Language', 'Draconiano', 'Enano', 'Élfico', 'Gigante',
-  'Gnómico', 'Goblin', 'Mediano', 'Orco', 'Abisal', 'Celestial', 'Infracomún',
-  'Infernal', 'Primordial', 'Silvano', 'Druídico', 'Jerga de ladrones',
+  'Common', 'Common Sign Language', 'Draconic', 'Dwarvish', 'Elvish', 'Giant',
+  'Gnomish', 'Goblin', 'Halfling', 'Orc', 'Abyssal', 'Celestial', 'Deep Speech',
+  'Druidic', 'Infernal', 'Primordial', 'Sylvan', "Thieves' Cant",
 ]
 
-/** Niveles de agotamiento 2024: cada nivel resta 2 a pruebas de d20 y 1,5 m de velocidad. */
+/** 2024 exhaustion levels: each one is −2 to D20 Tests and −5 feet of Speed. */
 export const EXHAUSTION_MAX = 6
 
 export function proficiencyBonus(level: number): number {
@@ -117,7 +119,7 @@ export function formatModifier(value: number): string {
   return value >= 0 ? `+${value}` : `${value}`
 }
 
-/** Espacios de conjuro por nivel para lanzadores completos (tabla del PHB). */
+/** Spell slots per level for full casters (PHB table). */
 const FULL_CASTER_SLOTS: number[][] = [
   [2], [3], [4, 2], [4, 3], [4, 3, 2], [4, 3, 3], [4, 3, 3, 1], [4, 3, 3, 2],
   [4, 3, 3, 3, 1], [4, 3, 3, 3, 2], [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1],
@@ -126,7 +128,7 @@ const FULL_CASTER_SLOTS: number[][] = [
   [4, 3, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 3, 2, 2, 1, 1],
 ]
 
-/** Espacios de pacto del Brujo: cantidad y nivel únicos. */
+/** Warlock Pact Magic slots: a single count and a single level. */
 const PACT_SLOTS: [number, number][] = [
   [1, 1], [2, 1], [2, 2], [2, 2], [2, 3], [2, 3], [2, 4], [2, 4], [2, 5], [2, 5],
   [3, 5], [3, 5], [3, 5], [3, 5], [3, 5], [3, 5], [4, 5], [4, 5], [4, 5], [4, 5],

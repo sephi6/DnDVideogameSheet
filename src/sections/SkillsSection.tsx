@@ -14,12 +14,12 @@ export function SkillsSection({ character, update }: SectionProps) {
   return (
     <div className="stack">
       <p className="muted" style={{ margin: 0 }}>
-        Pulsa el círculo para alternar: vacío → <b style={{ color: 'var(--accent)' }}>competente</b> →{' '}
-        <b style={{ color: 'var(--gold)' }}>experto</b>.
+        Click the pip to cycle: empty → <b style={{ color: 'var(--accent)' }}>proficient</b> →{' '}
+        <b style={{ color: 'var(--gold)' }}>expertise</b>.
       </p>
       <div className="grid g2">
         {columns.map((column, ci) => (
-          <Panel key={ci} title={ci === 0 ? 'Habilidades A–I' : 'Habilidades I–S'}>
+          <Panel key={ci} title={ci === 0 ? 'Skills A–I' : 'Skills M–S'}>
             {column.map((skill, i) => (
               <motion.div
                 key={skill.key}

@@ -15,8 +15,8 @@ import { play } from '@/lib/sfx'
 import type { SectionProps } from './types'
 
 const PORTRAIT_LIBRARY = [
-  'barbaro', 'bardo', 'brujo', 'clerigo', 'druida', 'explorador',
-  'guerrero', 'hechicero', 'mago', 'monje', 'paladin', 'picaro', 'default',
+  'barbarian', 'bard', 'cleric', 'druid', 'fighter', 'monk',
+  'paladin', 'ranger', 'rogue', 'sorcerer', 'warlock', 'wizard', 'default',
 ].map((slug) => `assets/portraits/${slug}.svg`)
 
 export function IdentitySection({ character, update }: SectionProps) {
@@ -64,27 +64,27 @@ export function IdentitySection({ character, update }: SectionProps) {
       })
       play('confirm')
     } catch (err) {
-      console.error('[arcana] no se pudo procesar el retrato', err)
+      console.error('[arcana] could not process the portrait', err)
       play('error')
-      setPortraitError('No se pudo procesar esa imagen. Prueba con un PNG o un JPG.')
+      setPortraitError('That image could not be processed. Try a PNG or a JPG.')
     }
   }
 
   return (
     <div className="grid g2">
-      <Panel title="Identidad">
+      <Panel title="Identity">
         <div className="grid g2" style={{ gap: 10 }}>
-          <TextField label="Nombre" value={identity.name} onChange={(v) => update((d) => { d.identity.name = v })} />
-          <TextField label="Jugador" value={identity.player} onChange={(v) => update((d) => { d.identity.player = v })} />
-          <SelectField label="Clase" value={identity.className} options={CLASSES.map((c) => c.name)} onChange={changeClass} />
-          <TextField label="Subclase" value={identity.subclass} onChange={(v) => update((d) => { d.identity.subclass = v })} />
-          <SelectField label="Especie" value={identity.species} options={SPECIES} onChange={(v) => update((d) => { d.identity.species = v })} />
-          <SelectField label="Trasfondo" value={identity.background} options={BACKGROUNDS} onChange={(v) => update((d) => { d.identity.background = v })} />
-          <SelectField label="Alineamiento" value={identity.alignment} options={ALIGNMENTS} onChange={(v) => update((d) => { d.identity.alignment = v })} />
-          <NumberField label="Nivel" value={identity.level} min={1} max={20} onChange={changeLevel} />
-          <NumberField label="Puntos de experiencia" value={identity.xp} min={0} max={999999} onChange={(v) => update((d) => { d.identity.xp = v })} />
+          <TextField label="Name" value={identity.name} onChange={(v) => update((d) => { d.identity.name = v })} />
+          <TextField label="Player" value={identity.player} onChange={(v) => update((d) => { d.identity.player = v })} />
+          <SelectField label="Class" value={identity.className} options={CLASSES.map((c) => c.name)} onChange={changeClass} />
+          <TextField label="Subclass" value={identity.subclass} onChange={(v) => update((d) => { d.identity.subclass = v })} />
+          <SelectField label="Species" value={identity.species} options={SPECIES} onChange={(v) => update((d) => { d.identity.species = v })} />
+          <SelectField label="Background" value={identity.background} options={BACKGROUNDS} onChange={(v) => update((d) => { d.identity.background = v })} />
+          <SelectField label="Alignment" value={identity.alignment} options={ALIGNMENTS} onChange={(v) => update((d) => { d.identity.alignment = v })} />
+          <NumberField label="Level" value={identity.level} min={1} max={20} onChange={changeLevel} />
+          <NumberField label="Experience Points" value={identity.xp} min={0} max={999999} onChange={(v) => update((d) => { d.identity.xp = v })} />
           <div className="field">
-            <span className="label">Bonificador de competencia</span>
+            <span className="label">Proficiency Bonus</span>
             <div className="input num" style={{ color: 'var(--gold)' }}>
               +{proficiencyBonus(identity.level)}
             </div>
@@ -92,22 +92,22 @@ export function IdentitySection({ character, update }: SectionProps) {
         </div>
         <div style={{ marginTop: 10 }}>
           <TextAreaField
-            label="Lema (aparece en la selección de personaje)"
+            label="Tagline (shown on the character select screen)"
             rows={2}
             value={identity.tagline}
-            placeholder="Una frase que lo define"
+            placeholder="One line that sums them up"
             onChange={(v) => update((d) => { d.identity.tagline = v })}
           />
         </div>
       </Panel>
 
       <Panel
-        title="Retrato"
+        title="Portrait"
         actions={
           <>
-            <Button variant="small ghost" onClick={() => fileInput.current?.click()}>Subir</Button>
+            <Button variant="small ghost" onClick={() => fileInput.current?.click()}>Upload</Button>
             <Button variant="small ghost" onClick={() => update((d) => { d.identity.portrait = portraitForClass(d.identity.className) })}>
-              Por defecto
+              Default
             </Button>
           </>
         }
@@ -129,7 +129,7 @@ export function IdentitySection({ character, update }: SectionProps) {
           <motion.img
             key={identity.portrait ?? 'none'}
             src={identity.portrait ?? PORTRAIT_LIBRARY[12]}
-            alt="Retrato del personaje"
+            alt="Character portrait"
             initial={{ opacity: 0, x: -14, rotate: -6 }}
             animate={{ opacity: 1, x: 0, rotate: -3 }}
             transition={{ type: 'spring', stiffness: 240, damping: 22 }}
@@ -144,7 +144,7 @@ export function IdentitySection({ character, update }: SectionProps) {
           />
           <div className="stack grow" style={{ gap: 10 }}>
             <div className="field">
-              <span className="label">Galería</span>
+              <span className="label">Gallery</span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(52px, 1fr))', gap: 6 }}>
                 {PORTRAIT_LIBRARY.map((src) => (
                   <button
@@ -168,7 +168,7 @@ export function IdentitySection({ character, update }: SectionProps) {
               </div>
             </div>
             <label className="field">
-              <span className="label">Color de acento del menú</span>
+              <span className="label">Menu accent color</span>
               <input
                 type="color"
                 className="input"

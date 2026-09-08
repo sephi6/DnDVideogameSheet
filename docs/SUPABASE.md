@@ -1,17 +1,17 @@
-# Supabase: puesta en marcha
+# Supabase: getting it running
 
-La app funciona en dos modos y decide sola cuál usar:
+The app works in two modes and picks one on its own:
 
-| Modo | Cuándo | Qué hace |
+| Mode | When | What it does |
 | --- | --- | --- |
-| **Local** | No hay `.env.local` | Guarda en `localStorage`, sin login. Útil para trastear. |
-| **Nube** | Hay `.env.local` | Pide login y lee/escribe en Supabase. |
+| **Local** | No `.env.local` | Saves to `localStorage`, no login. Handy for tinkering. |
+| **Cloud** | There is a `.env.local` | Asks for a login and reads/writes to Supabase. |
 
 ---
 
-## 1. Credenciales
+## 1. Credentials
 
-Crea `.env.local` en la raíz (no se sube al repositorio):
+Create `.env.local` at the root (it is not committed):
 
 ```bash
 VITE_SUPABASE_URL=https://dtybrsbjgatjqllsdhhi.supabase.co
@@ -19,103 +19,102 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxxxxxxxxxxxxxxxx
 ```
 
 - **URL**: Dashboard → Settings → Data API → *Project URL*.
-- **Clave**: Dashboard → Settings → API Keys → la **publishable** (`sb_publishable_…`).
-  Es una clave pensada para vivir en el navegador; quien protege los datos es RLS.
-  La `secret` / `service_role` **no** debe aparecer nunca en el frontend.
-- El nombre antiguo `VITE_SUPABASE_ANON_KEY` sigue funcionando por compatibilidad,
-  pero `VITE_SUPABASE_PUBLISHABLE_KEY` tiene prioridad si están los dos.
+- **Key**: Dashboard → Settings → API Keys → the **publishable** one (`sb_publishable_…`).
+  It is a key meant to live in the browser; the data is protected by RLS.
+  The `secret` / `service_role` key must **never** appear in the frontend.
+- The old name `VITE_SUPABASE_ANON_KEY` still works for compatibility, but
+  `VITE_SUPABASE_PUBLISHABLE_KEY` wins if both are present.
 
-Reinicia `npm run dev` después de crear el archivo: Vite lee las variables al arrancar.
+Restart `npm run dev` after creating the file: Vite reads the variables at start-up.
 
-## 2. Crear las tablas
+## 2. Create the tables
 
-Dashboard → **SQL Editor** → *New query* → pega entero
+Dashboard → **SQL Editor** → *New query* → paste the whole of
 [`supabase/migrations/0001_init.sql`](../supabase/migrations/0001_init.sql) → *Run*.
 
-Crea la tabla `characters`, sus índices, el disparador que mantiene `updated_at`
-y las políticas de RLS.
+It creates the `characters` table, its indexes, the trigger that keeps
+`updated_at` current, and the RLS policies.
 
-## 3. Datos de ejemplo
+## 3. Example data
 
-Dos caminos, el que prefieras:
+Two paths, whichever you prefer:
 
-- **Automático**: al entrar por primera vez con la tabla vacía, la app siembra
-  la party de ejemplo (Kaelith, Brann, Nyx y Sor Maren). Solo lo hace una vez;
-  si luego los borras, no vuelven.
-- **Manual**: ejecuta [`supabase/seed.sql`](../supabase/seed.sql) en el SQL Editor.
-  Se puede lanzar varias veces sin duplicar nada.
+- **Automatic**: on the first sign-in with an empty table, the app seeds the
+  example party (Kaelith, Brann, Nyx and Sister Maren). It only does it once;
+  if you delete them later, they do not come back.
+- **Manual**: run [`supabase/seed.sql`](../supabase/seed.sql) in the SQL Editor.
+  It can be run several times without duplicating anything.
 
-Ese archivo se genera desde el TypeScript para que no haya dos copias de los
-mismos datos:
+That file is generated from the TypeScript so there are never two copies of the
+same data:
 
 ```bash
 node scripts/generate-seed.mjs
 ```
 
-## 4. Activar el acceso por correo
+## 4. Enable email access
 
-Dashboard → **Authentication** → *Sign In / Providers* → **Email** activado.
+Dashboard → **Authentication** → *Sign In / Providers* → **Email** enabled.
 
-Para una mesa privada, lo cómodo es **desactivar «Confirm email»** (en el mismo
-panel): así crear la cuenta entra directamente, sin depender del correo. Si lo
-dejas activado, cada jugador tendrá que pulsar el enlace que reciba antes de
-poder entrar, y el remitente por defecto de Supabase está limitado a unos pocos
-envíos por hora.
+For a private table, the convenient thing is to **turn off "Confirm email"** (in
+the same panel): creating an account then signs you straight in, with no
+dependency on email. If you leave it on, every player will have to click the
+link they receive before they can sign in, and Supabase's default sender is
+limited to a few messages per hour.
 
-La pantalla de acceso ofrece correo + contraseña y, como alternativa, un enlace
-mágico (botón «Enviarme un enlace»), que sí necesita correo funcionando.
+The sign-in screen offers email + password and, as an alternative, a magic link
+("Send me a link" button), which does need working email.
 
-> **Cuando todos tengáis cuenta, desactiva los registros abiertos**
-> (*Allow new users to sign up*). Con el modelo de permisos actual, cualquiera
-> que se registre en este proyecto ve y edita todas las fichas.
+> **Once everyone has an account, turn off open sign-ups**
+> (*Allow new users to sign up*). With the current permission model, anyone who
+> registers in this project sees and edits every sheet.
 
-## 5. Modelo de permisos
+## 5. Permission model
 
-Tal y como se pidió, **todos los usuarios autenticados tienen los mismos
-permisos**: leer, crear, editar y borrar *cualquier* ficha. Es lo natural para
-una party donde todo el mundo se fía del resto y el DM toca las fichas de todos.
+As requested, **all authenticated users have the same permissions**: read,
+create, edit and delete *any* sheet. That is the natural thing for a party where
+everybody trusts each other and the DM touches everyone's sheet.
 
-Lo que eso implica:
+What that implies:
 
-- Quien tenga cuenta en el proyecto puede modificar o borrar la ficha de otro.
-- Sin sesión no se ve nada: el rol `anon` no tiene ninguna política.
-- `owner_id` se guarda igualmente (quién creó cada ficha), aunque hoy no
-  restrinja nada. Está ahí para poder cerrar permisos sin migrar datos.
+- Anyone with an account in the project can modify or delete someone else's sheet.
+- Without a session nothing is visible: the `anon` role has no policy at all.
+- `owner_id` is still stored (who created each sheet), even though it restricts
+  nothing today. It is there so permissions can be locked down without migrating data.
 
-Para cerrarlo más adelante, al final de `0001_init.sql` están las políticas
-estrictas por dueño, comentadas y listas para usar.
+To lock it down later, the strict per-owner policies are at the end of
+`0001_init.sql`, commented out and ready to use.
 
-## 6. Cómo está montado el código
+## 6. How the code is put together
 
 ```
-src/lib/supabase.ts     Cliente y detección de si hay credenciales
-src/lib/storage.ts      Servicios de lectura y escritura (local | supabase)
-src/store/auth.ts       Sesión: entrar, registrarse, enlace mágico, salir
-src/store/roster.ts     Estado de la party, guardado y estado de sincronización
+src/lib/supabase.ts     Client and detection of whether credentials exist
+src/lib/storage.ts      Read and write services (local | supabase)
+src/store/auth.ts       Session: sign in, sign up, magic link, sign out
+src/store/roster.ts     Party state, saving and sync status
 src/screens/LoginScreen.tsx
 ```
 
-Detalles que importan:
+Details that matter:
 
-- **Se guarda ficha a ficha**, no la party entera, y con medio segundo de
-  margen desde la última tecla. Editar dos personajes no encola un guardado
-  detrás del otro.
-- **La ficha completa va en `data` (jsonb)**. `name` y `owner_id` se
-  desnormalizan para poder listar y filtrar desde SQL sin abrir el json. El
-  modelo puede crecer (`src/types/character.ts`) sin migrar columnas.
-- **Si un guardado falla**, la cabecera de la ficha lo dice y aparece un botón
-  *Reintentar*; el trabajo no se pierde de la pantalla. Un borrado que falla
-  devuelve el personaje a la lista.
-- **La lectura está protegida contra duplicados**: React monta los efectos dos
-  veces en desarrollo, y sin esa guarda la party de ejemplo se sembraba dos veces.
-- **Los ids son UUID** de verdad, para que sean la clave primaria de la tabla.
+- **Saving is per sheet**, not per party, and with half a second of slack from
+  the last keystroke. Editing two characters does not queue one save behind the other.
+- **The whole sheet goes into `data` (jsonb)**. `name` and `owner_id` are
+  denormalized so SQL can list and filter without opening the json. The model can
+  grow (`src/types/character.ts`) without migrating columns.
+- **If a save fails**, the sheet header says so and a *Retry* button appears; the
+  work does not disappear from the screen. A failed delete puts the character
+  back in the list.
+- **The load is guarded against duplicates**: React mounts effects twice in
+  development, and without that guard the example party got seeded twice.
+- **Ids are real UUIDs**, so they can be the table's primary key.
 
-## 7. Lo que aún no está
+## 7. What is still missing
 
-- **Retratos en Storage.** Hoy una imagen subida se guarda como data-url dentro
-  del jsonb; se reescala a 1000×1400 antes de guardarla para que la fila no se
-  dispare. Lo suyo sería un bucket `portraits` y guardar solo la URL.
-- **Tiempo real.** `supabase.channel('characters')` con `postgres_changes`
-  permitiría que el DM viera los PG de la party moverse en directo.
-- **Partidas/mesas.** Hoy hay una sola party: todas las fichas de la base. Si
-  hiciera falta separar mesas, tocaría una tabla `campaigns` y filtrar por ella.
+- **Portraits in Storage.** Today an uploaded image is stored as a data-url
+  inside the jsonb; it is downscaled to 1000×1400 before saving so the row does
+  not blow up. The right thing would be a `portraits` bucket, storing only the URL.
+- **Real time.** `supabase.channel('characters')` with `postgres_changes` would
+  let the DM watch the party's Hit Points move live.
+- **Games/tables.** Today there is a single party: every sheet in the database.
+  If tables ever needed separating, it would take a `campaigns` table to filter by.

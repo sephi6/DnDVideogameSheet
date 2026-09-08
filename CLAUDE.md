@@ -2,175 +2,197 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Qué es
+## What it is
 
-**ARCANA** — app web para llevar la ficha de un personaje de **D&D 2024**. El objetivo de
-diseño no es la ficha en sí, sino **navegarla como el menú de un videojuego** (referencia
-declarada: Persona 5): cartas inclinadas, barrido rojo diagonal entre pantallas, blips de
-menú sintetizados y navegación con teclado.
+**ARCANA** — web app for keeping a **D&D 2024** character sheet. The design goal is not
+the sheet itself but **navigating it like a video-game menu** (declared reference:
+Persona 5): tilted cards, a diagonal red wipe between screens, synthesized menu blips and
+keyboard navigation.
 
-**Dos modos, decididos solos** (`src/lib/supabase.ts` → `isSupabaseConfigured`):
-- **Local** — sin `.env.local`. Guarda en `localStorage`, sin login.
-- **Nube** — con `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY` (o el nombre antiguo
-  `VITE_SUPABASE_ANON_KEY`) en `.env.local`. Pide login y lee/escribe en Supabase (tabla
-  `characters`, ficha entera como `jsonb`).
+**Two modes, decided automatically** (`src/lib/supabase.ts` → `isSupabaseConfigured`):
+- **Local** — no `.env.local`. Saves to `localStorage`, no login.
+- **Cloud** — with `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY` (or the old name
+  `VITE_SUPABASE_ANON_KEY`) in `.env.local`. Asks for a login and reads/writes to Supabase
+  (table `characters`, whole sheet as `jsonb`).
 
-## Idioma
+## Language and rules
 
-Todo el proyecto está en **español**: UI, comentarios, nombres de dominio (las clases se
-guardan por su nombre visible — `'Mago'`, `'Bárbaro'`), mensajes de commit. Sigue esa
-convención al añadir código.
+The whole project is in **English**: UI, comments, domain names (classes are stored under
+their display name — `'Wizard'`, `'Barbarian'`), commit messages. Follow that convention
+when adding code.
 
-## Comandos
+Rules terminology follows the **2024 Player's Handbook**: official class, species,
+background, condition, damage type, weapon mastery, spell school and language names, and
+**imperial units** (Speed and ranges in feet, weights in pounds, Carrying Capacity =
+Strength × 15 lb.).
+
+## Commands
 
 ```bash
-npm run dev        # Vite dev server en http://localhost:5173
-npm run build      # tsc -b (typecheck estricto) + vite build  ← única puerta de calidad
-npm run preview     # sirve el build de dist/
-npm run typecheck  # solo tipos
+npm run dev        # Vite dev server at http://localhost:5173
+npm run build      # tsc -b (strict typecheck) + vite build  ← the only quality gate
+npm run preview    # serves the dist/ build
+npm run typecheck  # types only
 
-node scripts/generate-seed.mjs     # regenera supabase/seed.sql desde src/data/defaults.ts (usa esbuild, viene con Vite)
-node scripts/generate-assets.mjs   # regenera los retratos-emblema SVG de public/assets/portraits/
-bash scripts/fetch-fonts.sh        # regenera las fuentes auto-alojadas de public/fonts/
+node scripts/generate-seed.mjs     # regenerates supabase/seed.sql from src/data/defaults.ts (uses esbuild, ships with Vite)
+node scripts/generate-assets.mjs   # regenerates the SVG emblem portraits in public/assets/portraits/
+bash scripts/fetch-fonts.sh        # regenerates the self-hosted fonts in public/fonts/
 ```
 
-No hay tests ni ESLint configurados. `tsc -b` corre en modo `strict` con `noUnusedLocals`
-y `noUnusedParameters`, así que una variable sin usar rompe el build.
+There are no tests and no ESLint. `tsc -b` runs in `strict` mode with `noUnusedLocals`
+and `noUnusedParameters`, so an unused variable breaks the build.
 
-Tras un `git pull` que cambie `package.json`, **corre `npm install`**: `@supabase/supabase-js`
-se añadió con la integración de Supabase y sin él el typecheck falla.
+After a `git pull` that changes `package.json`, **run `npm install`**: `@supabase/supabase-js`
+came in with the Supabase integration and without it the typecheck fails.
 
-Alias de imports: `@/` → `src/` (definido en `vite.config.ts` y `tsconfig.app.json`).
+Import alias: `@/` → `src/` (defined in `vite.config.ts` and `tsconfig.app.json`).
 
-## Arquitectura
+## Architecture
 
-**Sin router.** `src/App.tsx` es una máquina de estados de tres pantallas
-(`'title' | 'select' | 'sheet'`) más una puerta de login. `needsLogin` (auth activo y sin
-sesión) mete `LoginScreen` por encima de `select`/`sheet`. `App` llama a `hydrate()` cuando
-`authStatus` es `'signed-in'` o `'disabled'`, y a `reset()` al cerrar sesión.
+**No router.** `src/App.tsx` is a three-screen state machine
+(`'title' | 'select' | 'sheet'`) plus a login gate. `needsLogin` (auth active and no
+session) puts `LoginScreen` on top of `select`/`sheet`. `App` calls `hydrate()` when
+`authStatus` is `'signed-in'` or `'disabled'`, and `reset()` on sign-out.
 
-**Transiciones — `useWipe()` (`src/components/fx/Wipe.tsx`).** El barrido rojo cubre,
-ejecuta el cambio de pantalla y descubre. El efecto de navegación vive en un `useEffect`
-(fase `reveal`), **nunca dentro de un updater de `setState`**: StrictMode los invoca dos
-veces y la acción se perdería. Con `prefers-reduced-motion` se omite el barrido; hay un
-failsafe de 1,2 s por si la animación no avisa (pestaña en segundo plano). Mismo patrón en
-el menú de secciones de `SheetScreen`.
+**Transitions — `useWipe()` (`src/components/fx/Wipe.tsx`).** The red wipe covers, runs
+the screen change and uncovers. The navigation side effect lives in a `useEffect` (phase
+`reveal`), **never inside a `setState` updater**: StrictMode invokes them twice and the
+action would be lost. With `prefers-reduced-motion` the wipe is skipped; there is a 1.2 s
+failsafe in case the animation never reports back (background tab). Same pattern in the
+section menu of `SheetScreen`.
 
-**Estado de la party — `src/store/roster.ts` (zustand).** Fuente única de verdad del array
-de personajes. Toda mutación va por `updateCharacter(id, draft => { ... })`: recibe un
-`structuredClone` mutable, lo modificas libremente, el store fija `updatedAt`. Detalles:
-- **Guardado por ficha, no por party.** `scheduleSave(id)` con debounce de 500 ms y **un
-  temporizador por personaje** (`timers: Map`). Editar dos fichas no encola una detrás de otra.
-- **Estado de sincronización** `sync: 'idle'|'saving'|'saved'|'error'` + `syncError`, que la
-  cabecera de `SheetScreen` muestra. Los ids que fallan van a un `Set` `failed` y se
-  reintentan con `retryFailed()`.
-- **`hydrate()` está protegido contra doble ejecución** (promesa `hydration` en módulo):
-  StrictMode montaba el efecto dos veces y sembraba la party de ejemplo por duplicado.
-- **Siembra**: base vacía → `demoRoster()`. En local siempre; en la nube solo la primera vez
-  (flag `arcana:cloud-seeded` en `localStorage`), para no resucitar ejemplos borrados.
-- `pendingLocalImport` / `importLocalRoster()`: al pasar a la nube, ofrece subir las fichas
-  que quedaron en `localStorage`. `seedDemo()`: botón manual de "cargar ejemplos".
+**Party state — `src/store/roster.ts` (zustand).** Single source of truth for the array of
+characters. Every mutation goes through `updateCharacter(id, draft => { ... })`: it gets a
+mutable `structuredClone`, you edit it freely, the store sets `updatedAt`. Details:
+- **Saving per sheet, not per party.** `scheduleSave(id)` with a 500 ms debounce and **one
+  timer per character** (`timers: Map`). Editing two sheets does not queue one behind the other.
+- **Sync status** `sync: 'idle'|'saving'|'saved'|'error'` + `syncError`, shown by the
+  `SheetScreen` header. Ids that fail go into a `failed` `Set` and are retried with
+  `retryFailed()`.
+- **`hydrate()` is guarded against double execution** (module-level `hydration` promise):
+  StrictMode mounted the effect twice and seeded the example party in duplicate.
+- **Seeding**: empty database → `demoRoster()`. Always locally; in the cloud only the
+  first time (flag `arcana:cloud-seeded` in `localStorage`), so deleted examples do not
+  come back.
+- `pendingLocalImport` / `importLocalRoster()`: when moving to the cloud, offers to upload
+  the sheets left in `localStorage`. `seedDemo()`: manual "load examples" button.
 
-**Persistencia — `src/lib/storage.ts`.** Interfaz `StorageAdapter` con métodos **por ficha**
-(`load` / `save` / `saveMany` / `remove`) y dos implementaciones: `localAdapter` (clave
-`arcana:roster:v1`) y `supabaseAdapter`. `export const storage` elige según
-`isSupabaseConfigured`; `usingCloud` es el booleano derivado. Las pantallas hablan siempre
-con `storage` y no saben cuál está activo. **El `Character` entero tiene que ser
-serializable tal cual** (columna `data` `jsonb`); `id`, `name` y `owner_id` se desnormalizan
-a columnas para poder listar desde SQL. El `id` de la fila manda sobre el que venga en el json.
+**Persistence — `src/lib/storage.ts`.** `StorageAdapter` interface with **per-sheet**
+methods (`load` / `save` / `saveMany` / `remove`) and two implementations: `localAdapter`
+(key `arcana:roster:v1`) and `supabaseAdapter`. `export const storage` picks based on
+`isSupabaseConfigured`; `usingCloud` is the derived boolean. The screens always talk to
+`storage` and do not know which one is active. **The whole `Character` has to be
+serializable as-is** (`data` `jsonb` column); `id`, `name` and `owner_id` are denormalized
+into columns so SQL can list them. The row `id` wins over whatever comes in the json.
 
-**Auth — `src/store/auth.ts` (zustand) + `src/screens/LoginScreen.tsx`.** Correo+contraseña,
-enlace mágico como alternativa, y cierre de sesión. `init()` lee la sesión guardada y se
-suscribe a `onAuthStateChange` (devuelve la función de baja). `status` arranca en
-`'disabled'` si no hay Supabase. Los errores de Supabase se traducen con `readableError()`
+**Legacy migration — `src/lib/migrate.ts`.** Sheets saved by the Spanish version of the
+app hold Spanish domain values, metric units and portrait paths whose files were renamed
+(`assets/portraits/mago.svg` → `wizard.svg`). `migrateRoster()` is applied by `storage.ts`
+on **every read**, in both adapters, so old sheets display correctly straight away; the
+migrated version is written back the next time the sheet is edited. It only rewrites the
+**enumerated** fields (class, species, background, alignment, conditions, damage types,
+weapon masteries, spell schools, languages, portrait) plus the unit conversions (Speed
+m → ft., item weights kg → lb.). Free text the player typed —attack and item names,
+ranges, notes, journal— is deliberately left alone. `Character.schemaVersion` guards it:
+a sheet already at `SCHEMA_VERSION` is returned untouched, so a converted Speed is never
+converted twice. **Bump `SCHEMA_VERSION` and extend `migrateCharacter()` whenever a stored
+value is renamed or its unit changes.**
+
+**Auth — `src/store/auth.ts` (zustand) + `src/screens/LoginScreen.tsx`.** Email+password,
+magic link as an alternative, and sign-out. `init()` reads the stored session and
+subscribes to `onAuthStateChange` (returns the unsubscribe function). `status` starts at
+`'disabled'` if there is no Supabase. Supabase errors are translated by `readableError()`
 (`src/lib/supabase.ts`).
 
-**Cliente Supabase — `src/lib/supabase.ts`.** `supabase` es `null` sin credenciales;
-`requireSupabase()` lanza si se usa sin configurar. Tipos de `import.meta.env` en
+**Supabase client — `src/lib/supabase.ts`.** `supabase` is `null` without credentials;
+`requireSupabase()` throws if used unconfigured. `import.meta.env` types in
 `src/vite-env.d.ts`.
 
-**Retratos subidos — `src/lib/image.ts`.** `downscaleImage()` reescala a 1000×1400 y
-recomprime a WebP/JPEG antes de guardar: el retrato viaja como data-url dentro del `jsonb` y
-una foto de varios MB engordaría la fila y se reenviaría entera en cada guardado.
+**Uploaded portraits — `src/lib/image.ts`.** `downscaleImage()` resizes to 1000×1400 and
+recompresses to WebP/JPEG before saving: the portrait travels as a data-url inside the
+`jsonb` and a multi-megabyte photo would bloat the row and be resent whole on every save.
 
-**Modelo de datos — `src/types/character.ts`.** Una sola interfaz `Character` grande y
-plana. Sin migraciones: el modelo evoluciona y el `jsonb` se adapta. `id` es un **UUID de
-verdad** (`newId()` en `defaults.ts`), porque es la clave primaria de la tabla; `isUuid()`
-detecta las fichas viejas con id `pc_xxx` para regenerarlas al importarlas a la nube.
+**Data model — `src/types/character.ts`.** One big flat `Character` interface. No
+migrations: the model evolves and the `jsonb` follows. `id` is a **real UUID**
+(`newId()` in `defaults.ts`), because it is the table's primary key; `isUuid()` spots old
+sheets with `pc_xxx` ids so they can be regenerated when imported to the cloud.
 
-**Datos de reglas — `src/data/`.**
-- `rules.ts`: tablas estáticas de D&D 2024 (12 clases con dado de golpe/salvaciones/tipo de
-  lanzador, 18 habilidades, tabla de espacios de conjuro de lanzador completo y de pacto,
-  bonif. de competencia). `findClass(name)` resuelve por nombre visible.
-- `defaults.ts`: `createCharacter(partial?)` (fábrica, Guerrero nivel 1 por defecto) y
-  `demoRoster()` (4 personajes de ejemplo con **todas las secciones rellenas** — ataques,
-  conjuros, equipo, rasgos, diario). El demo usa ids anidados deterministas (`${slug}-atk-1`)
-  y `DEMO_TIMESTAMP` fijo para que `generate-seed.mjs` produzca un `seed.sql` estable.
+**Rules data — `src/data/`.**
+- `rules.ts`: static D&D 2024 tables (12 classes with hit die/saves/caster type, 18 skills,
+  full-caster and pact spell slot tables, proficiency bonus, plus species, backgrounds,
+  alignments, conditions, damage types, weapon masteries, spell schools and languages).
+  `findClass(name)` resolves by display name.
+- `defaults.ts`: `createCharacter(partial?)` (factory, level 1 Fighter by default) and
+  `demoRoster()` (4 example characters with **every section filled in** — attacks, spells,
+  gear, features, journal). The demo uses deterministic nested ids (`${slug}-atk-1`) and a
+  fixed `DEMO_TIMESTAMP` so `generate-seed.mjs` produces a stable `seed.sql`.
 
-**Valores derivados — `src/lib/derive.ts`.** Funciones puras (`mod`, `pb`, `saveBonus`,
-`skillBonus`, `spellSaveDC`, `initiative`, `carryCapacity`…). **No se almacenan derivados**:
-se calculan en render. Excepción deliberada: al cambiar clase o nivel en `IdentitySection`
-se reescriben `combat.hitDieSize`, `combat.hitDiceTotal` y `spellcasting.slots`, porque
-después son campos que el jugador edita a mano.
+**Derived values — `src/lib/derive.ts`.** Pure functions (`mod`, `pb`, `saveBonus`,
+`skillBonus`, `spellSaveDC`, `initiative`, `carryCapacity`…). **Derived values are not
+stored**: they are computed at render. Deliberate exception: changing class or level in
+`IdentitySection` rewrites `combat.hitDieSize`, `combat.hitDiceTotal` and
+`spellcasting.slots`, because afterwards those are fields the player edits by hand.
 
-**Secciones de la ficha — `src/sections/`.** Ocho componentes
-`({ character, update }: SectionProps) => JSX`. El orden, las teclas `1`–`8`, los glifos y
-el registro están en el array `SECTIONS` de `src/screens/SheetScreen.tsx` — para
-añadir/reordenar una sección se toca ahí.
+**Sheet sections — `src/sections/`.** Eight components
+`({ character, update }: SectionProps) => JSX`. The order, the `1`–`8` keys, the glyphs and
+the registry live in the `SECTIONS` array of `src/screens/SheetScreen.tsx` — adding or
+reordering a section is done there.
 
-**Primitivas de UI — `src/components/ui/controls.tsx`.** Todos los controles de formulario
-(`TextField`, `NumberField`, `SelectField`, `Button`, `CheckBox`, `ProficiencyPip`, `Chip`…).
-Cada control llama a `play(cue)` **por su cuenta**, así que las secciones no cablean sonido.
+**UI primitives — `src/components/ui/controls.tsx`.** Every form control (`TextField`,
+`NumberField`, `SelectField`, `Button`, `CheckBox`, `ProficiencyPip`, `Chip`…). Each
+control calls `play(cue)` **on its own**, so the sections do not wire up sound.
 
-**Sonido — `src/lib/sfx.ts`.** Cues de menú sintetizados con WebAudio, cero archivos de
-audio. Mute persistido en `arcana:sfx-muted`.
+**Sound — `src/lib/sfx.ts`.** Menu cues synthesized with WebAudio, zero audio files.
+Mute persisted in `arcana:sfx-muted`.
 
-**Teclado.** Cada pantalla monta su propio listener `keydown` en `window` dentro de un
-`useEffect`. Todos filtran con `isTyping(e.target)` (`src/lib/keys.ts`) para no secuestrar
-la escritura en campos. Hay alias WASD/QE junto a las flechas.
+**Keyboard.** Every screen mounts its own `keydown` listener on `window` inside a
+`useEffect`. They all filter with `isTyping(e.target)` (`src/lib/keys.ts`) so typing in
+fields is not hijacked. There are WASD/QE aliases next to the arrow keys.
 
-**Estilos.** CSS plano en `src/styles/` (`fonts`, `global`, `screens`, `sheet`), importado
-en `src/main.tsx`. La custom property `--accent` se fija por personaje (estilo inline en los
-contenedores) y tiñe todo el menú.
+**Styles.** Plain CSS in `src/styles/` (`fonts`, `global`, `screens`, `sheet`), imported in
+`src/main.tsx`. The `--accent` custom property is set per character (inline style on the
+containers) and tints the whole menu.
 
 ## Assets
 
-Los retratos de `public/assets/portraits/*.svg` son **emblemas provisionales generados por
-código**. Sustituirlos por ilustraciones reales: guía de estilo y prompts en
-`docs/ASSET_PROMPTS.md`. Si cambia la extensión (`.svg` → `.png`) hay que actualizarla en
-dos sitios: `PORTRAIT_SLUGS` / `portraitForClass()` en `src/data/defaults.ts` y
-`PORTRAIT_LIBRARY` en `src/sections/IdentitySection.tsx`. Las rutas de retrato son
-**relativas** (`assets/portraits/…`, sin barra inicial).
+The portraits in `public/assets/portraits/*.svg` are **provisional emblems generated by
+code**, one per class, named after the English class slug (`wizard.svg`, `barbarian.svg`…).
+To replace them with real illustrations: style guide and prompts in
+`docs/ASSET_PROMPTS.md`. If the extension changes (`.svg` → `.png`) it has to be updated
+in two places: `PORTRAIT_SLUGS` / `portraitForClass()` in `src/data/defaults.ts` and
+`PORTRAIT_LIBRARY` in `src/sections/IdentitySection.tsx`. Portrait paths are **relative**
+(`assets/portraits/…`, no leading slash).
 
 ## Supabase
 
-Base de datos y migraciones en `supabase/` (no hay proyecto de Supabase CLI: no existe
-`supabase/config.toml`). Guía completa: `docs/SUPABASE.md`.
+Database and migrations in `supabase/` (there is no Supabase CLI project: no
+`supabase/config.toml`). Full guide: `docs/SUPABASE.md`.
 
-- **`supabase/migrations/0001_init.sql`** — tabla `public.characters` (`id uuid pk`,
-  `owner_id` → `auth.users`, `name text`, `data jsonb`, timestamps), índices, trigger
-  `touch_updated_at`, y **RLS**: cualquier usuario `authenticated` puede leer/crear/editar/
-  borrar *cualquier* ficha (party donde todos se fían); `anon` no tiene ninguna política.
-  Al final, comentadas, las políticas estrictas por dueño.
-- **`supabase/seed.sql`** — la party de ejemplo con ids UUID fijos, `on conflict do nothing`.
-  **Generado** por `node scripts/generate-seed.mjs` desde `src/data/defaults.ts` (esbuild
-  empaqueta el TS y lo importa). No editar a mano.
-- Estos SQL se ejecutan en el **SQL Editor** del dashboard de Supabase, en orden. La app
-  también siembra sola la primera vez (ver `roster.ts`).
+- **`supabase/migrations/0001_init.sql`** — table `public.characters` (`id uuid pk`,
+  `owner_id` → `auth.users`, `name text`, `data jsonb`, timestamps), indexes, trigger
+  `touch_updated_at`, and **RLS**: any `authenticated` user can read/create/edit/delete
+  *any* sheet (a party where everyone trusts each other); `anon` has no policy. At the end,
+  commented out, the strict per-owner policies. The file also drops the older Spanish
+  policy names so it stays re-runnable on databases created before the rename.
+- **`supabase/seed.sql`** — the example party with fixed UUID ids, `on conflict do nothing`.
+  **Generated** by `node scripts/generate-seed.mjs` from `src/data/defaults.ts` (esbuild
+  bundles the TS and imports it). Do not edit by hand.
+- These SQL files are run in the **SQL Editor** of the Supabase dashboard, in order. The
+  app also seeds itself the first time (see `roster.ts`).
 
-**Configuración local**: copiar `.env.example` → `.env.local` con `VITE_SUPABASE_URL` y
-`VITE_SUPABASE_PUBLISHABLE_KEY` (la *publishable* `sb_publishable_…`, no la `service_role`).
-Reiniciar `npm run dev` después. Sin ese archivo la app arranca en modo local. Proyecto del
-usuario: `dtybrsbjgatjqllsdhhi.supabase.co`.
+**Local setup**: copy `.env.example` → `.env.local` with `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_PUBLISHABLE_KEY` (the *publishable* `sb_publishable_…`, not the
+`service_role`). Restart `npm run dev` afterwards. Without that file the app boots in
+local mode. The user's project: `dtybrsbjgatjqllsdhhi.supabase.co`.
 
-**Qué falta para dejarlo conectado** (todo del lado del dashboard/entorno, el código está):
-1. `.env.local` con URL + publishable key.
-2. Ejecutar `0001_init.sql` (y opcionalmente `seed.sql`) en el SQL Editor.
-3. Authentication → Email provider activado; decidir "Confirm email"; añadir
-   `http://localhost:5173` a las Redirect URLs para el enlace mágico.
-4. Cuando la mesa tenga cuenta, desactivar "Allow new users to sign up".
+**What is left to wire it up** (all on the dashboard/environment side, the code is done):
+1. `.env.local` with the URL + publishable key.
+2. Run `0001_init.sql` (and optionally `seed.sql`) in the SQL Editor.
+3. Authentication → Email provider enabled; decide on "Confirm email"; add
+   `http://localhost:5173` to the Redirect URLs for the magic link.
+4. Once the table's players all have accounts, turn off "Allow new users to sign up".
 
-## Siguientes pasos (README)
+## Next steps (README)
 
-Retratos reales (guía `docs/ASSET_PROMPTS.md`) · subirlos a Supabase Storage en vez del
-`jsonb` · tiempo real para que el DM vea los PG en directo · importar ficha desde JSON.
+Real portraits (guide in `docs/ASSET_PROMPTS.md`) · upload them to Supabase Storage
+instead of the `jsonb` · real time so the DM sees Hit Points live · import a sheet from JSON.

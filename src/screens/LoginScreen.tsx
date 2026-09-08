@@ -4,24 +4,24 @@ import { Button } from '@/components/ui/controls'
 import { play } from '@/lib/sfx'
 import { useAuth } from '@/store/auth'
 
-type Mode = 'entrar' | 'registro'
+type Mode = 'signin' | 'signup'
 
 /**
- * El alta de usuarios se gestiona desde Supabase. Solo se ofrece «Crear cuenta»
- * en la interfaz si se activa a propósito con VITE_SIGNUPS_OPEN=true.
+ * Sign-ups are managed from Supabase. The interface only offers "Create account"
+ * if it is deliberately turned on with VITE_SIGNUPS_OPEN=true.
  */
 const SIGNUPS_OPEN = import.meta.env.VITE_SIGNUPS_OPEN === 'true'
 
 export function LoginScreen() {
   const { signIn, signUp, sendMagicLink, busy, error, notice, clearMessages } = useAuth()
-  const [mode, setMode] = useState<Mode>('entrar')
+  const [mode, setMode] = useState<Mode>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     play('confirm')
-    if (mode === 'entrar' || !SIGNUPS_OPEN) await signIn(email, password)
+    if (mode === 'signin' || !SIGNUPS_OPEN) await signIn(email, password)
     else await signUp(email, password)
   }
 
@@ -40,13 +40,13 @@ export function LoginScreen() {
         transition={{ type: 'spring', stiffness: 200, damping: 22 }}
       >
         <div className="login-head">
-          <span className="slab"><span>Acceso</span></span>
-          <h1 className="display">Entra a la party</h1>
+          <span className="slab"><span>Sign in</span></span>
+          <h1 className="display">Join the party</h1>
         </div>
 
         {SIGNUPS_OPEN && (
           <div className="row login-tabs">
-            {(['entrar', 'registro'] as Mode[]).map((m) => (
+            {(['signin', 'signup'] as Mode[]).map((m) => (
               <button
                 key={m}
                 type="button"
@@ -54,7 +54,7 @@ export function LoginScreen() {
                 data-active={mode === m}
                 onClick={() => switchMode(m)}
               >
-                <span>{m === 'entrar' ? 'Ya tengo cuenta' : 'Crear cuenta'}</span>
+                <span>{m === 'signin' ? 'I have an account' : 'Create account'}</span>
               </button>
             ))}
           </div>
@@ -62,7 +62,7 @@ export function LoginScreen() {
 
         <form className="stack" onSubmit={submit} style={{ gap: 12 }}>
           <label className="field">
-            <span className="label">Correo</span>
+            <span className="label">Email</span>
             <input
               className="input"
               type="email"
@@ -70,21 +70,21 @@ export function LoginScreen() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@correo.com"
+              placeholder="you@email.com"
             />
           </label>
 
           <label className="field">
-            <span className="label">Contraseña</span>
+            <span className="label">Password</span>
             <input
               className="input"
               type="password"
-              autoComplete={mode === 'entrar' ? 'current-password' : 'new-password'}
+              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
               required
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="mínimo 6 caracteres"
+              placeholder="at least 6 characters"
             />
           </label>
 
@@ -105,19 +105,19 @@ export function LoginScreen() {
           )}
 
           <button type="submit" className="btn login-submit" disabled={busy}>
-            <span>{busy ? 'Un momento…' : mode === 'entrar' ? 'Entrar ▸' : 'Crear cuenta ▸'}</span>
+            <span>{busy ? 'One moment…' : mode === 'signin' ? 'Sign in ▸' : 'Create account ▸'}</span>
           </button>
         </form>
 
         <div className="login-alt">
-          <span className="muted">¿Sin ganas de contraseñas?</span>
+          <span className="muted">Not in the mood for passwords?</span>
           <Button
             variant="small ghost"
             onClick={() => {
               if (email.trim()) void sendMagicLink(email)
             }}
           >
-            Enviarme un enlace
+            Send me a link
           </Button>
         </div>
       </motion.div>

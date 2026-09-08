@@ -1,6 +1,6 @@
 /**
- * Efectos de sonido sintetizados con WebAudio: cero assets, cero peticiones.
- * Son los "blips" de menú que hacen que la navegación se sienta de videojuego.
+ * Sound effects synthesized with WebAudio: zero assets, zero requests.
+ * These are the menu blips that make navigation feel like a video game.
  */
 type Cue = 'move' | 'confirm' | 'back' | 'toggle' | 'open' | 'error'
 
@@ -89,7 +89,7 @@ export function play(cue: Cue) {
   try {
     CUES[cue]()
   } catch {
-    /* el audio nunca debe romper la interfaz */
+    /* audio must never break the interface */
   }
 }
 
@@ -102,7 +102,7 @@ export function setMuted(muted: boolean) {
   try {
     localStorage.setItem(MUTE_KEY, muted ? '1' : '0')
   } catch {
-    /* ignorar */
+    /* ignore */
   }
   if (!muted) play('toggle')
 }

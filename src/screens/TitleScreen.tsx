@@ -37,7 +37,7 @@ export function TitleScreen({ onStart }: { onStart: () => void }) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.25, duration: 0.4 }}
         >
-          Fichas de Dungeons &amp; Dragons 2024
+          Dungeons &amp; Dragons 2024 character sheets
         </motion.div>
         <motion.div
           className="title-cta"
@@ -45,7 +45,7 @@ export function TitleScreen({ onStart }: { onStart: () => void }) {
           animate={{ opacity: [0.25, 1, 0.25] }}
           transition={{ delay: 0.6, duration: 1.8, repeat: Infinity }}
         >
-          Pulsa cualquier tecla
+          Press any key
         </motion.div>
       </div>
     </div>

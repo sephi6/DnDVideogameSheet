@@ -46,7 +46,7 @@ export function carriedWeight(character: Character): number {
   return character.inventory.items.reduce((sum, i) => sum + i.weight * i.quantity, 0)
 }
 
-/** Capacidad de carga: Fuerza x 7,5 kg (equivalente métrico del PHB). */
+/** Carrying Capacity: Strength score × 15 pounds (PHB 2024). */
 export function carryCapacity(character: Character): number {
-  return character.abilities.str * 7.5
+  return character.abilities.str * 15
 }
