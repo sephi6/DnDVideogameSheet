@@ -112,7 +112,9 @@
   flex: 0 0 auto;
 }
 
-.nav-item:hover { color: var(--bone); background: linear-gradient(100deg, #241f2b, #100e14); }
+@media (hover: hover) {
+  .nav-item:hover { color: var(--bone); background: linear-gradient(100deg, #241f2b, #100e14); }
+}
 
 .nav-item[data-active='true'] {
   background: var(--accent);
@@ -141,7 +143,6 @@
 .g4 { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 
 .abilities-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-@media (min-width: 1000px) { .abilities-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 
 .card { padding: 14px; }
 
@@ -193,7 +194,9 @@
   padding: 4px 2px;
 }
 
-.skill-row:hover { background: rgba(224, 17, 51, 0.09); }
+@media (hover: hover) {
+  .skill-row:hover { background: rgba(224, 17, 51, 0.09); }
+}
 
 .skill-row .sk-name { font-size: 17px; }
 .skill-row .sk-ability { font-family: var(--font-label); font-size: 13px; color: var(--bone-dim); letter-spacing: 0.12em; }
@@ -214,7 +217,9 @@
   border-radius: 50%;
   padding: 0;
   flex: 0 0 auto;
-  transition: all 120ms ease;
+  /* Colour only: with `all`, the pip animates its size on a touch device, where
+     the coarse-pointer media query enlarges it. */
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
 }
 .pip[data-level='1'] { background: var(--accent); border-color: var(--ink); }
 .pip[data-level='2'] { background: var(--gold); border-color: var(--ink); box-shadow: 0 0 0 2px var(--accent); }
@@ -258,7 +263,7 @@
   background: transparent;
   cursor: pointer;
   padding: 0;
-  transition: all 110ms ease;
+  transition: background 110ms ease, border-color 110ms ease;
 }
 .box[data-on='true'] { background: var(--accent); border-color: var(--ink); }
 .box.gold[data-on='true'] { background: var(--gold); }
@@ -302,16 +307,7 @@
 .coin.sp .cn { color: #cfd6dd; }
 .coin.cp .cn { color: #c98a5e; }
 
-@media (max-width: 860px) {
-  .sheet {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: 'ident' 'head' 'nav' 'body' 'hints';
-    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
-  }
-  .sheet-nav { flex-direction: row; overflow-x: auto; padding-bottom: 8px; }
-  .nav-item { width: auto; white-space: nowrap; }
-  .nav-item[data-active='true'] { box-shadow: 4px 4px 0 var(--ink); }
-}
+/* Every size breakpoint lives in responsive.css. */
 
 .save-dot[data-state='saving'] { color: var(--bone-dim); }
 .save-dot[data-state='saved'] { color: var(--gold); }

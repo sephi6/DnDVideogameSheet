@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Button, HintBar } from '@/components/ui/controls'
+import { Button, HintBar, OverflowMenu } from '@/components/ui/controls'
 import { ABILITIES, formatModifier } from '@/data/rules'
 import { abilityModifier } from '@/data/rules'
 import { isTyping } from '@/lib/keys'
+import { useIsPhone } from '@/lib/responsive'
 import { play } from '@/lib/sfx'
 import type { Character } from '@/types/character'
 
@@ -40,6 +41,7 @@ export function CharacterSelect({
 }: Props) {
   const railRef = useRef<HTMLDivElement>(null)
   const current = characters[index]
+  const isPhone = useIsPhone()
 
   const move = useCallback(
     (delta: number) => {
@@ -96,6 +98,33 @@ export function CharacterSelect({
 
   const accent = current?.identity.accent ?? 'var(--blood)'
 
+  const sessionTag = userEmail && (
+    <span className="label session-tag" title={userEmail}>{userEmail}</span>
+  )
+  const importAction = pendingLocalImport > 0 && (
+    <Button variant="ghost small" onClick={onImportLocal}>
+      Upload {pendingLocalImport} local one(s)
+    </Button>
+  )
+  const createAction = <Button variant="ghost small" onClick={onCreate}>+ New</Button>
+  const duplicateAction = current && (
+    <Button variant="ghost small" onClick={() => onDuplicate(current)}>Duplicate</Button>
+  )
+  const deleteAction = current && (
+    <Button
+      variant="ghost small danger"
+      cue="back"
+      onClick={() => {
+        if (confirm(`Delete ${current.identity.name}? This cannot be undone.`)) onDelete(current)
+      }}
+    >
+      Delete
+    </Button>
+  )
+  const signOutAction = userEmail && (
+    <Button variant="ghost small" cue="back" onClick={onSignOut}>Sign out</Button>
+  )
+
   return (
     <div className="select-screen" style={{ ['--accent' as string]: accent }}>
       <header className="screen-head">
@@ -104,31 +133,27 @@ export function CharacterSelect({
           <h1 style={{ marginTop: 10 }}>The party</h1>
         </div>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          {userEmail && (
-            <span className="label session-tag" title={userEmail}>
-              {userEmail}
-            </span>
-          )}
-          {pendingLocalImport > 0 && (
-            <Button variant="ghost small" onClick={onImportLocal}>
-              Upload {pendingLocalImport} local one(s)
-            </Button>
-          )}
-          <Button variant="ghost small" onClick={onCreate}>+ New</Button>
-          {current && <Button variant="ghost small" onClick={() => onDuplicate(current)}>Duplicate</Button>}
-          {current && (
-            <Button
-              variant="ghost small danger"
-              cue="back"
-              onClick={() => {
-                if (confirm(`Delete ${current.identity.name}? This cannot be undone.`)) onDelete(current)
-              }}
-            >
-              Delete
-            </Button>
-          )}
-          {userEmail && (
-            <Button variant="ghost small" cue="back" onClick={onSignOut}>Sign out</Button>
+          {isPhone ? (
+            // Creating is the only thing done often from here; the rest folds away.
+            <>
+              {createAction}
+              <OverflowMenu>
+                {sessionTag}
+                {importAction}
+                {duplicateAction}
+                {deleteAction}
+                {signOutAction}
+              </OverflowMenu>
+            </>
+          ) : (
+            <>
+              {sessionTag}
+              {importAction}
+              {createAction}
+              {duplicateAction}
+              {deleteAction}
+              {signOutAction}
+            </>
           )}
         </div>
       </header>

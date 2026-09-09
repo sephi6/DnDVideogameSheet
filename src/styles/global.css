@@ -15,16 +15,32 @@
   --font-label: 'Bebas Neue', 'Arial Narrow', system-ui, sans-serif;
   --font-body: 'Barlow Condensed', 'Segoe UI', system-ui, sans-serif;
 
+  /* The slanted grammar costs space: the border and the hard shadow eat 9px a
+     side, which is a detail at 1440px and 5% of the width at 393px. That is why
+     the style constants scale with the viewport, not just the layout. These are
+     the desktop values; responsive.css steps them down on tablet and phone. */
   --skew: -9deg;
   --shadow-hard: 6px 6px 0 var(--ink);
   --edge: 3px solid var(--ink);
+
+  /* Notches and the gesture bar. index.html declares viewport-fit=cover, so
+     without these the content slides under the Dynamic Island and the home
+     indicator. */
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+
+  /* Comfortable minimum for a fingertip. */
+  --touch: 44px;
 
   color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
 
-html, body, #root { height: 100%; }
+/* 100dvh, not 100vh: in Safari iOS the URL bar retracts and 100vh clips. */
+html, body, #root { height: 100%; height: 100dvh; }
 
 body {
   margin: 0;
@@ -226,7 +242,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   transition: background 120ms ease, color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
 }
 .btn > span { display: inline-block; transform: skewX(calc(-1 * var(--skew))); }
-.btn:hover { background: var(--accent); color: var(--ink); border-color: var(--ink); box-shadow: var(--shadow-hard); }
 .btn:active { transform: skewX(var(--skew)) translate(3px, 3px); box-shadow: none; }
 .btn.ghost { background: transparent; border-color: #43404c; }
 .btn.danger:hover { background: var(--blood-hot); }
@@ -242,11 +257,51 @@ button, input, select, textarea { font: inherit; color: inherit; }
   color: var(--bone-dim);
   padding: 2px 10px;
   cursor: pointer;
-  transition: all 120ms ease;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 .chip[data-on='true'] { background: var(--accent); border-color: var(--ink); color: var(--ink); }
-.chip:hover { border-color: var(--gold); color: var(--bone); }
-.chip[data-on='true']:hover { color: var(--ink); }
+
+/* On touch, :hover sticks after the tap, so it only exists where there is a
+   real pointer that can move away. */
+@media (hover: hover) {
+  .btn:hover { background: var(--accent); color: var(--ink); border-color: var(--ink); box-shadow: var(--shadow-hard); }
+  .chip:hover { border-color: var(--gold); color: var(--bone); }
+  .chip[data-on='true']:hover { color: var(--ink); }
+}
+
+/* Overflow menu: where the secondary actions fold away once the header runs
+   out of room (phone). */
+.overflow { position: relative; flex: 0 0 auto; }
+
+.overflow-toggle { padding-inline: 12px; letter-spacing: 0; }
+
+.overflow-sheet {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 200px;
+  padding: 12px;
+  background: var(--ink-2);
+  border: 3px solid var(--ink);
+  border-top: 4px solid var(--accent);
+  box-shadow: 8px 8px 0 var(--ink);
+}
+
+/* Inside the menu the buttons are rows, not slanted pills: the skew stacked
+   several times vertically reads as noise. */
+.overflow-sheet .btn {
+  transform: none;
+  width: 100%;
+  text-align: left;
+  justify-content: flex-start;
+}
+.overflow-sheet .btn > span { transform: none; }
+.overflow-sheet .btn:active { transform: translate(2px, 2px); }
 
 .row { display: flex; align-items: center; gap: 10px; }
 .grow { flex: 1; min-width: 0; }
@@ -261,6 +316,40 @@ button, input, select, textarea { font: inherit; color: inherit; }
   color: var(--bone-dim);
   font-family: var(--font-label);
   letter-spacing: 0.14em;
+}
+
+/* ── Finger reach ───────────────────────────────────────────────────────────
+   The proficiency pip is 18px and is right that way: growing it breaks the
+   skill row. What grows is the touch area, through an invisible centred
+   pseudo-element. The drawing is preserved, the finger lands. */
+@media (pointer: coarse) {
+  .pip,
+  .box { position: relative; }
+
+  .pip::after,
+  .box::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--touch);
+    height: var(--touch);
+    translate: -50% -50%;
+  }
+
+  /* The tally boxes do grow: they sit in rows of their own with room to spare. */
+  .box { width: 30px; height: 30px; }
+  .tracker { gap: 12px; }
+
+  /* A button with 2px/5px padding ends up 24px tall. Unusable with a finger. */
+  .btn { min-height: var(--touch); padding-inline: 16px; }
+  .btn.small { min-height: 38px; font-size: 15px; }
+  .chip { min-height: 38px; padding-inline: 14px; }
+
+  /* iOS zooms in automatically when focusing a field smaller than 16px. */
+  .input,
+  .select,
+  .textarea { font-size: max(16px, 1rem); min-height: var(--touch); }
 }
 
 @media (prefers-reduced-motion: reduce) {
