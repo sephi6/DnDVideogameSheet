@@ -243,7 +243,26 @@ Insert above the existing `--ink` declarations. The old tokens stay until Task 1
   --gold-hi: #e8d08a;
   --gold-lo: #8a6d2f;
   --bevel: inset 1px 1px 0 var(--gold-hi), inset -1px -1px 0 var(--gold-lo);
-  --frame: 2px solid var(--gold);
+
+  /* Ink on a gold plate, and the seat hairline under every band frame.
+     A genuinely new value: not derivable from the three stones. */
+  --seat: #0d0a08;
+
+  /* Inner rules, dividers and inset catch-lights. Written as color-mix, not a
+     frozen rgba, so it follows --gold if --gold ever moves. */
+  --gold-faint: color-mix(in srgb, var(--gold) 22%, transparent);
+
+  /* Hover and state grounds, so stone stays at exactly three values.
+     One scale, three steps — 7 / 12 / 18. */
+  --veil: color-mix(in srgb, var(--gold-hi) 7%, transparent);
+  --veil-2: color-mix(in srgb, var(--gold-hi) 12%, transparent);
+  --veil-3: color-mix(in srgb, var(--gold-hi) 18%, transparent);
+
+  /* Destructive actions. Deliberately NOT Death Knight's #C41E3A: a class
+     accent and the delete button must never be the same colour. Destructive
+     controls additionally carry a word — never colour alone. */
+  --danger: #e23b2e;
+  --danger-veil: color-mix(in srgb, var(--danger) 14%, transparent);
 
   /* Fallbacks are metric-compatible on purpose: Garamond for EB Garamond, and
      a condensed face for Barlow Condensed, so a missing webfont does not
@@ -265,31 +284,21 @@ Insert above the existing `--ink` declarations. The old tokens stay until Task 1
   --rarity-artifact: #e6cc80;
 ```
 
-- [ ] **Step 2: Add the procedural grain filters**
+- [ ] **Step 2: Add the grain and type-scale tokens, transcribed from the cards**
 
-Append to `global.css`. These replace texture image files entirely — zero asset bytes, and they tile because turbulence is seamless.
+These values are **not reproduced here on purpose** — the design cards are the declared source of truth, and a second copy in this plan is how the two drift. Transcribe them verbatim from the approved cards:
 
-```css
-/* ── Procedural grain ───────────────────────────────────────────────────── */
-/* Stone and parchment texture as SVG filters referenced from CSS, so the
-   skin ships no texture images at all. */
-.grain-stone::after,
-.grain-parchment::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  mix-blend-mode: multiply;
-  opacity: 0.18;
-}
-.grain-stone::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-}
-.grain-parchment::after {
-  opacity: 0.1;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5'/></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>");
-}
-```
+| Token(s) | Source |
+|---|---|
+| `--grain-stone` | `design/frame-bevel.html` (the `--grain-*` declarations in `:root`) |
+| `--grain-parchment` | same block |
+| `--t-label` … `--t-hero` | `design/type-scale.html` (the type-scale block in `:root`) |
+
+The grain is a **`background-image` token composited with `background-blend-mode`** on the element itself — stone on `soft-light`, parchment on `multiply`. It is deliberately *not* a positioned `::after` pseudo-element: an absolutely-positioned `::after` only covers its host if that host is itself positioned, and the hosts here are not, so the grain would escape and spread across the page. Using the element's own background removes the failure mode rather than documenting it.
+
+Note the grain does not tile. An SVG data-URI with no intrinsic size is scaled by CSS to the background positioning area, so each element gets one instance stretched to its own box. That is the intended behaviour and it is why `background-repeat` is irrelevant here.
+
+Copy each value character for character — the `#` inside `url(%23n)` and the `%25` in `100%25` are percent-encodings that a retype will silently break.
 
 - [ ] **Step 3: Build**
 
