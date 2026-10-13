@@ -642,6 +642,50 @@ Both class lists are offered in one control, grouped so the duplicated names are
 
 Species gets the same treatment with three groups keyed off `SPECIES[].origin`.
 
+- [ ] **Step 2b: Resolve the picked class by origin, not by name**
+
+`findClass(name)` returns the **first** match, which is always the PHB entry. For the five names in both books that writes the wrong class colour: pick Warcraft's Druid and `identity.accent` becomes the PHB green `#4f9e57` instead of Warcraft's orange `#ff7c0a`. The same for Monk, Paladin, Rogue and Warlock — five of the thirteen Warcraft classes get a wrong-coloured menu.
+
+This only needs fixing at the moment of selection. Of everything that differs between a shared name's two entries, `accent` is the only field written onto the character, and the mechanical fields are **identical** across both books for all five names — so `findClass` by name stays correct everywhere else.
+
+Carry the origin on each option and read it back from the selected option, which keeps the controlled `value` equal to the stored `className`:
+
+```tsx
+<option key={`wow-${c.name}`} value={c.name} data-origin={c.origin}>{c.name}</option>
+```
+
+```tsx
+const applyClass = (name: string, origin?: ClassInfo['origin']) => {
+  // findClass() resolves by name alone and would hand back the PHB entry for
+  // the five names both books use. The accent is the one field that differs.
+  const info =
+    CLASSES.find((c) => c.name === name && (!origin ? true : c.origin === origin)) ??
+    findClass(name)
+  if (!info) return
+  update((d) => {
+    d.identity.className = name
+    d.identity.accent = info.accent
+    // Unchanged from IdentitySection: these three are rewritten here and then
+    // owned by the player. Do not alter that behaviour.
+    d.combat.hitDieSize = info.hitDie
+    d.combat.hitDiceTotal = d.identity.level
+    d.spellcasting.slots = slotsForClass(info.caster, d.identity.level)
+      .map((s) => ({ ...s, used: 0 }))
+  })
+}
+```
+
+```tsx
+onChange={(e) => {
+  play('toggle')
+  applyClass(e.target.value, e.target.selectedOptions[0]?.dataset.origin as ClassInfo['origin'])
+}}
+```
+
+Import `ClassInfo` as a type from `@/data/rules`.
+
+**Known limitation, deliberately not fixed here.** `SPECIALIZATIONS` is keyed by class name, so a *PHB* Druid is offered Warcraft's Balance/Feral/Guardian/Restoration list. Telling the two apart on a later render needs an `origin` field on `Character`, and this spec forbids touching `types/character.ts`. Leave it: the Warcraft classes are shells until the book lands on 17 November 2026, and the five-name collision may not survive real subclass data. Record it, do not work around it.
+
 - [ ] **Step 3: Make the subclass control a select when the specializations are known**
 
 ```tsx
@@ -1030,6 +1074,8 @@ Portraits are keyed by class **slug**, so the five names shared between the two 
 - [ ] **Step 2: Add Azeroth characters to the demo party**
 
 Keep `demoRoster()`'s existing discipline: deterministic nested ids of the form `${slug}-atk-1` and the fixed `DEMO_TIMESTAMP`, so the generated seed stays stable. Every section stays filled in — attacks, spells, gear, features, journal — because that is what makes the demo worth loading. Give at least two of the characters Warcraft classes with a specialization in `identity.subclass`.
+
+**Pick Warcraft classes whose names are unique to that book.** `createCharacter()` resolves the class with `findClass(className)!`, which returns the first match and therefore always the PHB entry, so a demo character given one of the five shared names (Druid, Monk, Paladin, Rogue, Warlock) would be seeded with the PHB accent instead of the Warcraft one. Death Knight, Demon Hunter, Evoker, Hunter, Mage, Priest, Shaman and Warrior are unambiguous — use those. If a shared name is ever genuinely wanted here, set `identity.accent` explicitly on that character rather than changing `createCharacter`.
 
 - [ ] **Step 3: Regenerate the seed**
 
