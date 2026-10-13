@@ -1,5 +1,40 @@
 /* ── Tokens ─────────────────────────────────────────────────────────────── */
 :root {
+  /* ── Azeroth ─────────────────────────────────────────────────────────── */
+  --stone: #1a1512;
+  --stone-2: #241d18;
+  --stone-3: #30261f;
+  --parchment: #e8dcc0;
+  --parchment-dim: #c4b795;
+
+  /* Warcraft's gold is three tones, never one: highlight on the top-left
+     bevel, base on the stroke, shadow on the bottom-right. A frame drawn in a
+     single tone reads flat. */
+  --gold: #c8a84f;
+  --gold-hi: #e8d08a;
+  --gold-lo: #8a6d2f;
+  --bevel: inset 1px 1px 0 var(--gold-hi), inset -1px -1px 0 var(--gold-lo);
+  --frame: 2px solid var(--gold);
+
+  /* Fallbacks are metric-compatible on purpose: Garamond for EB Garamond, and
+     a condensed face for Barlow Condensed, so a missing webfont does not
+     reflow the dense number columns. Copy these three strings verbatim — the
+     design cards use exactly them. */
+  --font-display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  --font-body: 'EB Garamond', Garamond, Georgia, serif;
+  --font-data: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+
+  /* Item rarity, straight from the game. Gives Bags its visual logic. The
+     token names stay Warcraft's; the printed LABELS use the 2024 book's
+     vocabulary per constraint D4, so --rarity-epic prints "very rare". */
+  --rarity-poor: #9d9d9d;
+  --rarity-common: #ffffff;
+  --rarity-uncommon: #1eff00;
+  --rarity-rare: #0070dd;
+  --rarity-epic: #a335ee;
+  --rarity-legendary: #ff8000;
+  --rarity-artifact: #e6cc80;
+
   --ink: #08070a;
   --ink-2: #121016;
   --ink-3: #1c1a22;
@@ -7,13 +42,10 @@
   --bone-dim: #b8b2a6;
   --blood: #e01133;
   --blood-hot: #ff2a4d;
-  --gold: #ffc93c;
   --accent: #e01133;
   --accent-soft: color-mix(in srgb, var(--accent) 30%, transparent);
 
-  --font-display: 'Archivo Black', 'Arial Black', system-ui, sans-serif;
   --font-label: 'Bebas Neue', 'Arial Narrow', system-ui, sans-serif;
-  --font-body: 'Barlow Condensed', 'Segoe UI', system-ui, sans-serif;
 
   /* The slanted grammar costs space: the border and the hard shadow eat 9px a
      side, which is a detail at 1440px and 5% of the width at 393px. That is why
@@ -355,4 +387,24 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .bg-fx::before, .bg-burst { animation: none; }
   * { scroll-behavior: auto; }
+}
+
+/* ── Procedural grain ───────────────────────────────────────────────────── */
+/* Stone and parchment texture as SVG filters referenced from CSS, so the
+   skin ships no texture images at all. */
+.grain-stone::after,
+.grain-parchment::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  opacity: 0.18;
+}
+.grain-stone::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+.grain-parchment::after {
+  opacity: 0.1;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5'/></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>");
 }
