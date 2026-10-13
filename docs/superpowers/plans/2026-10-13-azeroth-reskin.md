@@ -203,6 +203,31 @@ Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>"
 
 Insert above the existing `--ink` declarations. The old tokens stay until Task 12 so no stylesheet is left dangling mid-plan.
 
+> **Three names collide, and the old declarations must be deleted now.** `:root`
+> already declares `--gold`, `--font-display` and `--font-body` *below* the
+> insertion point, so in the cascade the old values would win and the new ones
+> would be dead code until Task 12. Delete exactly those three old declarations
+> as part of this step:
+>
+> ```
+> --gold: #ffc93c;
+> --font-display: 'Archivo Black', 'Arial Black', system-ui, sans-serif;
+> --font-body: 'Barlow Condensed', 'Segoe UI', system-ui, sans-serif;
+> ```
+>
+> This does not violate "keep the old tokens". That rule exists so no stylesheet
+> references an **undefined** property, and a duplicate declaration of the same
+> name cannot undefine anything — the new declaration defines it. Leaving the old
+> ones would mean Tasks 7–11 author and visually verify their CSS against
+> `#ffc93c` for nine tasks, and the gold would then change under them at Task 12.
+>
+> Every token whose name is unique to the old set **stays**: `--ink`, `--ink-2`,
+> `--ink-3`, `--bone`, `--bone-dim`, `--blood`, `--blood-hot`, `--accent`,
+> `--accent-soft`, `--font-label`, `--skew`, `--shadow-hard`, `--edge`.
+>
+> Note `--font-display` and `--font-label` already resolve to their fallbacks:
+> Task 2 deleted the Archivo Black and Bebas Neue files.
+
 ```css
   /* ── Azeroth ─────────────────────────────────────────────────────────── */
   --stone: #1a1512;
@@ -947,6 +972,10 @@ Expected: matches **only** inside `global.css` itself. Any match elsewhere means
 - [ ] **Step 2: Delete the old tokens and the old background**
 
 Remove `--ink`, `--ink-2`, `--ink-3`, `--bone`, `--bone-dim`, `--blood`, `--blood-hot`, `--gold-hot` if present, `--accent-soft`, `--font-label`, `--skew`, `--shadow-hard`, `--edge`, and the old `.bg-fx` gradient rules. Repoint `body` and `::selection` at `--stone` and `--parchment`. Keep `color-scheme: dark`, the `--safe-*` variables, `--touch`, `100dvh` and the `box-sizing` reset.
+
+Task 3 already deleted the three duplicated declarations (`--gold`, `--font-display`, `--font-body`), so they are not in this list.
+
+`--accent` keeps its name but **must be repointed**: it still holds the Persona red `#e01133`, which is the default before a character is selected and therefore the only accent the title and login screens ever show. Set it to `--gold`'s value. The per-character inline `--accent` continues to override it everywhere else.
 
 - [ ] **Step 3: Build**
 
