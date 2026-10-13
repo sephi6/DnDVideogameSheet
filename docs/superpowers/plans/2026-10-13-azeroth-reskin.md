@@ -442,11 +442,33 @@ Expected: exit 0. If `tsc` reports an unfixed `SPECIES` consumer, fix it — tha
 
 - [ ] **Step 8: Verify the counts**
 
-Run:
+Counting with a regex over the source is unreliable here — the class and species
+entries share the `origin:` key, so a naive pattern double-counts. Import the
+real module instead, with the esbuild pattern `scripts/generate-seed.mjs`
+already uses (note the `alias` entry, which is what resolves `@/`):
+
 ```bash
-node -e "const s=require('fs').readFileSync('src/data/rules.ts','utf8');console.log('classes',(s.match(/origin: 'phb2024'/g)||[]).length+(s.match(/origin: 'warcraft', provisional/g)||[]).length,'species',(s.match(/origin: '(phb2024|warcraft|both)' }/g)||[]).length)"
+node --input-type=module -e "
+import { build } from 'esbuild'
+const b = await build({
+  entryPoints: ['src/data/rules.ts'],
+  bundle: true, write: false, format: 'esm', platform: 'neutral',
+  alias: { '@': new URL('src/', import.meta.url).pathname },
+})
+const m = await import('data:text/javascript;base64,' + Buffer.from(b.outputFiles[0].text).toString('base64'))
+console.log('classes', m.CLASSES.length, 'species', m.SPECIES.length, 'specs', Object.keys(m.SPECIALIZATIONS).length)
+const phb = m.CLASSES.filter(c => c.origin === 'phb2024').length
+const wow = m.CLASSES.filter(c => c.origin === 'warcraft').length
+const prov = m.CLASSES.filter(c => c.provisional).length
+console.log('phb', phb, 'warcraft', wow, 'provisional', prov)
+"
 ```
-Expected: `classes 25 species 22`.
+
+Expected exactly:
+```
+classes 25 species 22 specs 13
+phb 12 warcraft 13 provisional 13
+```
 
 - [ ] **Step 9: Commit**
 
@@ -677,6 +699,11 @@ Run: `grep -n '^export function' src/components/ui/controls.tsx`
 Expected, and unchanged at the end of this task: `Panel`, `TextField`, `NumberField`, `SelectField`, `TextAreaField`, `Button`, `CheckBox`, `ProficiencyPip`, `Chip`, `OverflowMenu`, `HintBar`.
 
 - [ ] **Step 2: Restyle each control's markup from the approved `controls.html` card**
+
+> **Do not rename any existing CSS class name.** `controls.tsx` currently emits
+> `field`, `label`, `input`, `select`, `panel` and others, and Tasks 8 and 11
+> select exactly those. New class names may be added freely; renaming one leaves
+> a stylesheet selecting nothing, and CSS failures are invisible to `tsc`.
 
 Work control by control. The structural changes, applying to all of them:
 
