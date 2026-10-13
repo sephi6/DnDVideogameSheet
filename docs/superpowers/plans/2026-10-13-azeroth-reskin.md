@@ -220,18 +220,24 @@ Insert above the existing `--ink` declarations. The old tokens stay until Task 1
   --bevel: inset 1px 1px 0 var(--gold-hi), inset -1px -1px 0 var(--gold-lo);
   --frame: 2px solid var(--gold);
 
+  /* Fallbacks are metric-compatible on purpose: Garamond for EB Garamond, and
+     a condensed face for Barlow Condensed, so a missing webfont does not
+     reflow the dense number columns. Copy these three strings verbatim — the
+     design cards use exactly them. */
   --font-display: 'Cinzel', 'Trajan Pro', Georgia, serif;
-  --font-body: 'EB Garamond', Georgia, 'Times New Roman', serif;
-  --font-data: 'Barlow Condensed', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'EB Garamond', Garamond, Georgia, serif;
+  --font-data: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
 
-  /* Item rarity, straight from the game. Gives Bags its visual logic. */
-  --q-poor: #9d9d9d;
-  --q-common: #ffffff;
-  --q-uncommon: #1eff00;
-  --q-rare: #0070dd;
-  --q-epic: #a335ee;
-  --q-legendary: #ff8000;
-  --q-artifact: #e6cc80;
+  /* Item rarity, straight from the game. Gives Bags its visual logic. The
+     token names stay Warcraft's; the printed LABELS use the 2024 book's
+     vocabulary per constraint D4, so --rarity-epic prints "very rare". */
+  --rarity-poor: #9d9d9d;
+  --rarity-common: #ffffff;
+  --rarity-uncommon: #1eff00;
+  --rarity-rare: #0070dd;
+  --rarity-epic: #a335ee;
+  --rarity-legendary: #ff8000;
+  --rarity-artifact: #e6cc80;
 ```
 
 - [ ] **Step 2: Add the procedural grain filters**
