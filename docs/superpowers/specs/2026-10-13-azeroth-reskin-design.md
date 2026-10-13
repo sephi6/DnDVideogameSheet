@@ -308,6 +308,8 @@ exact signatures — `Panel`, `TextField`, `NumberField`, `SelectField`,
   `reveal` `useEffect`, never in a `setState` updater, and the 1.2 s failsafe
   stays.
 - `src/components/fx/Background.tsx` (8) — new ambient layer.
+- `src/lib/sfx.ts` (108) — the `CUES` table only, per §5.5. The six cue names
+  are an API that every control depends on and do not change.
 - `src/data/rules.ts` — §6.1, §6.2.
 - `src/data/defaults.ts` — `portraitForClass()` covers 20 slugs; `demoRoster()`
   per §6.4.
