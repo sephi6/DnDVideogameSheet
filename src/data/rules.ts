@@ -39,28 +39,104 @@ export interface ClassInfo {
   /** Full, half, third or pact caster (or none): picks the spell slot table. */
   caster: 'full' | 'half' | 'third' | 'pact' | 'none'
   accent: string
+  /** Which book the class comes from. Drives the grouping in the selector. */
+  origin: 'phb2024' | 'warcraft'
+  /**
+   * The mechanical fields are placeholders pending D&D: World of Warcraft
+   * (17 Nov 2026). They exist because IdentitySection writes hitDieSize,
+   * hitDiceTotal and slots when the class changes, and those are fields the
+   * player edits by hand afterwards. Never presented as official.
+   */
+  provisional?: true
 }
 
-/** The 12 classes of the 2024 Player's Handbook. */
-export const CLASSES: ClassInfo[] = [
-  { name: 'Barbarian', hitDie: 12, primary: ['str'], saves: ['str', 'con'], spellAbility: null, caster: 'none', accent: '#e03a2f' },
-  { name: 'Bard', hitDie: 8, primary: ['cha'], saves: ['dex', 'cha'], spellAbility: 'cha', caster: 'full', accent: '#d8478f' },
-  { name: 'Cleric', hitDie: 8, primary: ['wis'], saves: ['wis', 'cha'], spellAbility: 'wis', caster: 'full', accent: '#e8c15a' },
-  { name: 'Druid', hitDie: 8, primary: ['wis'], saves: ['int', 'wis'], spellAbility: 'wis', caster: 'full', accent: '#4fae62' },
-  { name: 'Fighter', hitDie: 10, primary: ['str', 'dex'], saves: ['str', 'con'], spellAbility: null, caster: 'none', accent: '#b9411f' },
-  { name: 'Monk', hitDie: 8, primary: ['dex', 'wis'], saves: ['str', 'dex'], spellAbility: null, caster: 'none', accent: '#37b6c4' },
-  { name: 'Paladin', hitDie: 10, primary: ['str', 'cha'], saves: ['wis', 'cha'], spellAbility: 'cha', caster: 'half', accent: '#dcae3c' },
-  { name: 'Ranger', hitDie: 10, primary: ['dex', 'wis'], saves: ['str', 'dex'], spellAbility: 'wis', caster: 'half', accent: '#3f8f6d' },
-  { name: 'Rogue', hitDie: 8, primary: ['dex'], saves: ['dex', 'int'], spellAbility: null, caster: 'none', accent: '#6f7cd1' },
-  { name: 'Sorcerer', hitDie: 6, primary: ['cha'], saves: ['con', 'cha'], spellAbility: 'cha', caster: 'full', accent: '#e2593f' },
-  { name: 'Warlock', hitDie: 8, primary: ['cha'], saves: ['wis', 'cha'], spellAbility: 'cha', caster: 'pact', accent: '#8b46d6' },
-  { name: 'Wizard', hitDie: 6, primary: ['int'], saves: ['int', 'wis'], spellAbility: 'int', caster: 'full', accent: '#3f7bd6' },
+/** The 12 classes of the 2024 Player's Handbook. Accents re-tuned warm. */
+const PHB_CLASSES: ClassInfo[] = [
+  { name: 'Barbarian', hitDie: 12, primary: ['str'], saves: ['str', 'con'], spellAbility: null, caster: 'none', accent: '#c4452f', origin: 'phb2024' },
+  { name: 'Bard', hitDie: 8, primary: ['cha'], saves: ['dex', 'cha'], spellAbility: 'cha', caster: 'full', accent: '#c4598a', origin: 'phb2024' },
+  { name: 'Cleric', hitDie: 8, primary: ['wis'], saves: ['wis', 'cha'], spellAbility: 'wis', caster: 'full', accent: '#e8c15a', origin: 'phb2024' },
+  { name: 'Druid', hitDie: 8, primary: ['wis'], saves: ['int', 'wis'], spellAbility: 'wis', caster: 'full', accent: '#4f9e57', origin: 'phb2024' },
+  { name: 'Fighter', hitDie: 10, primary: ['str', 'dex'], saves: ['str', 'con'], spellAbility: null, caster: 'none', accent: '#b9411f', origin: 'phb2024' },
+  { name: 'Monk', hitDie: 8, primary: ['dex', 'wis'], saves: ['str', 'dex'], spellAbility: null, caster: 'none', accent: '#3f9ea8', origin: 'phb2024' },
+  { name: 'Paladin', hitDie: 10, primary: ['str', 'cha'], saves: ['wis', 'cha'], spellAbility: 'cha', caster: 'half', accent: '#dcae3c', origin: 'phb2024' },
+  { name: 'Ranger', hitDie: 10, primary: ['dex', 'wis'], saves: ['str', 'dex'], spellAbility: 'wis', caster: 'half', accent: '#5a8f5c', origin: 'phb2024' },
+  { name: 'Rogue', hitDie: 8, primary: ['dex'], saves: ['dex', 'int'], spellAbility: null, caster: 'none', accent: '#6f78bd', origin: 'phb2024' },
+  { name: 'Sorcerer', hitDie: 6, primary: ['cha'], saves: ['con', 'cha'], spellAbility: 'cha', caster: 'full', accent: '#d9663f', origin: 'phb2024' },
+  { name: 'Warlock', hitDie: 8, primary: ['cha'], saves: ['wis', 'cha'], spellAbility: 'cha', caster: 'pact', accent: '#8257c4', origin: 'phb2024' },
+  { name: 'Wizard', hitDie: 6, primary: ['int'], saves: ['int', 'wis'], spellAbility: 'int', caster: 'full', accent: '#5b7fc4', origin: 'phb2024' },
 ]
 
-/** The 10 species of the 2024 Player's Handbook. */
-export const SPECIES = [
-  'Aasimar', 'Dragonborn', 'Dwarf', 'Elf', 'Gnome', 'Goliath',
-  'Halfling', 'Human', 'Orc', 'Tiefling',
+/**
+ * The 13 classes of D&D: World of Warcraft. Colours are the game's own class
+ * colours. Every mechanical field is provisional: see ClassInfo.provisional.
+ */
+const WARCRAFT_CLASSES: ClassInfo[] = [
+  { name: 'Death Knight', hitDie: 10, primary: ['str'], saves: ['str', 'con'], spellAbility: null, caster: 'none', accent: '#c41e3a', origin: 'warcraft', provisional: true },
+  { name: 'Demon Hunter', hitDie: 10, primary: ['dex'], saves: ['dex', 'cha'], spellAbility: null, caster: 'none', accent: '#a330c9', origin: 'warcraft', provisional: true },
+  { name: 'Druid', hitDie: 8, primary: ['wis'], saves: ['int', 'wis'], spellAbility: 'wis', caster: 'full', accent: '#ff7c0a', origin: 'warcraft', provisional: true },
+  { name: 'Evoker', hitDie: 6, primary: ['cha'], saves: ['con', 'cha'], spellAbility: 'cha', caster: 'full', accent: '#33937f', origin: 'warcraft', provisional: true },
+  { name: 'Hunter', hitDie: 10, primary: ['dex'], saves: ['str', 'dex'], spellAbility: 'wis', caster: 'half', accent: '#aad372', origin: 'warcraft', provisional: true },
+  { name: 'Mage', hitDie: 6, primary: ['int'], saves: ['int', 'wis'], spellAbility: 'int', caster: 'full', accent: '#3fc7eb', origin: 'warcraft', provisional: true },
+  { name: 'Monk', hitDie: 8, primary: ['dex', 'wis'], saves: ['str', 'dex'], spellAbility: null, caster: 'none', accent: '#00ff98', origin: 'warcraft', provisional: true },
+  { name: 'Paladin', hitDie: 10, primary: ['str', 'cha'], saves: ['wis', 'cha'], spellAbility: 'cha', caster: 'half', accent: '#f48cba', origin: 'warcraft', provisional: true },
+  { name: 'Priest', hitDie: 8, primary: ['wis'], saves: ['wis', 'cha'], spellAbility: 'wis', caster: 'full', accent: '#ffffff', origin: 'warcraft', provisional: true },
+  { name: 'Rogue', hitDie: 8, primary: ['dex'], saves: ['dex', 'int'], spellAbility: null, caster: 'none', accent: '#fff468', origin: 'warcraft', provisional: true },
+  { name: 'Shaman', hitDie: 8, primary: ['wis'], saves: ['con', 'wis'], spellAbility: 'wis', caster: 'full', accent: '#0070dd', origin: 'warcraft', provisional: true },
+  { name: 'Warlock', hitDie: 8, primary: ['cha'], saves: ['wis', 'cha'], spellAbility: 'cha', caster: 'pact', accent: '#8788ee', origin: 'warcraft', provisional: true },
+  { name: 'Warrior', hitDie: 10, primary: ['str'], saves: ['str', 'con'], spellAbility: null, caster: 'none', accent: '#c69b6d', origin: 'warcraft', provisional: true },
+]
+
+/** PHB first, so findClass() resolves a shared name to the published rules. */
+export const CLASSES: ClassInfo[] = [...PHB_CLASSES, ...WARCRAFT_CLASSES]
+
+/**
+ * Specializations per Warcraft class. For a Warcraft class, the sheet stores
+ * the specialization in `identity.subclass` — no new field. Taken from the
+ * announcements, so provisional like the rest of the Warcraft data.
+ */
+export const SPECIALIZATIONS: Record<string, string[]> = {
+  'Death Knight': ['Blood', 'Frost', 'Unholy'],
+  'Demon Hunter': ['Devourer', 'Havoc', 'Vengeance'],
+  'Druid': ['Balance', 'Feral', 'Guardian', 'Restoration'],
+  'Evoker': ['Augmentation', 'Devastation', 'Preservation'],
+  'Hunter': ['Beast Mastery', 'Marksmanship', 'Survival'],
+  'Mage': ['Arcane', 'Fire', 'Frost'],
+  'Monk': ['Brewmaster', 'Mistweaver', 'Windwalker'],
+  'Paladin': ['Holy', 'Protection', 'Retribution'],
+  'Priest': ['Discipline', 'Holy', 'Shadow'],
+  'Rogue': ['Assassination', 'Outlaw', 'Subtlety'],
+  'Shaman': ['Elemental', 'Enhancement', 'Restoration'],
+  'Warlock': ['Affliction', 'Demonology', 'Destruction'],
+  'Warrior': ['Arms', 'Fury', 'Protection'],
+}
+
+/**
+ * 22 distinct species: the 2024 PHB's 10 and D&D: World of Warcraft's 16,
+ * overlapping on four names.
+ */
+export const SPECIES: { name: string; origin: 'phb2024' | 'warcraft' | 'both' }[] = [
+  { name: 'Dwarf', origin: 'both' },
+  { name: 'Elf', origin: 'both' },
+  { name: 'Human', origin: 'both' },
+  { name: 'Orc', origin: 'both' },
+  { name: 'Aasimar', origin: 'phb2024' },
+  { name: 'Dragonborn', origin: 'phb2024' },
+  { name: 'Gnome', origin: 'phb2024' },
+  { name: 'Goliath', origin: 'phb2024' },
+  { name: 'Halfling', origin: 'phb2024' },
+  { name: 'Tiefling', origin: 'phb2024' },
+  { name: 'Dracthyr', origin: 'warcraft' },
+  { name: 'Draenei', origin: 'warcraft' },
+  { name: 'Earthen', origin: 'warcraft' },
+  { name: 'Forsaken', origin: 'warcraft' },
+  { name: 'Goblin', origin: 'warcraft' },
+  { name: 'Haranir', origin: 'warcraft' },
+  { name: 'Mechagnome', origin: 'warcraft' },
+  { name: 'Pandaren', origin: 'warcraft' },
+  { name: 'Tauren', origin: 'warcraft' },
+  { name: 'Troll', origin: 'warcraft' },
+  { name: 'Vulpera', origin: 'warcraft' },
+  { name: 'Worgen', origin: 'warcraft' },
 ]
 
 /** The 16 backgrounds of the 2024 Player's Handbook. */

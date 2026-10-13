@@ -78,7 +78,7 @@ export function IdentitySection({ character, update }: SectionProps) {
           <TextField label="Player" value={identity.player} onChange={(v) => update((d) => { d.identity.player = v })} />
           <SelectField label="Class" value={identity.className} options={CLASSES.map((c) => c.name)} onChange={changeClass} />
           <TextField label="Subclass" value={identity.subclass} onChange={(v) => update((d) => { d.identity.subclass = v })} />
-          <SelectField label="Species" value={identity.species} options={SPECIES} onChange={(v) => update((d) => { d.identity.species = v })} />
+          <SelectField label="Species" value={identity.species} options={SPECIES.map((s) => s.name)} onChange={(v) => update((d) => { d.identity.species = v })} />
           <SelectField label="Background" value={identity.background} options={BACKGROUNDS} onChange={(v) => update((d) => { d.identity.background = v })} />
           <SelectField label="Alignment" value={identity.alignment} options={ALIGNMENTS} onChange={(v) => update((d) => { d.identity.alignment = v })} />
           <NumberField label="Level" value={identity.level} min={1} max={20} onChange={changeLevel} />
