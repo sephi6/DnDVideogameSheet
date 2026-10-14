@@ -4,8 +4,7 @@ import { Button, HintBar, OverflowMenu } from '@/components/ui/controls'
 import { isMuted, play, setMuted } from '@/lib/sfx'
 import { isTyping } from '@/lib/keys'
 import { useHorizontalSwipe, useIsPhone } from '@/lib/responsive'
-import { IdentitySection } from '@/sections/IdentitySection'
-import { AbilitiesSection } from '@/sections/AbilitiesSection'
+import { CharacterSection } from '@/sections/CharacterSection'
 import { SkillsSection } from '@/sections/SkillsSection'
 import { CombatSection } from '@/sections/CombatSection'
 import { SpellsSection } from '@/sections/SpellsSection'
@@ -17,14 +16,13 @@ import type { SyncStatus } from '@/store/roster'
 import type { Character } from '@/types/character'
 
 const SECTIONS: { id: string; label: string; glyph: string; Component: (p: SectionProps) => JSX.Element }[] = [
-  { id: 'identity', label: 'Identity', glyph: '✦', Component: IdentitySection },
-  { id: 'abilities', label: 'Abilities', glyph: '◈', Component: AbilitiesSection },
-  { id: 'skills', label: 'Skills', glyph: '✧', Component: SkillsSection },
+  { id: 'character', label: 'Character', glyph: '◆', Component: CharacterSection },
+  { id: 'skills', label: 'Skills', glyph: '❖', Component: SkillsSection },
   { id: 'combat', label: 'Combat', glyph: '⚔', Component: CombatSection },
-  { id: 'spells', label: 'Spells', glyph: '✺', Component: SpellsSection },
-  { id: 'equipment', label: 'Equipment', glyph: '◆', Component: InventorySection },
-  { id: 'features', label: 'Features', glyph: '❖', Component: FeaturesSection },
-  { id: 'journal', label: 'Journal', glyph: '✍', Component: JournalSection },
+  { id: 'spellbook', label: 'Spellbook', glyph: '❉', Component: SpellsSection },
+  { id: 'bags', label: 'Bags', glyph: '◈', Component: InventorySection },
+  { id: 'features', label: 'Features', glyph: '✦', Component: FeaturesSection },
+  { id: 'journal', label: 'Journal', glyph: '☙', Component: JournalSection },
 ]
 
 interface Props {
@@ -82,7 +80,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
       } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === 'q' || e.key === 'Q') {
         e.preventDefault()
         goto(index - 1)
-      } else if (/^[1-8]$/.test(e.key)) {
+      } else if (/^[1-7]$/.test(e.key)) {
         e.preventDefault()
         goto(Number(e.key) - 1, 'confirm')
       }
@@ -239,7 +237,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
         <HintBar
           hints={[
             ['↑ ↓', 'Navigate'],
-            ['1-8', 'Go to section'],
+            ['1-7', 'Go to section'],
             ['Esc', 'Back to the party'],
           ]}
         />

@@ -43,7 +43,7 @@ export interface ClassInfo {
   origin: 'phb2024' | 'warcraft'
   /**
    * The mechanical fields are placeholders pending D&D: World of Warcraft
-   * (17 Nov 2026). They exist because IdentitySection writes hitDieSize,
+   * (17 Nov 2026). They exist because CharacterSection writes hitDieSize,
    * hitDiceTotal and slots when the class changes, and those are fields the
    * player edits by hand afterwards. Never presented as official.
    */
