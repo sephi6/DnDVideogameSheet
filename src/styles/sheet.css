@@ -370,21 +370,22 @@
 
 /* Proficiency promotes the whole row. The level lives on the pip (the row
    carries no attribute), so the rows reach it with :has(). */
-.skill-row:has(.pip[data-level='1']) {
+.skill-row:where(:has(.pip[data-level='1'])) {
   background-image: linear-gradient(var(--veil), var(--veil));
   border-left-color: var(--accent);
 }
-.skill-row:has(.pip[data-level='1']) .sk-name,
-.skill-row:has(.pip[data-level='1']) .sk-value { color: var(--parchment); }
-.skill-row:has(.pip[data-level='2']) {
+.skill-row:where(:has(.pip[data-level='1'])) .sk-name,
+.skill-row:where(:has(.pip[data-level='1'])) .sk-value { color: var(--parchment); }
+.skill-row:where(:has(.pip[data-level='2'])) {
   background-image: linear-gradient(var(--veil-2), var(--veil-2));
   border-left-color: var(--gold);
   box-shadow: inset -1px -1px 0 var(--gold-faint);
 }
-.skill-row:has(.pip[data-level='2']) .sk-name,
-.skill-row:has(.pip[data-level='2']) .sk-value { color: var(--gold-hi); }
-.skill-row:has(.pip[data-level='2']) .sk-ability { border-color: var(--gold-lo); color: var(--gold); }
-/* Hover last: same specificity as the state rules above. */
+.skill-row:where(:has(.pip[data-level='2'])) .sk-name,
+.skill-row:where(:has(.pip[data-level='2'])) .sk-value { color: var(--gold-hi); }
+.skill-row:where(:has(.pip[data-level='2'])) .sk-ability { border-color: var(--gold-lo); color: var(--gold); }
+/* The state selectors are wrapped in :where(), so they weigh (0,1,0) and the
+   hover below, (0,2,0), wins on proficient rows too. */
 @media (hover: hover) {
   .skill-row:hover {
     background-image: linear-gradient(var(--veil-3), var(--veil-3));
@@ -501,11 +502,8 @@
   font-size: var(--t-small);
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  /* item-slot.html: one colour for every coin label; the letters carry the metal. */
+  color: var(--parchment-dim);
 }
-.coin.pp .cn { color: var(--parchment); }
-.coin.gp .cn { color: var(--gold-hi); }
-.coin.ep .cn { color: var(--gold); }
-.coin.sp .cn { color: var(--parchment-dim); }
-.coin.cp .cn { color: var(--gold-lo); }
 
 /* Every size breakpoint lives in responsive.css. */
