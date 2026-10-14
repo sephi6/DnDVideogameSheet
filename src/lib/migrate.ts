@@ -11,9 +11,13 @@
  * names, notes, ranges, journal) is left exactly as typed.
  */
 import type { Character } from '@/types/character'
+import { CLASSES as CLASS_TABLE } from '@/data/rules'
 
-/** Sheets without `schemaVersion` are Spanish and metric. */
-export const SCHEMA_VERSION = 2
+/**
+ * Sheets without `schemaVersion` (v1) are Spanish and metric. v2 is English and
+ * imperial. v3 re-tuned the default class accents to the Azeroth palette.
+ */
+export const SCHEMA_VERSION = 3
 
 const CLASSES: Record<string, string> = {
   'Bárbaro': 'Barbarian', 'Bardo': 'Bard', 'Brujo': 'Warlock', 'Clérigo': 'Cleric',
@@ -114,15 +118,49 @@ function kilosToPounds(kilos: number): number {
 }
 
 /**
- * Brings one sheet up to the current schema. Idempotent: a sheet already
- * stamped with `SCHEMA_VERSION` is returned untouched, so a speed that has
- * already been converted is never converted twice.
+ * Accents as they were before the Azeroth palette. A sheet still carrying the
+ * exact default for its class gets the new one; a player-picked colour is left
+ * alone, which is why this compares for equality instead of just overwriting.
+ */
+const LEGACY_ACCENTS: Record<string, string> = {
+  Barbarian: '#e03a2f', Bard: '#d8478f', Cleric: '#e8c15a', Druid: '#4fae62',
+  Fighter: '#b9411f', Monk: '#37b6c4', Paladin: '#dcae3c', Ranger: '#3f8f6d',
+  Rogue: '#6f7cd1', Sorcerer: '#e2593f', Warlock: '#8b46d6', Wizard: '#3f7bd6',
+}
+
+function migrateAccent(character: Character): void {
+  const stored = character.identity.accent?.toLowerCase()
+  const legacy = LEGACY_ACCENTS[character.identity.className]
+  if (!stored || !legacy || stored !== legacy) return
+  const current = CLASS_TABLE.find(
+    (c) => c.name === character.identity.className && c.origin === 'phb2024',
+  )
+  if (current) character.identity.accent = current.accent
+}
+
+/**
+ * Brings one sheet up to the current schema, one version step at a time:
+ * v1 → v2 translates the Spanish values and converts metric to imperial;
+ * v2 → v3 re-tunes a default accent. A sheet already stamped with
+ * `SCHEMA_VERSION` is returned untouched, and the v1 step only runs on v1
+ * sheets, so a speed that has already been converted is never converted twice.
  */
 export function migrateCharacter(character: Character): Character {
-  if ((character.schemaVersion ?? 1) >= SCHEMA_VERSION) return character
+  const from = character.schemaVersion ?? 1
+  if (from >= SCHEMA_VERSION) return character
 
   const c = structuredClone(character)
 
+  if (from < 2) migrateSpanishMetric(c)
+  // After the Spanish step, so a v1 'Mago' is already 'Wizard' when compared.
+  if (from < 3) migrateAccent(c)
+
+  c.schemaVersion = SCHEMA_VERSION
+  return c
+}
+
+/** v1 → v2: Spanish domain values and metric units to English and imperial. */
+function migrateSpanishMetric(c: Character): void {
   c.identity.className = map(CLASSES, c.identity.className)
   c.identity.species = map(SPECIES, c.identity.species)
   c.identity.background = map(BACKGROUNDS, c.identity.background)
@@ -149,9 +187,6 @@ export function migrateCharacter(character: Character): Character {
     // `source` usually holds a class or species name; subclasses stay as typed.
     entry.source = map(SPECIES, map(CLASSES, entry.source))
   }
-
-  c.schemaVersion = SCHEMA_VERSION
-  return c
 }
 
 export function migrateRoster(characters: Character[]): Character[] {
