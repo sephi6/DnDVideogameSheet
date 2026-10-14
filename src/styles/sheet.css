@@ -1,4 +1,7 @@
-/* ── Sheet frame ────────────────────────────────────────────────────────── */
+/* ── Sheet frame ──────────────────────────────────────────────────────────
+   Transcribed from design/section-header.html (tiers 1 and 2, the rail),
+   skill-row.html, item-slot.html, character-card.html and filigree-corners.html.
+   Controls (.panel .field .btn .box .pip .chip) belong to global.css. */
 .sheet {
   position: relative;
   z-index: 1;
@@ -12,10 +15,46 @@
     'nav    hints';
   gap: 10px clamp(10px, 2vw, 26px);
   padding: 16px clamp(14px, 3vw, 40px) 12px;
+  color: var(--parchment);
+  background-color: var(--stone);
+  background-image: var(--grain-stone);
+  background-blend-mode: soft-light;
 }
 
+/* Filigree: the corner of filigree-corners.html at each screen corner. A mask
+   lets background-color (the gold) tint it, which a background-image SVG
+   could not do. Decorative only, never catches the pointer. */
+.sheet::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--gold);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='matrix(1 0 0 1 0 0)'%3E%3Cpath d='M48 3 H9 C5.7 3 3 5.7 3 9 V48'/%3E%3Cpath d='M48 9.5 H12.5 C10.8 9.5 9.5 10.8 9.5 12.5 V48'/%3E%3Cpath d='M9.5 26 C9.5 18.5 14 14 21.5 14 C25.5 14 27.6 16.2 27.6 19 C27.6 21.4 25.8 22.8 23.8 22.1'/%3E%3Cpath d='M16.2 16.2 L19.4 13 L22.6 16.2 L19.4 19.4 Z'/%3E%3Cpath d='M32 3 V7.5 M40 3 V7.5'/%3E%3C/g%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='matrix(-1 0 0 1 48 0)'%3E%3Cpath d='M48 3 H9 C5.7 3 3 5.7 3 9 V48'/%3E%3Cpath d='M48 9.5 H12.5 C10.8 9.5 9.5 10.8 9.5 12.5 V48'/%3E%3Cpath d='M9.5 26 C9.5 18.5 14 14 21.5 14 C25.5 14 27.6 16.2 27.6 19 C27.6 21.4 25.8 22.8 23.8 22.1'/%3E%3Cpath d='M16.2 16.2 L19.4 13 L22.6 16.2 L19.4 19.4 Z'/%3E%3Cpath d='M32 3 V7.5 M40 3 V7.5'/%3E%3C/g%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='matrix(1 0 0 -1 0 48)'%3E%3Cpath d='M48 3 H9 C5.7 3 3 5.7 3 9 V48'/%3E%3Cpath d='M48 9.5 H12.5 C10.8 9.5 9.5 10.8 9.5 12.5 V48'/%3E%3Cpath d='M9.5 26 C9.5 18.5 14 14 21.5 14 C25.5 14 27.6 16.2 27.6 19 C27.6 21.4 25.8 22.8 23.8 22.1'/%3E%3Cpath d='M16.2 16.2 L19.4 13 L22.6 16.2 L19.4 19.4 Z'/%3E%3Cpath d='M32 3 V7.5 M40 3 V7.5'/%3E%3C/g%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='matrix(-1 0 0 -1 48 48)'%3E%3Cpath d='M48 3 H9 C5.7 3 3 5.7 3 9 V48'/%3E%3Cpath d='M48 9.5 H12.5 C10.8 9.5 9.5 10.8 9.5 12.5 V48'/%3E%3Cpath d='M9.5 26 C9.5 18.5 14 14 21.5 14 C25.5 14 27.6 16.2 27.6 19 C27.6 21.4 25.8 22.8 23.8 22.1'/%3E%3Cpath d='M16.2 16.2 L19.4 13 L22.6 16.2 L19.4 19.4 Z'/%3E%3Cpath d='M32 3 V7.5 M40 3 V7.5'/%3E%3C/g%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='matrix(1 0 0 1 0 0)'%3E%3Cpath d='M48 3 H9 C5.7 3 3 5.7 3 9 V48'/%3E%3Cpath d='M48 9.5 H12.5 C10.8 9.5 9.5 10.8 9.5 12.5 V48'/%3E%3Cpath d='M9.5 26 C9.5 18.5 14 14 21.5 14 C25.5 14 27.6 16.2 27.6 19 C27.6 21.4 25.8 22.8 23.8 22.1'/%3E%3Cpath d='M16.2 16.2 L19.4 13 L22.6 16.2 L19.4 19.4 Z'/%3E%3Cpath d='M32 3 V7.5 M40 3 V7.5'/%3E%3C/g%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='matrix(-1 0 0 1 48 0)'%3E%3Cpath d='M48 3 H9 C5.7 3 3 5.7 3 9 V48'/%3E%3Cpath d='M48 9.5 H12.5 C10.8 9.5 9.5 10.8 9.5 12.5 V48'/%3E%3Cpath d='M9.5 26 C9.5 18.5 14 14 21.5 14 C25.5 14 27.6 16.2 27.6 19 C27.6 21.4 25.8 22.8 23.8 22.1'/%3E%3Cpath d='M16.2 16.2 L19.4 13 L22.6 16.2 L19.4 19.4 Z'/%3E%3Cpath d='M32 3 V7.5 M40 3 V7.5'/%3E%3C/g%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='matrix(1 0 0 -1 0 48)'%3E%3Cpath d='M48 3 H9 C5.7 3 3 5.7 3 9 V48'/%3E%3Cpath d='M48 9.5 H12.5 C10.8 9.5 9.5 10.8 9.5 12.5 V48'/%3E%3Cpath d='M9.5 26 C9.5 18.5 14 14 21.5 14 C25.5 14 27.6 16.2 27.6 19 C27.6 21.4 25.8 22.8 23.8 22.1'/%3E%3Cpath d='M16.2 16.2 L19.4 13 L22.6 16.2 L19.4 19.4 Z'/%3E%3Cpath d='M32 3 V7.5 M40 3 V7.5'/%3E%3C/g%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg transform='matrix(-1 0 0 -1 48 48)'%3E%3Cpath d='M48 3 H9 C5.7 3 3 5.7 3 9 V48'/%3E%3Cpath d='M48 9.5 H12.5 C10.8 9.5 9.5 10.8 9.5 12.5 V48'/%3E%3Cpath d='M9.5 26 C9.5 18.5 14 14 21.5 14 C25.5 14 27.6 16.2 27.6 19 C27.6 21.4 25.8 22.8 23.8 22.1'/%3E%3Cpath d='M16.2 16.2 L19.4 13 L22.6 16.2 L19.4 19.4 Z'/%3E%3Cpath d='M32 3 V7.5 M40 3 V7.5'/%3E%3C/g%3E%3C/svg%3E");
+  -webkit-mask-position: top 4px left 4px, top 4px right 4px, bottom 4px left 4px, bottom 4px right 4px;
+  mask-position: top 4px left 4px, top 4px right 4px, bottom 4px left 4px, bottom 4px right 4px;
+  -webkit-mask-size: clamp(44px, 5vw, 64px) auto;
+  mask-size: clamp(44px, 5vw, 64px) auto;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+/* The inner hairline the corners sit on (.screen::after of the same card). */
+.sheet::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  z-index: 0;
+  pointer-events: none;
+  border: 1px solid var(--gold-faint);
+}
+
+/* ── Identity block (character-card.html: portrait frame + nameplate) ───── */
 .sheet-ident {
   grid-area: ident;
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -26,25 +65,40 @@
   width: 54px;
   height: 68px;
   object-fit: cover;
-  border: 3px solid var(--ink);
-  box-shadow: 4px 4px 0 var(--accent);
-  transform: skewX(-6deg);
   flex: 0 0 auto;
+  /* Band frame: transparent border, ground padding-box first, gold border-box last. */
+  border: 3px solid transparent;
+  border-radius: 3px;
+  background:
+    linear-gradient(var(--stone-2), var(--stone-2)) padding-box,
+    linear-gradient(135deg, var(--gold-hi) 0%, var(--gold) 44%, var(--gold-lo) 100%) border-box;
+  box-shadow: 0 0 0 1px var(--seat), inset 0 0 0 1px var(--seat);
 }
 
 .sheet-ident .who { min-width: 0; }
 .sheet-ident .who .n {
   font-family: var(--font-display);
-  font-size: 19px;
-  text-transform: uppercase;
+  font-weight: 700;
+  font-size: var(--t-card);
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  color: var(--gold-hi);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.sheet-ident .who .c { font-family: var(--font-label); font-size: 14px; letter-spacing: 0.1em; color: var(--gold); }
+.sheet-ident .who .c {
+  font-family: var(--font-data);
+  font-size: var(--t-small);
+  letter-spacing: 0.04em;
+  color: var(--parchment-dim);
+}
 
+/* ── Head: tier-1 cartouche behind the screen title, once per screen ───── */
 .sheet-head {
   grid-area: head;
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -53,28 +107,67 @@
 }
 
 .sheet-head .section-name {
+  position: relative;
+  isolation: isolate;
+  padding: 7px 34px;
   font-family: var(--font-display);
-  font-size: clamp(22px, 3.4vw, 40px);
+  font-weight: 700;
+  font-size: var(--t-section);
+  letter-spacing: 0.13em;
   text-transform: uppercase;
-  line-height: 1;
+  line-height: 1.1;
+  color: var(--gold-hi);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+}
+/* Cartouche: gold outline plate (::before) and a stone-2 ground inset by the
+   stroke (::after), both the same chamfered hexagon. */
+.sheet-head .section-name::before,
+.sheet-head .section-name::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 16px 100%, 0 50%);
+}
+.sheet-head .section-name::before {
+  inset: 0;
+  background: linear-gradient(135deg, var(--gold-hi) 0%, var(--gold) 42%, var(--gold-lo) 100%);
+}
+.sheet-head .section-name::after {
+  inset: 2px;
+  background-color: var(--stone-2);
+  background-image: var(--grain-stone);
+  background-blend-mode: soft-light;
 }
 
 .sheet-head .head-actions { display: flex; gap: 8px; flex: 0 0 auto; align-items: center; }
 
+/* Sync indicator. Keeps its three meanings; error is the one alarm on the sheet. */
 .save-dot {
-  font-family: var(--font-label);
-  font-size: 13px;
-  letter-spacing: 0.14em;
+  font-family: var(--font-data);
+  font-size: var(--t-label);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--gold);
   white-space: nowrap;
 }
+.save-dot[data-state='saving'] { color: var(--parchment-dim); }
+.save-dot[data-state='saved'] { color: var(--gold); }
+.save-dot[data-state='error'] {
+  color: var(--danger);
+  font-weight: 700;
+  padding: 1px 8px;
+  background: var(--danger-veil);
+  border: 1px solid var(--danger);
+}
 
-/* Side menu */
+/* ── Side menu: the section rail (section-header.html .tab) ─────────────── */
 .sheet-nav {
   grid-area: nav;
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -87,88 +180,140 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
-  border: 3px solid var(--ink);
-  background: linear-gradient(100deg, #17151d, #0d0c11);
-  color: var(--bone-dim);
-  padding: 7px 12px;
-  cursor: pointer;
-  text-align: left;
-  transform: skewX(var(--skew));
-  font-family: var(--font-label);
-  letter-spacing: 0.14em;
-  font-size: 19px;
-  text-transform: uppercase;
+  gap: 9px;
   width: 100%;
-  transition: color 120ms ease, background 120ms ease;
+  padding: 8px 13px 8px 9px;
+  text-align: left;
+  cursor: pointer;
+  background-color: var(--stone-2);
+  color: var(--parchment-dim);
+  border: 1px solid var(--gold-lo);
+  border-radius: 0;
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.45), inset -1px -1px 0 var(--gold-faint);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--t-small);
+  letter-spacing: 0.07em;
+  transition: color 120ms ease, background-color 120ms ease;
 }
 
-.nav-item > * { transform: skewX(calc(-1 * var(--skew))); }
-
+/* Index: the card's kbd chip, pushed to the right edge of the row. */
 .nav-item .idx {
-  font-size: 13px;
-  color: var(--accent);
-  width: 16px;
+  order: 3;
+  margin-left: auto;
+  padding: 0 4px;
+  font-family: var(--font-data);
+  font-weight: 400;
+  font-size: var(--t-label);
+  letter-spacing: 0.04em;
+  color: var(--parchment-dim);
+  background: var(--seat);
+  border: 1px solid var(--gold-faint);
   flex: 0 0 auto;
 }
+/* Glyph: a gold-edged square. */
+.nav-item > span:nth-child(2) {
+  order: 1;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--gold);
+  background: var(--stone-3);
+  border: 1px solid var(--gold-lo);
+}
+.nav-item > span:nth-child(3) { order: 2; min-width: 0; }
 
 @media (hover: hover) {
-  .nav-item:hover { color: var(--bone); background: linear-gradient(100deg, #241f2b, #100e14); }
+  .nav-item:hover { color: var(--gold-hi); background-image: linear-gradient(var(--veil-2), var(--veil-2)); }
 }
 
+/* Inset is idle, raised is active: the state rides on the bevel direction. */
 .nav-item[data-active='true'] {
-  background: var(--accent);
-  color: var(--ink);
-  box-shadow: 8px 8px 0 var(--ink);
+  color: var(--gold-hi);
+  background-color: var(--stone-3);
+  border-color: var(--gold);
+  box-shadow: var(--bevel);
 }
-.nav-item[data-active='true'] .idx { color: var(--ink); }
+.nav-item[data-active='true'] > span:nth-child(2) {
+  color: var(--accent);
+  border-color: var(--gold);
+  box-shadow: inset 1px 1px 0 var(--gold-faint);
+}
 
 .nav-spacer { flex: 1; min-height: 8px; }
 
-/* Body */
+/* ── Body ───────────────────────────────────────────────────────────────── */
 .sheet-body {
   grid-area: body;
+  position: relative;
+  z-index: 1;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 4px 8px 24px 4px;
 }
 
-.sheet-hints { grid-area: hints; }
+.sheet-hints { grid-area: hints; position: relative; z-index: 1; }
 
-/* Content grids */
+/* ── Content grids ──────────────────────────────────────────────────────── */
 .grid { display: grid; gap: 12px; }
 .g2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .g3 { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
 .g4 { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 
-.abilities-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+.abilities-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 
+/* global.css gives .panel no padding of its own; it lives here (14px, the
+   panel-body padding of section-header.html). */
 .card { padding: 14px; }
 
-/* Ability block */
-.ability-block {
-  border: 3px solid var(--ink);
-  background: linear-gradient(160deg, #1a1821, #0b0a0e);
-  padding: 10px 8px 8px;
-  text-align: center;
-  position: relative;
-  transform: skewX(-4deg);
+/* .label is display:block (global.css); this one sits inside a flex row. */
+.row > .label { display: inline; }
+
+/* Provisional-rules disclosure: a parchment inset, a note and not a warning. */
+.note-provisional {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  background-color: var(--parchment);
+  background-image: var(--grain-parchment);
+  background-blend-mode: multiply;
+  color: var(--seat);
+  border-left: 3px solid var(--gold-lo);
+  font-family: var(--font-body);
+  font-style: italic;
+  font-size: var(--t-small);
+  line-height: 1.45;
 }
-.ability-block > * { transform: skewX(4deg); }
+
+/* ── Ability block (character-card.html .stats li) ──────────────────────── */
+.ability-block {
+  position: relative;
+  padding: 9px 6px 8px;
+  text-align: center;
+  background: var(--stone-3);
+  border: 1px solid var(--gold-lo);
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.5), inset -1px -1px 0 var(--gold-faint);
+}
 
 .ability-block .ab-name {
-  font-family: var(--font-label);
-  letter-spacing: 0.2em;
-  font-size: 15px;
-  color: var(--bone-dim);
+  font-family: var(--font-data);
+  font-size: 12px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
 }
 
 .ability-block .ab-mod {
-  font-family: var(--font-display);
-  font-size: 44px;
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: var(--t-hero);
   line-height: 1;
-  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-hi);
   margin: 2px 0 4px;
 }
 
@@ -180,108 +325,143 @@
   justify-content: center;
   gap: 6px;
   margin-top: 8px;
-  border-top: 2px solid #2c2935;
+  border-top: 1px solid var(--gold-faint);
   padding-top: 6px;
 }
 
-/* Skills */
+/* ── Skills (skill-row.html) ────────────────────────────────────────────── */
 .skill-row {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: 18px minmax(0, 1fr) 34px 46px;
   align-items: center;
-  gap: 10px;
-  border-bottom: 2px solid #221f29;
-  padding: 4px 2px;
+  gap: 11px;
+  padding: 7px 10px;
+  margin-bottom: 3px;
+  background-color: var(--stone-3);
+  border-left: 2px solid var(--gold-lo);
 }
 
-@media (hover: hover) {
-  .skill-row:hover { background: rgba(224, 17, 51, 0.09); }
+.skill-row .sk-name {
+  font-family: var(--font-data);
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  color: var(--parchment-dim);
+  min-width: 0;
 }
-
-.skill-row .sk-name { font-size: 17px; }
-.skill-row .sk-ability { font-family: var(--font-label); font-size: 13px; color: var(--bone-dim); letter-spacing: 0.12em; }
-.skill-row .sk-value {
-  font-family: var(--font-label);
-  font-size: 24px;
-  min-width: 46px;
-  text-align: right;
-  color: var(--gold);
-}
-
-.pip {
-  width: 18px;
-  height: 18px;
-  border: 2px solid var(--bone-dim);
-  background: transparent;
-  cursor: pointer;
-  border-radius: 50%;
-  padding: 0;
-  flex: 0 0 auto;
-  /* Colour only: with `all`, the pip animates its size on a touch device, where
-     the coarse-pointer media query enlarges it. */
-  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
-}
-.pip[data-level='1'] { background: var(--accent); border-color: var(--ink); }
-.pip[data-level='2'] { background: var(--gold); border-color: var(--ink); box-shadow: 0 0 0 2px var(--accent); }
-
-/* Big counters (HP, AC…) */
-.big-stat {
-  border: 3px solid var(--ink);
-  background: linear-gradient(160deg, #1a1821, #0b0a0e);
-  padding: 8px;
+.skill-row .sk-ability {
+  font-family: var(--font-data);
+  font-size: 12px;
+  letter-spacing: 0.06em;
   text-align: center;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+  background: var(--stone-2);
+  padding: 1px 0;
+  border: 1px solid var(--gold-faint);
 }
-.big-stat .bs-label { font-family: var(--font-label); letter-spacing: 0.18em; font-size: 13px; color: var(--bone-dim); }
-.big-stat .bs-value { font-family: var(--font-display); font-size: 36px; line-height: 1.05; color: var(--bone); }
+.skill-row .sk-value {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 19px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--parchment-dim);
+}
+
+/* Proficiency promotes the whole row. The level lives on the pip (the row
+   carries no attribute), so the rows reach it with :has(). */
+.skill-row:has(.pip[data-level='1']) {
+  background-image: linear-gradient(var(--veil), var(--veil));
+  border-left-color: var(--accent);
+}
+.skill-row:has(.pip[data-level='1']) .sk-name,
+.skill-row:has(.pip[data-level='1']) .sk-value { color: var(--parchment); }
+.skill-row:has(.pip[data-level='2']) {
+  background-image: linear-gradient(var(--veil-2), var(--veil-2));
+  border-left-color: var(--gold);
+  box-shadow: inset -1px -1px 0 var(--gold-faint);
+}
+.skill-row:has(.pip[data-level='2']) .sk-name,
+.skill-row:has(.pip[data-level='2']) .sk-value { color: var(--gold-hi); }
+.skill-row:has(.pip[data-level='2']) .sk-ability { border-color: var(--gold-lo); color: var(--gold); }
+/* Hover last: same specificity as the state rules above. */
+@media (hover: hover) {
+  .skill-row:hover {
+    background-image: linear-gradient(var(--veil-3), var(--veil-3));
+    border-left-color: var(--gold-hi);
+  }
+}
+
+/* ── Big counters (HP, AC…) — character-card.html .vitals li ───────────── */
+.big-stat {
+  padding: 9px 12px;
+  text-align: center;
+  background-color: var(--stone-2);
+  border: 1px solid var(--gold);
+  box-shadow: var(--bevel);
+}
+.big-stat .bs-label {
+  font-family: var(--font-data);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+}
+.big-stat .bs-value {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: var(--t-screen);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-hi);
+}
 
 .hp-bar {
   position: relative;
-  height: 22px;
-  border: 3px solid var(--ink);
-  background: #17151c;
-  overflow: hidden;
+  height: 20px;
   margin-top: 6px;
+  overflow: hidden;
+  background: var(--stone-3);
+  border: 1px solid var(--gold-lo);
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.6), inset -1px -1px 0 var(--gold-faint);
 }
-.hp-fill { height: 100%; background: linear-gradient(90deg, var(--blood), var(--blood-hot)); }
+.hp-fill { height: 100%; background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, var(--gold-lo)); }
 .hp-text {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  font-family: var(--font-label);
-  letter-spacing: 0.1em;
-  font-size: 15px;
-  text-shadow: 0 0 4px #000;
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  font-size: var(--t-small);
+  color: var(--parchment);
+  text-shadow: 0 0 3px var(--seat), 0 1px 1px var(--seat);
 }
 
 .tracker { display: flex; gap: 5px; flex-wrap: wrap; }
 
-.box {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--bone-dim);
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  transition: background 110ms ease, border-color 110ms ease;
-}
-.box[data-on='true'] { background: var(--accent); border-color: var(--ink); }
-.box.gold[data-on='true'] { background: var(--gold); }
-
-/* Editable lists (attacks, items, spells, features) */
+/* ── Editable lists: attacks, items, spells, features (item-slot.html .slot) */
 .entry {
-  border: 2px solid #2e2b36;
-  border-left: 5px solid var(--accent);
-  background: rgba(0, 0, 0, 0.45);
-  padding: 10px;
   display: grid;
   gap: 8px;
+  padding: 10px;
+  background-color: var(--stone-3);
+  border-left: 2px solid var(--gold-lo);
+}
+@media (hover: hover) {
+  .entry:hover {
+    background-image: linear-gradient(var(--veil-3), var(--veil-3));
+    border-left-color: var(--gold);
+  }
 }
 
 .entry-head { display: flex; gap: 8px; align-items: center; }
 
 .entry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
 
+/* Spell-level heading: tier-3 vocabulary (rule + accent lozenge), no ornament. */
 .spell-level-head {
   display: flex;
   align-items: center;
@@ -289,26 +469,43 @@
   margin: 16px 0 8px;
 }
 .spell-level-head .lv {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 12px;
   font-family: var(--font-display);
-  font-size: 20px;
-  text-transform: uppercase;
-  background: var(--ink-3);
-  border-left: 5px solid var(--accent);
-  padding: 3px 12px;
+  font-weight: 600;
+  font-size: var(--t-body);
+  letter-spacing: 0.06em;
+  color: var(--parchment);
+  background: var(--stone-3);
+  border-left: 2px solid var(--gold);
+}
+.spell-level-head .lv::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  flex: none;
+  transform: rotate(45deg);
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--seat);
 }
 
+/* ── Coins ──────────────────────────────────────────────────────────────── */
 .coin-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 
 .coin { text-align: center; }
-.coin .cn { font-family: var(--font-label); letter-spacing: 0.16em; font-size: 15px; }
-.coin.pp .cn { color: #dfe6f2; }
-.coin.gp .cn { color: var(--gold); }
-.coin.ep .cn { color: #c9c2a6; }
-.coin.sp .cn { color: #cfd6dd; }
-.coin.cp .cn { color: #c98a5e; }
+.coin .cn {
+  font-family: var(--font-data);
+  font-weight: 600;
+  font-size: var(--t-small);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.coin.pp .cn { color: var(--parchment); }
+.coin.gp .cn { color: var(--gold-hi); }
+.coin.ep .cn { color: var(--gold); }
+.coin.sp .cn { color: var(--parchment-dim); }
+.coin.cp .cn { color: var(--gold-lo); }
 
 /* Every size breakpoint lives in responsive.css. */
-
-.save-dot[data-state='saving'] { color: var(--bone-dim); }
-.save-dot[data-state='saved'] { color: var(--gold); }
-.save-dot[data-state='error'] { color: var(--blood-hot); }
