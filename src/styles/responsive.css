@@ -47,30 +47,37 @@
 .sheet { --pad-x: clamp(14px, 3vw, 40px); --pad-t: 16px; --pad-b: 12px; }
 
 /* The filigree corners and the inner hairline are drawn on the element's own
-   edge, which in landscape is under the notch. Seat them on the safe area. The
-   layer order matches the mask lists in sheet.css and screens.css:
+   edge, which in landscape is under the notch. Seat them on the safe area,
+   but outside the content box: on the left and right the content starts at
+   max(safe, pad-x), so the safe inset only counts for what it adds beyond the
+   pad (the hairline then stays pad-x - 4px outside the content, notch or not).
+   Top and bottom padding is additive, so there the full inset applies. The layer order matches the mask lists in sheet.css and screens.css:
    top-left, top-right, bottom-left, bottom-right. */
 .title-screen::before,
 .select-screen::before,
 .login-screen::before,
 .sheet::before {
   -webkit-mask-position:
-    top calc(4px + var(--safe-t)) left calc(4px + var(--safe-l)),
-    top calc(4px + var(--safe-t)) right calc(4px + var(--safe-r)),
-    bottom calc(4px + var(--safe-b)) left calc(4px + var(--safe-l)),
-    bottom calc(4px + var(--safe-b)) right calc(4px + var(--safe-r));
+    top calc(4px + var(--safe-t)) left calc(4px + max(0px, var(--safe-l) - var(--pad-x, 0px))),
+    top calc(4px + var(--safe-t)) right calc(4px + max(0px, var(--safe-r) - var(--pad-x, 0px))),
+    bottom calc(4px + var(--safe-b)) left calc(4px + max(0px, var(--safe-l) - var(--pad-x, 0px))),
+    bottom calc(4px + var(--safe-b)) right calc(4px + max(0px, var(--safe-r) - var(--pad-x, 0px)));
   mask-position:
-    top calc(4px + var(--safe-t)) left calc(4px + var(--safe-l)),
-    top calc(4px + var(--safe-t)) right calc(4px + var(--safe-r)),
-    bottom calc(4px + var(--safe-b)) left calc(4px + var(--safe-l)),
-    bottom calc(4px + var(--safe-b)) right calc(4px + var(--safe-r));
+    top calc(4px + var(--safe-t)) left calc(4px + max(0px, var(--safe-l) - var(--pad-x, 0px))),
+    top calc(4px + var(--safe-t)) right calc(4px + max(0px, var(--safe-r) - var(--pad-x, 0px))),
+    bottom calc(4px + var(--safe-b)) left calc(4px + max(0px, var(--safe-l) - var(--pad-x, 0px))),
+    bottom calc(4px + var(--safe-b)) right calc(4px + max(0px, var(--safe-r) - var(--pad-x, 0px)));
 }
 
 .title-screen::after,
 .select-screen::after,
 .login-screen::after,
 .sheet::after {
-  inset: calc(4px + var(--safe-t)) calc(4px + var(--safe-r)) calc(4px + var(--safe-b)) calc(4px + var(--safe-l));
+  inset:
+    calc(4px + var(--safe-t))
+    calc(4px + max(0px, var(--safe-r) - var(--pad-x, 0px)))
+    calc(4px + var(--safe-b))
+    calc(4px + max(0px, var(--safe-l) - var(--pad-x, 0px)));
 }
 
 /* ── Keyboard hints and scrollbars ──────────────────────────────────────────
@@ -160,8 +167,9 @@
   .sheet-nav::-webkit-scrollbar { display: none; }
 
   /* The base rule is a sidebar row (glyph, label, index via order). Here the
-     same spans become a compact tab: the index is hidden by the hint rule
-     above, the glyph square and the label stay. The active state keeps the base
+     same spans become a compact tab: the index chip is hidden by the hint rule
+     above on touch and phone widths (a fine pointer in a short landscape window
+     keeps it, where the keys 1-8 do work), the glyph square and the label stay. The active state keeps the base
      bevel; the lift is done by the component (y: -5). */
   .nav-item {
     width: auto;
@@ -298,6 +306,18 @@
    The column width is the base clamp (190px at these sizes).
    ════════════════════════════════════════════════════════════════════════════ */
 @media (min-width: 600px) and (max-width: 1023px) {
+  /* Filigree: 32px corners (curl reach 4 + 27.6/48 * 32 = 22.4px) and gutters
+     of at least 24px, so no content sits over them. */
+  .title-screen::before,
+  .select-screen::before,
+  .login-screen::before,
+  .sheet::before {
+    -webkit-mask-size: 32px auto;
+    mask-size: 32px auto;
+  }
+  .sheet { --pad-x: clamp(24px, 3vw, 40px); --pad-t: 24px; --pad-b: 24px; }
+  .select-screen { --pad-t: 24px; --pad-b: 24px; }
+
   .nav-item { padding: 7px 10px 7px 8px; gap: 8px; min-height: 46px; letter-spacing: 0.05em; }
 
   /* The identity block shares a column with the sidebar, and at 190px a 54px
@@ -329,8 +349,21 @@
    tablet block, which would claim the side column. Here it is put back to a
    single column so the bottom-strip shell is the one in charge. */
 @media (max-height: 500px) and (orientation: landscape) {
+  /* 22px corners reach 4 + 27.6/48 * 22 = 16.7px, so the top gutter is 18px. */
+  .title-screen::before,
+  .select-screen::before,
+  .login-screen::before {
+    -webkit-mask-size: 22px auto;
+    mask-size: 22px auto;
+  }
+  /* The sheet keeps the strip shell's top-only corners. */
+  .sheet::before {
+    -webkit-mask-size: 22px auto, 22px auto, 0 0, 0 0;
+    mask-size: 22px auto, 22px auto, 0 0, 0 0;
+  }
+
   .sheet {
-    --pad-t: 8px;
+    --pad-t: 18px;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 6px 10px;
   }
@@ -339,7 +372,7 @@
   .nav-item { min-height: 44px; font-size: 13px; padding: 4px 12px 4px 8px; }
   .nav-spacer { flex: 0 0 34vw; }
 
-  .select-screen { --pad-t: 10px; --pad-b: 8px; }
+  .select-screen { --pad-t: 18px; --pad-b: 16px; }
   .select-body { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
   .hero-card { height: min(100%, 62dvh); }
   .roster-rail { padding: 12px 4px 6px; }
