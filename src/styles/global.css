@@ -133,7 +133,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible {
   outline: 2px solid var(--gold-hi);
   outline-offset: 2px;
-  /* A seat-dark halo keeps the gold-hi ring readable on parchment grounds too. */
+}
+/* A seat-dark halo keeps the gold-hi ring readable on parchment grounds too.
+   Scoped to the controls: a filter creates a stacking context, which would be
+   unwelcome on tabindex wrappers. */
+.btn:focus-visible, .input:focus-visible, .select:focus-visible, .textarea:focus-visible,
+.box:focus-visible, .pip:focus-visible, .chip:focus-visible {
   filter: drop-shadow(0 0 1.5px var(--seat));
 }
 
@@ -436,8 +441,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
    real pointer that can move away. */
 @media (hover: hover) {
   .input:hover, .select:hover, .textarea:hover { border-color: var(--gold); }
-  .btn:not(:disabled):hover { border-color: var(--gold-hi); background-image: linear-gradient(var(--veil-2), var(--veil-2)); }
+  .btn:not(:disabled, .primary, .ghost, .danger):hover { border-color: var(--gold-hi); background-image: linear-gradient(var(--veil-2), var(--veil-2)); }
   .btn.primary:not(:disabled):hover { filter: brightness(1.07); }
+  .btn.primary:not(:disabled):hover:focus-visible { filter: brightness(1.07) drop-shadow(0 0 1.5px var(--seat)); }
   .btn.ghost:not(:disabled):hover { color: var(--gold-hi); border-color: var(--gold); background-image: linear-gradient(var(--veil), var(--veil)); }
   .btn.danger:not(:disabled):hover { border-color: var(--danger); background-image: linear-gradient(var(--danger-veil), var(--danger-veil)); }
   .chip:hover { color: var(--gold-hi); border-color: var(--gold); }
