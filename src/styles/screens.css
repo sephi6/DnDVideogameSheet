@@ -404,12 +404,17 @@
   box-shadow: inset 1px 1px 0 var(--gold-faint), 0 1px 0 var(--seat);
 }
 
-/* Wipe transition between screens. The layers are driven by components/fx. */
+/* Wipe transition between screens: a sweep of beaten gold. The layers are
+   driven by components/fx. Three tones, bevelled at the leading and trailing
+   edges, so it reads as metal rather than a flat yellow. */
 .wipe {
   position: fixed;
   inset: -20% -30%;
   z-index: 60;
-  background: var(--accent);
+  background:
+    linear-gradient(90deg, var(--gold-hi) 0, var(--gold) 3%, transparent 3.5%, transparent 96.5%, var(--gold) 97%, var(--gold-lo) 100%),
+    linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 35%, var(--gold-lo) 100%);
+  box-shadow: var(--bevel);
   pointer-events: none;
 }
 

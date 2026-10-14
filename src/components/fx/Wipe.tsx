@@ -13,8 +13,8 @@ function prefersReducedMotion() {
 }
 
 /**
- * Diagonal red wipe between screens: it covers, runs the change and uncovers.
- * The equivalent of the scene cut in the Persona menus.
+ * Gold sweep between screens: it covers, runs the change and uncovers.
+ * The scene cut of the menu, drawn as a plate of beaten gold sliding across.
  */
 export function useWipe() {
   const [wipe, setWipe] = useState<{ label: string; phase: Phase } | null>(null)
@@ -78,8 +78,8 @@ export function useWipe() {
           <motion.div
             key={wipe.phase}
             className="wipe"
-            initial={{ x: wipe.phase === 'cover' ? '-140%' : '0%', skewX: -12 }}
-            animate={{ x: wipe.phase === 'cover' ? '0%' : '140%', skewX: -12 }}
+            initial={{ x: wipe.phase === 'cover' ? '-140%' : '0%', skewX: 0 }}
+            animate={{ x: wipe.phase === 'cover' ? '0%' : '140%', skewX: 0 }}
             transition={{
               duration: (wipe.phase === 'cover' ? COVER_MS : REVEAL_MS) / 1000,
               ease: [0.7, 0, 0.2, 1],

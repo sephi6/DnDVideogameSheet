@@ -151,9 +151,9 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
           <motion.div
             key={active.id}
             className="section-name"
-            initial={{ opacity: 0, x: -40, skewX: -14 }}
-            animate={{ opacity: 1, x: 0, skewX: -6 }}
-            exit={{ opacity: 0, x: 30, skewX: -14 }}
+            initial={{ opacity: 0, x: -40, skewX: 0 }}
+            animate={{ opacity: 1, x: 0, skewX: 0 }}
+            exit={{ opacity: 0, x: 30, skewX: 0 }}
             transition={{ duration: 0.15 }}
           >
             {active.glyph} {active.label}
@@ -223,9 +223,9 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
         <AnimatePresence mode="wait">
           <motion.div
             key={active.id}
-            initial={{ opacity: 0, x: 48, skewX: -5 }}
+            initial={{ opacity: 0, x: 48, skewX: 0 }}
             animate={{ opacity: 1, x: 0, skewX: 0 }}
-            exit={{ opacity: 0, x: -28, skewX: 3 }}
+            exit={{ opacity: 0, x: -28, skewX: 0 }}
             transition={{ duration: 0.17, ease: [0.35, 0, 0.2, 1] }}
           >
             <Section character={character} update={update} />

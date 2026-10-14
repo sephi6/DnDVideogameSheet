@@ -143,6 +143,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* ── Animated background ────────────────────────────────────────────────── */
+/* Warm stone, lit from above, with a slow gold breath. Everything here is
+   decoration: pointer-events none, under the content (z-index 0). */
 .bg-fx {
   position: fixed;
   inset: 0;
@@ -150,58 +152,58 @@ button, input, select, textarea { font: inherit; color: inherit; }
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(120% 90% at 15% 0%, #1d0a10 0%, #08070a 60%),
-    var(--ink);
+    radial-gradient(120% 90% at 50% 0%, var(--stone-3) 0%, var(--stone-2) 38%, var(--stone) 72%),
+    var(--stone);
 }
 
+/* Stone grain, on the layer itself and blended in, as the grain token asks. */
 .bg-fx::before {
   content: '';
   position: absolute;
-  inset: -40%;
-  background: repeating-linear-gradient(
-    115deg,
-    color-mix(in srgb, var(--accent) 16%, transparent) 0 26px,
-    transparent 26px 78px
-  );
-  animation: drift 14s linear infinite;
+  inset: 0;
+  background-image: var(--grain-stone);
+  mix-blend-mode: soft-light;
   opacity: 0.55;
 }
 
+/* A faint gold seam across the top, as light on a carved lintel. */
 .bg-fx::after {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.075) 1.1px, transparent 1.2px);
-  background-size: 9px 9px;
-  mix-blend-mode: overlay;
-  opacity: 0.55;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--gold-hi) 9%, transparent) 0,
+    transparent 22%
+  );
 }
 
 .bg-burst {
   position: absolute;
-  width: 160vmax;
-  height: 160vmax;
+  width: 140vmax;
+  height: 140vmax;
   left: 50%;
-  top: 50%;
+  top: 38%;
   translate: -50% -50%;
-  background: conic-gradient(
-    from 0deg,
-    color-mix(in srgb, var(--accent) 22%, transparent) 0 6deg,
-    transparent 6deg 18deg
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--gold) 16%, transparent) 0%,
+    color-mix(in srgb, var(--gold-lo) 8%, transparent) 45%,
+    transparent 100%
   );
-  animation: spin 90s linear infinite;
-  opacity: 0.25;
-  filter: blur(0.4px);
+  animation: gold-breath 16s ease-in-out infinite;
 }
 
 .bg-vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(80% 70% at 50% 45%, transparent 40%, rgba(0, 0, 0, 0.82) 100%);
+  background: radial-gradient(80% 70% at 50% 45%, transparent 40%, color-mix(in srgb, var(--seat) 85%, transparent) 100%);
 }
 
-@keyframes drift { to { transform: translate3d(-78px, 168px, 0); } }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes gold-breath {
+  0%, 100% { opacity: 0.45; scale: 0.92; }
+  50% { opacity: 1; scale: 1.04; }
+}
 
 /* ── Shared typography ──────────────────────────────────────────────────── */
 .display {
@@ -540,6 +542,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bg-fx::before, .bg-burst { animation: none; }
+  .bg-burst { animation: none; opacity: 0.8; }
   * { scroll-behavior: auto; }
 }
