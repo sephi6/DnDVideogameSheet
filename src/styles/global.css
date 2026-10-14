@@ -14,7 +14,26 @@
   --gold-hi: #e8d08a;
   --gold-lo: #8a6d2f;
   --bevel: inset 1px 1px 0 var(--gold-hi), inset -1px -1px 0 var(--gold-lo);
-  --frame: 2px solid var(--gold);
+
+  /* Ink on a gold plate, and the seat hairline under every band frame.
+     A genuinely new value: not derivable from the three stones. */
+  --seat: #0d0a08;
+
+  /* Inner rules, dividers and inset catch-lights. Written as color-mix, not a
+     frozen rgba, so it follows --gold if --gold ever moves. */
+  --gold-faint: color-mix(in srgb, var(--gold) 22%, transparent);
+
+  /* Hover and state grounds, so stone stays at exactly three values.
+     One scale, three steps — 7 / 12 / 18. */
+  --veil: color-mix(in srgb, var(--gold-hi) 7%, transparent);
+  --veil-2: color-mix(in srgb, var(--gold-hi) 12%, transparent);
+  --veil-3: color-mix(in srgb, var(--gold-hi) 18%, transparent);
+
+  /* Destructive actions. Deliberately NOT Death Knight's #C41E3A: a class
+     accent and the delete button must never be the same colour. Destructive
+     controls additionally carry a word — never colour alone. */
+  --danger: #e23b2e;
+  --danger-veil: color-mix(in srgb, var(--danger) 14%, transparent);
 
   /* Fallbacks are metric-compatible on purpose: Garamond for EB Garamond, and
      a condensed face for Barlow Condensed, so a missing webfont does not
@@ -34,6 +53,21 @@
   --rarity-epic: #a335ee;
   --rarity-legendary: #ff8000;
   --rarity-artifact: #e6cc80;
+
+  /* The scale: 13 14 16 18 22 32 44, about 1.22 at the top end. */
+  --t-label:13px;
+  --t-small:14px;
+  --t-body:16px;
+  --t-card:18px;
+  --t-section:22px;
+  --t-screen:32px;
+  --t-hero:44px;
+
+  /* Grain is procedural: feTurbulence in a data URI, no asset files. Applied on
+     the element itself as background-image with background-blend-mode (stone on
+     soft-light, parchment on multiply), never as a positioned ::after. */
+  --grain-stone:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23s)' opacity='0.45'/%3E%3C/svg%3E");
+  --grain-parchment:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.035' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23p)' opacity='0.55'/%3E%3C/svg%3E");
 
   --ink: #08070a;
   --ink-2: #121016;
@@ -387,24 +421,4 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .bg-fx::before, .bg-burst { animation: none; }
   * { scroll-behavior: auto; }
-}
-
-/* ── Procedural grain ───────────────────────────────────────────────────── */
-/* Stone and parchment texture as SVG filters referenced from CSS, so the
-   skin ships no texture images at all. */
-.grain-stone::after,
-.grain-parchment::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  mix-blend-mode: multiply;
-  opacity: 0.18;
-}
-.grain-stone::after {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-}
-.grain-parchment::after {
-  opacity: 0.1;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.04' numOctaves='5'/></filter><rect width='100%25' height='100%25' filter='url(%23p)'/></svg>");
 }
