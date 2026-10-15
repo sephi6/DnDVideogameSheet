@@ -159,11 +159,8 @@ export const supabaseQuestStorage: QuestStorage = {
   },
 
   async upsertQuest(q) {
-    const client = requireSupabase()
-    const { data: auth } = await client.auth.getUser()
-    const { error } = await client
-      .from('quests')
-      .upsert({ ...questToRow(q), created_by: auth.user?.id ?? null }, { onConflict: 'id' })
+    // created_by is left out: the column default fills it on insert and updates keep it.
+    const { error } = await requireSupabase().from('quests').upsert(questToRow(q), { onConflict: 'id' })
     if (error) throw error
   },
 
@@ -198,10 +195,14 @@ export const supabaseQuestStorage: QuestStorage = {
     if (error) throw error
   },
 
-  subscribe(onChange, onStatus) {
+  subscribe(rawOnChange, rawOnStatus) {
     const client = requireSupabase()
+    // Cleared on unsubscribe so late events (e.g. CLOSED) never reach the caller.
+    let active = true
+    const onChange: typeof rawOnChange = (c) => { if (active) rawOnChange(c) }
+    const onStatus: typeof rawOnStatus = (st) => { if (active) rawOnStatus(st) }
     const channel = client
-      .channel('arcana-quests')
+      .channel(`arcana-quests-${crypto.randomUUID()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'quests' }, (p: Payload<QuestRow & Record<string, unknown>>) => {
         if (p.eventType === 'DELETE') onChange({ table: 'quests', type: 'delete', id: (p.old as QuestRow).id })
         else onChange({ table: 'quests', type: 'upsert', row: questFromRow(p.new as QuestRow) })
@@ -221,6 +222,7 @@ export const supabaseQuestStorage: QuestStorage = {
         else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') onStatus('down')
       })
     return () => {
+      active = false
       void client.removeChannel(channel)
     }
   },
