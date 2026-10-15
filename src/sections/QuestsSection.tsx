@@ -40,23 +40,23 @@ export function QuestsSection({ character }: SectionProps) {
 
   // A quest deleted or moved out of this tab elsewhere: fall back to the first.
   useEffect(() => {
-    if (selectedId && !list.some((q) => q.id === selectedId)) {
+    if (selectedId && !quests.some((q) => q.id === selectedId)) {
       setSelectedId(list[0]?.id ?? null)
       setShowPage(false)
     }
-  }, [list, selectedId])
+  }, [list, quests, selectedId])
 
   // T tracks / untracks the selected active quest.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || isTyping(e.target) || (e.key !== 't' && e.key !== 'T') || tab !== 'active' || !selected) return
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || isTyping(e.target) || (e.key !== 't' && e.key !== 'T') || tab !== 'active' || !selected || editing) return
       e.preventDefault()
       play('toggle')
       setTracked(selected.id, character.id, !isTracked(selected, participants, character.id))
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [tab, selected, participants, character.id, setTracked])
+  }, [tab, selected, editing, participants, character.id, setTracked])
 
   const members = selected
     ? memberIds(selected, participants, roster).map((id) => roster.find((c) => c.id === id)!).filter(Boolean)
@@ -99,7 +99,7 @@ export function QuestsSection({ character }: SectionProps) {
         onSave={(quest, objs) => {
           const id = saveQuest(quest, objs, character.id)
           setEditing(null)
-          setTab('active')
+          if (!editing.quest.id) setTab('active')
           setSelectedId(id)
           setShowPage(true)
         }}

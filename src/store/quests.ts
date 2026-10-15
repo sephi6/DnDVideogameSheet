@@ -304,9 +304,15 @@ export const useQuests = create<QuestsState>((set, get) => ({
       progress: clampProgress(o.progress, Math.max(1, Math.min(999, Math.round(o.target)))),
     }))
     const dropped = get().objectives.filter((o) => o.questId === stored.id && !kept.some((k) => k.id === o.id))
+    // A new personal quest lists the creator at once, so it shows in their Active tab; the row is written later.
+    const creatorRow: QuestParticipant | null =
+      isNew && stored.scope === 'personal' && creatorId ? { questId: stored.id, characterId: creatorId, joined: true, tracked: true } : null
     set((s) => ({
       quests: [...s.quests.filter((q) => q.id !== stored.id), stored],
       objectives: [...s.objectives.filter((o) => o.questId !== stored.id), ...kept],
+      participants: creatorRow
+        ? [...s.participants.filter((p) => !(p.questId === creatorRow.questId && p.characterId === creatorRow.characterId)), creatorRow]
+        : s.participants,
     }))
     const mine = epoch
     // Objectives wait for the quest row (foreign key).
