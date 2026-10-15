@@ -28,13 +28,26 @@ const EMBLEMS = {
   sorcerer: 'M50 10 C58 30 74 38 74 56 C74 72 62 86 50 86 C38 86 26 72 26 56 C26 38 42 30 50 10 Z M50 40 C54 52 62 56 62 66 C62 74 56 78 50 78 C44 78 38 74 38 66 C38 56 46 52 50 40 Z',
   warlock: 'M20 50 C34 30 66 30 80 50 C66 70 34 70 20 50 Z M50 38 A12 12 0 1 0 50 62 A12 12 0 1 0 50 38 Z M50 14 L54 30 M50 86 L54 70 M18 24 L30 34 M82 24 L70 34',
   wizard: 'M24 86 L74 24 M74 24 A10 10 0 1 0 74 24.1 Z M64 12 L68 22 L78 26 L68 30 L64 40 L60 30 L50 26 L60 22 Z M22 46 L26 54 L34 58 L26 62 L22 70 L18 62 L10 58 L18 54 Z',
+  // Warcraft-only classes. Original, generic iconography; never Blizzard's own class icons.
+  'death-knight': 'M50 14 C28 14 20 32 24 50 C26 58 32 60 34 64 L34 76 L66 76 L66 64 C68 60 74 58 76 50 C80 32 72 14 50 14 Z M38 34 L46 44 L32 44 Z M62 34 L54 44 L68 44 Z M50 52 L45 62 L55 62 Z M42 76 L42 86 M50 76 L50 86 M58 76 L58 86',
+  'demon-hunter': 'M18 14 C18 34 28 46 42 48 M82 14 C82 34 72 46 58 48 M14 56 L86 56 L86 70 L14 70 Z M30 62 L42 62 M58 62 L70 62 M30 82 L50 94 L70 82',
+  evoker: 'M50 88 L50 40 M50 40 C40 20 22 14 10 18 C18 28 20 40 24 52 C30 44 36 46 40 56 M50 40 C60 20 78 14 90 18 C82 28 80 40 76 52 C70 44 64 46 60 56',
+  hunter: 'M50 50 C36 50 28 64 34 74 C40 84 60 84 66 74 C72 64 64 50 50 50 Z M18 40 C14 34 22 26 26 32 C30 38 22 46 18 40 Z M38 24 C34 16 44 10 48 18 C50 26 42 32 38 24 Z M62 24 C66 16 56 10 52 18 C50 26 58 32 62 24 Z M82 40 C86 34 78 26 74 32 C70 38 78 46 82 40 Z',
+  mage: 'M50 10 A40 40 0 1 0 50 90 A40 40 0 1 0 50 10 Z M50 24 L78 68 L22 68 Z M50 76 L22 32 L78 32 Z',
+  priest: 'M50 8 A14 14 0 1 0 50 36 A14 14 0 1 0 50 8 Z M50 40 L50 90 M34 56 L66 56 M40 90 L60 90',
+  shaman: 'M58 8 L30 54 L48 54 L40 92 L72 44 L54 44 Z',
+  warrior: 'M16 16 L70 70 M84 16 L30 70 M60 80 L80 60 M20 60 L40 80 M70 70 L84 84 M30 70 L16 84',
   default: 'M50 20 A16 16 0 1 0 50 52 A16 16 0 1 0 50 20 Z M22 88 C22 66 36 56 50 56 C64 56 78 66 78 88 Z',
 }
 
 const CLASS_ACCENTS = {
-  barbarian: '#e03a2f', bard: '#d8478f', cleric: '#e8c15a', druid: '#4fae62',
-  fighter: '#b9411f', monk: '#37b6c4', paladin: '#dcae3c', ranger: '#3f8f6d',
-  rogue: '#6f7cd1', sorcerer: '#e2593f', warlock: '#8b46d6', wizard: '#3f7bd6',
+  barbarian: '#c4452f', bard: '#c4598a', cleric: '#e8c15a', druid: '#4f9e57',
+  fighter: '#b9411f', monk: '#3f9ea8', paladin: '#dcae3c', ranger: '#5a8f5c',
+  rogue: '#6f78bd', sorcerer: '#d9663f', warlock: '#8257c4', wizard: '#5b7fc4',
+  // Warcraft-only classes use their Warcraft class colour (see rules.ts).
+  'death-knight': '#c41e3a', 'demon-hunter': '#a330c9', evoker: '#33937f',
+  hunter: '#aad372', mage: '#3fc7eb', priest: '#ffffff', shaman: '#0070dd',
+  warrior: '#c69b6d',
   default: '#e8e2d4',
 }
 

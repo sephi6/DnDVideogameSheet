@@ -24,18 +24,12 @@ import {
 import type { ClassInfo } from '@/data/rules'
 import { mod, passive, pb, saveBonus } from '@/lib/derive'
 import type { AbilityKey, Proficiency } from '@/types/character'
-import { portraitForClass } from '@/data/defaults'
+import { CLASS_PORTRAITS, DEFAULT_PORTRAIT, portraitForClass } from '@/data/defaults'
 import { downscaleImage } from '@/lib/image'
 import { play } from '@/lib/sfx'
 import type { SectionProps } from './types'
 
-const CLASS_PORTRAITS = [
-  'barbarian', 'bard', 'cleric', 'druid', 'fighter', 'monk',
-  'paladin', 'ranger', 'rogue', 'sorcerer', 'warlock', 'wizard',
-].map((slug) => `assets/portraits/${slug}.png`)
-
-const DEFAULT_PORTRAIT = 'assets/portraits/default.svg'
-export const PORTRAIT_LIBRARY = [...CLASS_PORTRAITS, DEFAULT_PORTRAIT]
+export const PORTRAIT_LIBRARY = [...new Set(Object.values(CLASS_PORTRAITS)), DEFAULT_PORTRAIT]
 
 const cycle = (p: Proficiency): Proficiency => ((p + 1) % 3) as Proficiency
 
