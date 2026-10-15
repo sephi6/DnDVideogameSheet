@@ -19,10 +19,13 @@ export function JournalSection({ character, update }: SectionProps) {
       {FIELDS.map((field, i) => (
         <motion.div
           key={field.key}
+          className="journal-cell"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.04 }}
-          style={{ gridColumn: field.rows >= 8 ? 'span 1' : undefined }}
+          // Session notes close the grid at full width, so it never sits alone
+          // in a row beside empty columns.
+          style={{ gridColumn: field.key === 'notes' ? '1 / -1' : undefined }}
         >
           <Panel title={field.label}>
             <TextAreaField

@@ -66,22 +66,27 @@ function noise(duration = 0.06, gain = 0.03) {
 }
 
 const CUES: Record<Cue, () => void> = {
-  move: () => tone({ freq: 520, to: 720, duration: 0.05, gain: 0.035 }),
+  // Lower, rounder: sine and triangle bodies, short tails, a soft stone tap
+  // under the clicks. The register of a Warcraft interface click.
+  move: () => tone({ freq: 330, to: 400, type: 'sine', duration: 0.06, gain: 0.04 }),
   confirm: () => {
-    tone({ freq: 660, to: 990, type: 'sawtooth', duration: 0.09, gain: 0.045 })
-    tone({ freq: 990, to: 1480, type: 'square', duration: 0.12, gain: 0.035, delay: 0.06 })
-    noise(0.09, 0.02)
+    tone({ freq: 260, to: 330, type: 'triangle', duration: 0.1, gain: 0.05 })
+    tone({ freq: 392, to: 523, type: 'sine', duration: 0.16, gain: 0.04, delay: 0.06 })
+    noise(0.05, 0.012)
   },
-  back: () => tone({ freq: 420, to: 190, type: 'triangle', duration: 0.12, gain: 0.045 }),
+  back: () => tone({ freq: 300, to: 170, type: 'triangle', duration: 0.14, gain: 0.05 }),
   toggle: () => {
-    tone({ freq: 880, duration: 0.035, gain: 0.03 })
-    noise(0.03, 0.02)
+    tone({ freq: 440, type: 'sine', duration: 0.05, gain: 0.04 })
+    noise(0.025, 0.012)
   },
   open: () => {
-    tone({ freq: 300, to: 620, type: 'sawtooth', duration: 0.18, gain: 0.04 })
-    tone({ freq: 450, to: 930, type: 'square', duration: 0.22, gain: 0.03, delay: 0.05 })
+    tone({ freq: 220, to: 330, type: 'triangle', duration: 0.2, gain: 0.045 })
+    tone({ freq: 330, to: 495, type: 'sine', duration: 0.24, gain: 0.035, delay: 0.05 })
   },
-  error: () => tone({ freq: 180, to: 120, type: 'square', duration: 0.16, gain: 0.05 }),
+  error: () => {
+    tone({ freq: 150, to: 100, type: 'triangle', duration: 0.2, gain: 0.055 })
+    noise(0.04, 0.012)
+  },
 }
 
 export function play(cue: Cue) {

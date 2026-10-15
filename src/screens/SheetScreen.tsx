@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Button, HintBar, OverflowMenu } from '@/components/ui/controls'
 import { isMuted, play, setMuted } from '@/lib/sfx'
+import { DEFAULT_PORTRAIT } from '@/data/defaults'
 import { isTyping } from '@/lib/keys'
 import { useHorizontalSwipe, useIsPhone } from '@/lib/responsive'
-import { IdentitySection } from '@/sections/IdentitySection'
-import { AbilitiesSection } from '@/sections/AbilitiesSection'
+import { CharacterSection } from '@/sections/CharacterSection'
 import { SkillsSection } from '@/sections/SkillsSection'
 import { CombatSection } from '@/sections/CombatSection'
 import { SpellsSection } from '@/sections/SpellsSection'
@@ -17,14 +17,13 @@ import type { SyncStatus } from '@/store/roster'
 import type { Character } from '@/types/character'
 
 const SECTIONS: { id: string; label: string; glyph: string; Component: (p: SectionProps) => JSX.Element }[] = [
-  { id: 'identity', label: 'Identity', glyph: '✦', Component: IdentitySection },
-  { id: 'abilities', label: 'Abilities', glyph: '◈', Component: AbilitiesSection },
-  { id: 'skills', label: 'Skills', glyph: '✧', Component: SkillsSection },
+  { id: 'character', label: 'Character', glyph: '◆', Component: CharacterSection },
+  { id: 'skills', label: 'Skills', glyph: '❖', Component: SkillsSection },
   { id: 'combat', label: 'Combat', glyph: '⚔', Component: CombatSection },
-  { id: 'spells', label: 'Spells', glyph: '✺', Component: SpellsSection },
-  { id: 'equipment', label: 'Equipment', glyph: '◆', Component: InventorySection },
-  { id: 'features', label: 'Features', glyph: '❖', Component: FeaturesSection },
-  { id: 'journal', label: 'Journal', glyph: '✍', Component: JournalSection },
+  { id: 'spellbook', label: 'Spellbook', glyph: '❉', Component: SpellsSection },
+  { id: 'bags', label: 'Bags', glyph: '◈', Component: InventorySection },
+  { id: 'features', label: 'Features', glyph: '✦', Component: FeaturesSection },
+  { id: 'journal', label: 'Journal', glyph: '☙', Component: JournalSection },
 ]
 
 interface Props {
@@ -82,7 +81,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
       } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === 'q' || e.key === 'Q') {
         e.preventDefault()
         goto(index - 1)
-      } else if (/^[1-8]$/.test(e.key)) {
+      } else if (/^[1-7]$/.test(e.key)) {
         e.preventDefault()
         goto(Number(e.key) - 1, 'confirm')
       }
@@ -139,7 +138,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
   return (
     <div className="sheet" style={{ ['--accent' as string]: character.identity.accent }}>
       <div className="sheet-ident">
-        <img className="portrait" src={character.identity.portrait ?? 'assets/portraits/default.svg'} alt="" />
+        <img className="portrait" src={character.identity.portrait ?? DEFAULT_PORTRAIT} alt="" />
         <div className="who">
           <div className="n">{character.identity.name}</div>
           <div className="c">
@@ -153,9 +152,9 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
           <motion.div
             key={active.id}
             className="section-name"
-            initial={{ opacity: 0, x: -40, skewX: -14 }}
-            animate={{ opacity: 1, x: 0, skewX: -6 }}
-            exit={{ opacity: 0, x: 30, skewX: -14 }}
+            initial={{ opacity: 0, x: -40, skewX: 0 }}
+            animate={{ opacity: 1, x: 0, skewX: 0 }}
+            exit={{ opacity: 0, x: 30, skewX: 0 }}
             transition={{ duration: 0.15 }}
           >
             {active.glyph} {active.label}
@@ -225,9 +224,9 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
         <AnimatePresence mode="wait">
           <motion.div
             key={active.id}
-            initial={{ opacity: 0, x: 48, skewX: -5 }}
+            initial={{ opacity: 0, x: 48, skewX: 0 }}
             animate={{ opacity: 1, x: 0, skewX: 0 }}
-            exit={{ opacity: 0, x: -28, skewX: 3 }}
+            exit={{ opacity: 0, x: -28, skewX: 0 }}
             transition={{ duration: 0.17, ease: [0.35, 0, 0.2, 1] }}
           >
             <Section character={character} update={update} />
@@ -239,7 +238,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
         <HintBar
           hints={[
             ['↑ ↓', 'Navigate'],
-            ['1-8', 'Go to section'],
+            ['1-7', 'Go to section'],
             ['Esc', 'Back to the party'],
           ]}
         />

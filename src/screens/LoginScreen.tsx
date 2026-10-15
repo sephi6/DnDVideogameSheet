@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/controls'
 import { play } from '@/lib/sfx'
 import { useAuth } from '@/store/auth'
+import { ScreenTitle } from './ScreenTitle'
 
 type Mode = 'signin' | 'signup'
 
@@ -35,13 +36,13 @@ export function LoginScreen() {
     <div className="login-screen">
       <motion.div
         className="login-card panel"
-        initial={{ opacity: 0, y: 40, rotate: -2 }}
-        animate={{ opacity: 1, y: 0, rotate: -1 }}
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 22 }}
       >
         <div className="login-head">
-          <span className="slab"><span>Sign in</span></span>
-          <h1 className="display">Join the party</h1>
+          <span className="eyebrow">Sign in</span>
+          <ScreenTitle>Join the party</ScreenTitle>
         </div>
 
         {SIGNUPS_OPEN && (
@@ -104,7 +105,7 @@ export function LoginScreen() {
             </motion.p>
           )}
 
-          <button type="submit" className="btn login-submit" disabled={busy}>
+          <button type="submit" className="btn primary login-submit" disabled={busy}>
             <span>{busy ? 'One moment…' : mode === 'signin' ? 'Sign in ▸' : 'Create account ▸'}</span>
           </button>
         </form>

@@ -39,7 +39,7 @@ export default function App() {
 
   const active = characters.find((c) => c.id === activeId) ?? null
   const accent =
-    screen === 'title' ? '#e01133' : active?.identity.accent ?? characters[index]?.identity.accent ?? '#e01133'
+    screen === 'title' ? 'var(--gold)' : active?.identity.accent ?? characters[index]?.identity.accent ?? 'var(--gold)'
 
   const openSheet = (character: Character) => {
     run(character.identity.name, () => {
@@ -71,7 +71,7 @@ export default function App() {
       {screen === 'title' && <TitleScreen onStart={() => run('Arcana', () => setScreen('select'))} />}
 
       {screen !== 'title' && needsLogin && (
-        authStatus === 'loading' ? <div className="center" style={{ height: '100%' }}>
+        authStatus === 'loading' ? <div className="center" style={{ height: '100%', position: 'relative', zIndex: 1 }}>
           <span className="label">Checking session…</span>
         </div> : <LoginScreen />
       )}

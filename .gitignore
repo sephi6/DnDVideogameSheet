@@ -8,3 +8,6 @@ dist-ssr
 .vite
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+
+# Claude Design local bundle (synced to claude.ai/design, not to git)
+design/

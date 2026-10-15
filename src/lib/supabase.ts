@@ -31,7 +31,14 @@ export function requireSupabase(): SupabaseClient {
 
 /** Supabase error messages turned into something readable on screen. */
 export function readableError(error: unknown): string {
-  const raw = error instanceof Error ? error.message : String(error)
+  // Supabase returns its errors as plain objects with a `message`, not as Error
+  // instances; String() on those prints "[object Object]".
+  const raw =
+    error instanceof Error
+      ? error.message
+      : typeof error === 'object' && error !== null && 'message' in error
+        ? String((error as { message: unknown }).message)
+        : String(error)
   const map: Record<string, string> = {
     'Invalid login credentials': 'Wrong email or password.',
     'Email not confirmed': 'The email is still unconfirmed. Check your inbox.',

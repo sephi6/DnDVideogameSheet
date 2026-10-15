@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <path d="M 2 34 V 10 C 2 5.582 5.582 2 10 2 H 34" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 6 30 V 12 C 6 8.686 8.686 6 12 6 H 30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="10,28 10,10 28,10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="18,12 24,18 18,24 12,18 18,12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 18 55 C 18 43 20 33 27 26 C 34 19 44 17 55 18 C 47 20 41 25 39 32 C 37 39 40 45 46 46 C 51 47 55 44 56 39 C 57 35 54 32 51 32 C 48 32 46 34 46 37" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 55 18 C 43 18 33 20 26 27 C 19 34 17 44 18 55 C 20 47 25 41 32 39 C 39 37 45 40 46 46 C 47 51 44 55 39 56 C 35 57 32 54 32 51 C 32 48 34 46 37 46" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 27 26 C 21 26 17 23 15 19 C 20 18 24 20 28 23 C 29 24 29 25 27 26 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 26 27 C 26 21 23 17 19 15 C 18 20 20 24 23 28 C 24 29 25 29 26 27 Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="18" cy="18" r="1.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="31" cy="15" r="1.25" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="15" cy="31" r="1.25" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,27 +1,77 @@
 /* ── Tokens ─────────────────────────────────────────────────────────────── */
 :root {
-  --ink: #08070a;
-  --ink-2: #121016;
-  --ink-3: #1c1a22;
-  --bone: #f6f1e6;
-  --bone-dim: #b8b2a6;
-  --blood: #e01133;
-  --blood-hot: #ff2a4d;
-  --gold: #ffc93c;
-  --accent: #e01133;
-  --accent-soft: color-mix(in srgb, var(--accent) 30%, transparent);
+  /* ── Azeroth ─────────────────────────────────────────────────────────── */
+  --stone: #1a1512;
+  --stone-2: #241d18;
+  --stone-3: #30261f;
+  --parchment: #e8dcc0;
+  --parchment-dim: #c4b795;
 
-  --font-display: 'Archivo Black', 'Arial Black', system-ui, sans-serif;
-  --font-label: 'Bebas Neue', 'Arial Narrow', system-ui, sans-serif;
-  --font-body: 'Barlow Condensed', 'Segoe UI', system-ui, sans-serif;
+  /* Warcraft's gold is three tones, never one: highlight on the top-left
+     bevel, base on the stroke, shadow on the bottom-right. A frame drawn in a
+     single tone reads flat. */
+  --gold: #c8a84f;
+  --gold-hi: #e8d08a;
+  --gold-lo: #8a6d2f;
+  --bevel: inset 1px 1px 0 var(--gold-hi), inset -1px -1px 0 var(--gold-lo);
 
-  /* The slanted grammar costs space: the border and the hard shadow eat 9px a
-     side, which is a detail at 1440px and 5% of the width at 393px. That is why
-     the style constants scale with the viewport, not just the layout. These are
-     the desktop values; responsive.css steps them down on tablet and phone. */
-  --skew: -9deg;
-  --shadow-hard: 6px 6px 0 var(--ink);
-  --edge: 3px solid var(--ink);
+  /* Ink on a gold plate, and the seat hairline under every band frame.
+     A genuinely new value: not derivable from the three stones. */
+  --seat: #0d0a08;
+
+  /* Inner rules, dividers and inset catch-lights. Written as color-mix, not a
+     frozen rgba, so it follows --gold if --gold ever moves. */
+  --gold-faint: color-mix(in srgb, var(--gold) 22%, transparent);
+
+  /* Hover and state grounds, so stone stays at exactly three values.
+     One scale, three steps — 7 / 12 / 18. */
+  --veil: color-mix(in srgb, var(--gold-hi) 7%, transparent);
+  --veil-2: color-mix(in srgb, var(--gold-hi) 12%, transparent);
+  --veil-3: color-mix(in srgb, var(--gold-hi) 18%, transparent);
+
+  /* Destructive actions. Deliberately NOT Death Knight's #C41E3A: a class
+     accent and the delete button must never be the same colour. Destructive
+     controls additionally carry a word — never colour alone. */
+  --danger: #e23b2e;
+  --danger-veil: color-mix(in srgb, var(--danger) 14%, transparent);
+
+  /* Fallbacks are metric-compatible on purpose: Garamond for EB Garamond, and
+     a condensed face for Barlow Condensed, so a missing webfont does not
+     reflow the dense number columns. Copy these three strings verbatim — the
+     design cards use exactly them. */
+  --font-display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  --font-body: 'EB Garamond', Garamond, Georgia, serif;
+  --font-data: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+
+  /* Item rarity, straight from the game. Gives Bags its visual logic. The
+     token names stay Warcraft's; the printed LABELS use the 2024 book's
+     vocabulary per constraint D4, so --rarity-epic prints "very rare". */
+  --rarity-poor: #9d9d9d;
+  --rarity-common: #ffffff;
+  --rarity-uncommon: #1eff00;
+  --rarity-rare: #0070dd;
+  --rarity-epic: #a335ee;
+  --rarity-legendary: #ff8000;
+  --rarity-artifact: #e6cc80;
+
+  /* The scale: 13 14 16 18 22 32 44, about 1.22 at the top end. */
+  --t-label:13px;
+  --t-small:14px;
+  --t-body:16px;
+  --t-card:18px;
+  --t-section:22px;
+  --t-screen:32px;
+  --t-hero:44px;
+
+  /* Grain is procedural: feTurbulence in a data URI, no asset files. Applied on
+     the element itself as background-image with background-blend-mode (stone on
+     soft-light, parchment on multiply), never as a positioned ::after. */
+  --grain-stone:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23s)' opacity='0.45'/%3E%3C/svg%3E");
+  --grain-parchment:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.035' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23p)' opacity='0.55'/%3E%3C/svg%3E");
+
+  /* Default accent (title and login screens). A per-character inline
+     --accent overrides it everywhere else. */
+  --accent: var(--gold);
 
   /* Notches and the gesture bar. index.html declares viewport-fit=cover, so
      without these the content slides under the Dynamic Island and the home
@@ -44,8 +94,8 @@ html, body, #root { height: 100%; height: 100dvh; }
 
 body {
   margin: 0;
-  background: var(--ink);
-  color: var(--bone);
+  background: var(--stone);
+  color: var(--parchment);
   font-family: var(--font-body);
   font-size: 17px;
   letter-spacing: 0.01em;
@@ -55,21 +105,30 @@ body {
 
 button, input, select, textarea { font: inherit; color: inherit; }
 
-::selection { background: var(--blood); color: var(--bone); }
+::selection { background: var(--gold); color: var(--seat); }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #0e0d11; }
+::-webkit-scrollbar-track { background: var(--seat); }
 ::-webkit-scrollbar-thumb {
   background: var(--accent);
-  border: 2px solid #0e0d11;
+  border: 2px solid var(--seat);
 }
 
 :focus-visible {
-  outline: 3px solid var(--gold);
+  outline: 2px solid var(--gold-hi);
   outline-offset: 2px;
+}
+/* A seat-dark halo keeps the gold-hi ring readable on parchment grounds too.
+   Scoped to the controls: a filter creates a stacking context, which would be
+   unwelcome on tabindex wrappers. */
+.btn:focus-visible, .input:focus-visible, .select:focus-visible, .textarea:focus-visible,
+.box:focus-visible, .pip:focus-visible, .chip:focus-visible {
+  filter: drop-shadow(0 0 1.5px var(--seat));
 }
 
 /* ── Animated background ────────────────────────────────────────────────── */
+/* Warm stone, lit from above, with a slow gold breath. Everything here is
+   decoration: pointer-events none, under the content (z-index 0). */
 .bg-fx {
   position: fixed;
   inset: 0;
@@ -77,244 +136,343 @@ button, input, select, textarea { font: inherit; color: inherit; }
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(120% 90% at 15% 0%, #1d0a10 0%, #08070a 60%),
-    var(--ink);
+    radial-gradient(120% 90% at 50% 0%, var(--stone-3) 0%, var(--stone-2) 38%, var(--stone) 72%),
+    var(--stone);
 }
 
+/* Stone grain, on the layer itself and blended in, as the grain token asks. */
 .bg-fx::before {
   content: '';
   position: absolute;
-  inset: -40%;
-  background: repeating-linear-gradient(
-    115deg,
-    color-mix(in srgb, var(--accent) 16%, transparent) 0 26px,
-    transparent 26px 78px
-  );
-  animation: drift 14s linear infinite;
+  inset: 0;
+  background-image: var(--grain-stone);
+  mix-blend-mode: soft-light;
   opacity: 0.55;
 }
 
+/* A faint gold seam across the top, as light on a carved lintel. */
 .bg-fx::after {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.075) 1.1px, transparent 1.2px);
-  background-size: 9px 9px;
-  mix-blend-mode: overlay;
-  opacity: 0.55;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--gold-hi) 9%, transparent) 0,
+    transparent 22%
+  );
 }
 
 .bg-burst {
   position: absolute;
-  width: 160vmax;
-  height: 160vmax;
+  width: 140vmax;
+  height: 140vmax;
   left: 50%;
-  top: 50%;
+  top: 38%;
   translate: -50% -50%;
-  background: conic-gradient(
-    from 0deg,
-    color-mix(in srgb, var(--accent) 22%, transparent) 0 6deg,
-    transparent 6deg 18deg
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--gold) 16%, transparent) 0%,
+    color-mix(in srgb, var(--gold-lo) 8%, transparent) 45%,
+    transparent 100%
   );
-  animation: spin 90s linear infinite;
-  opacity: 0.25;
-  filter: blur(0.4px);
+  animation: gold-breath 16s ease-in-out infinite;
 }
 
 .bg-vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(80% 70% at 50% 45%, transparent 40%, rgba(0, 0, 0, 0.82) 100%);
+  background: radial-gradient(80% 70% at 50% 45%, transparent 40%, color-mix(in srgb, var(--seat) 85%, transparent) 100%);
 }
 
-@keyframes drift { to { transform: translate3d(-78px, 168px, 0); } }
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes gold-breath {
+  0%, 100% { opacity: 0.45; scale: 0.92; }
+  50% { opacity: 1; scale: 1.04; }
+}
 
 /* ── Shared typography ──────────────────────────────────────────────────── */
-.display {
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  line-height: 0.92;
-  letter-spacing: -0.01em;
+/* .label lives with the field rules under UI primitives. */
+
+/* ── UI primitives ──────────────────────────────────────────────────────────
+   Transcribed from design/controls.html. Raised means press it (bevel), inset
+   means fill it (reversed bevel). */
+
+/* Panel: hairline gold + bevel on stone-2, with stone grain on the element
+   itself (soft-light). The frame is the hairline of controls.html and the
+   section-header card's tier 3; bands belong to cards and section heads. */
+.panel {
+  position: relative;
+  background-color: var(--stone-2);
+  background-image: var(--grain-stone);
+  background-blend-mode: soft-light;
+  border: 1px solid var(--gold);
+  box-shadow: var(--bevel);
 }
+
+/* Panel header (title + actions): wrap rather than push the actions past the
+   frame when the panel is narrow. */
+.panel > header.row { flex-wrap: wrap; gap: 8px; }
+
+/* Tier 3 of section-header.html: a rule and a class-coloured lozenge, no
+   ornament. Padding on the panel itself comes from .card (sheet.css). */
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 0 0 9px;
+  border-bottom: 1px solid var(--gold-faint);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--t-body);
+  letter-spacing: 0.06em;
+  color: var(--parchment);
+}
+.panel-title::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  flex: none;
+  transform: rotate(45deg);
+  background: var(--accent);
+  box-shadow: 0 0 0 1px var(--seat);
+}
+
+/* Field: a label and a well. */
+.field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 
 .label {
-  font-family: var(--font-label);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--bone-dim);
-  font-size: 15px;
+  display: block;
+  font-family: var(--font-data);
+  font-weight: 600;
+  font-size: var(--t-label);
+  letter-spacing: 0.04em;
+  color: var(--parchment-dim);
 }
-
-.slab {
-  display: inline-block;
-  background: var(--accent);
-  color: var(--ink);
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  padding: 4px 14px;
-  transform: skewX(var(--skew));
-  box-shadow: var(--shadow-hard);
-}
-.slab > span { display: inline-block; transform: skewX(calc(-1 * var(--skew))); }
-
-/* ── UI primitives ──────────────────────────────────────────────────────── */
-.panel {
-  background: linear-gradient(160deg, rgba(28, 26, 34, 0.96), rgba(10, 9, 13, 0.96));
-  border: var(--edge);
-  box-shadow: var(--shadow-hard);
-  position: relative;
-}
-
-.panel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(circle at center, rgba(255, 255, 255, 0.05) 1px, transparent 1.1px);
-  background-size: 7px 7px;
-  pointer-events: none;
-}
-
-.panel-title {
-  font-family: var(--font-label);
-  font-size: 20px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink);
-  background: var(--accent);
-  padding: 2px 12px;
-  display: inline-block;
-  transform: skewX(var(--skew)) translateX(-6px);
-  margin-bottom: 10px;
-}
-.panel-title > span { display: inline-block; transform: skewX(calc(-1 * var(--skew))); }
-
-.field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-
-.field > .label { font-size: 13px; letter-spacing: 0.16em; }
 
 .input,
 .textarea,
 .select {
-  background: rgba(0, 0, 0, 0.55);
-  border: 2px solid #35313d;
-  border-left: 4px solid var(--accent);
-  color: var(--bone);
-  padding: 6px 10px;
-  font-family: var(--font-body);
-  font-size: 17px;
   width: 100%;
-  transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
+  font-family: var(--font-data);
+  font-size: 17px;
+  letter-spacing: 0.02em;
+  color: var(--parchment);
+  background-color: var(--stone-3);
+  padding: 8px 10px;
+  border: 1px solid var(--gold-lo);
+  border-radius: 2px;
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.55), inset -1px -1px 0 var(--gold-faint);
 }
 
-.input:focus, .textarea:focus, .select:focus {
-  background: rgba(0, 0, 0, 0.8);
-  border-color: var(--gold);
-  border-left-color: var(--gold);
-  outline: none;
-  transform: translateX(2px);
+.textarea {
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+  line-height: 1.55;
+  min-height: 82px;
+  resize: vertical;
 }
-
-.textarea { resize: vertical; min-height: 82px; line-height: 1.35; }
-
-.select { appearance: none; cursor: pointer; }
-.select option { background: #14121a; }
 
 .input.num {
-  font-family: var(--font-label);
-  font-size: 24px;
+  font-weight: 700;
+  font-size: 30px;
   text-align: center;
-  letter-spacing: 0.06em;
-  padding: 2px 4px;
+  padding: 4px 6px;
+  font-variant-numeric: tabular-nums;
 }
 
+.select {
+  appearance: none;
+  cursor: pointer;
+  padding-right: 30px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--gold) 50%),
+    linear-gradient(135deg, var(--gold) 50%, transparent 50%);
+  background-position: calc(100% - 17px) 55%, calc(100% - 11px) 55%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+.select option { background: var(--stone-3); color: var(--parchment); }
+
+.input::placeholder,
+.textarea::placeholder { color: color-mix(in srgb, var(--parchment-dim) 52%, transparent); }
+
+/* Button: a raised gold-edged plate. Pressing it inverts the bevel. */
 .btn {
-  font-family: var(--font-label);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-size: 17px;
-  background: var(--ink-3);
-  color: var(--bone);
-  border: 2px solid var(--bone-dim);
-  padding: 5px 14px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--t-small);
+  letter-spacing: 0.09em;
+  color: var(--gold-hi);
+  background-color: var(--stone-3);
+  padding: 9px 18px;
   cursor: pointer;
-  transform: skewX(var(--skew));
-  transition: background 120ms ease, color 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+  border: 1px solid var(--gold);
+  border-radius: 2px;
+  box-shadow: var(--bevel);
 }
-.btn > span { display: inline-block; transform: skewX(calc(-1 * var(--skew))); }
-.btn:active { transform: skewX(var(--skew)) translate(3px, 3px); box-shadow: none; }
-.btn.ghost { background: transparent; border-color: #43404c; }
-.btn.danger:hover { background: var(--blood-hot); }
-.btn.small { font-size: 14px; padding: 2px 10px; }
+.btn.primary {
+  color: var(--seat);
+  background: linear-gradient(180deg, var(--gold-hi) 0%, var(--gold) 55%, var(--gold-lo) 100%);
+  border-color: var(--gold-lo);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.55), inset -1px -1px 0 rgba(0, 0, 0, 0.3);
+}
+.btn.ghost {
+  background: transparent;
+  border-color: var(--gold-lo);
+  color: var(--parchment-dim);
+  box-shadow: inset 1px 1px 0 var(--gold-faint);
+}
+.btn.danger {
+  color: var(--parchment);
+  border-color: var(--danger);
+  box-shadow:
+    inset 1px 1px 0 color-mix(in srgb, var(--danger) 70%, transparent),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.5);
+}
+.btn.small { font-size: 12px; padding: 6px 11px; letter-spacing: 0.07em; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.4); }
+/* Pressed comes last, with a variant selector of its own, so the bevel inverts
+   on the gold plate too. */
+.btn:active:not(:disabled),
+.btn.primary:active:not(:disabled) {
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.6), inset -1px -1px 0 var(--gold-faint);
+  color: var(--gold);
+}
+.btn.primary:active:not(:disabled) {
+  background: linear-gradient(180deg, var(--gold-lo) 0%, var(--gold) 55%, var(--gold-hi) 100%);
+  color: var(--seat);
+}
 
-.chip {
-  font-family: var(--font-label);
-  letter-spacing: 0.1em;
-  font-size: 14px;
-  text-transform: uppercase;
-  border: 2px solid #3b3844;
-  background: rgba(0, 0, 0, 0.4);
-  color: var(--bone-dim);
-  padding: 2px 10px;
+/* Box: a tickable square. The tick is a lozenge on ::before; ::after is kept
+   for the coarse-pointer touch area below. */
+.box {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  padding: 0;
   cursor: pointer;
-  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  background-color: var(--stone-3);
+  border: 1px solid var(--gold-lo);
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.55), inset -1px -1px 0 var(--gold-faint);
 }
-.chip[data-on='true'] { background: var(--accent); border-color: var(--ink); color: var(--ink); }
+.box[data-on='true'] { border-color: var(--gold); box-shadow: var(--bevel); }
+.box[data-on='true']::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  background: var(--accent);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+.box.gold[data-on='true']::before { background: var(--gold-hi); }
+
+/* Pip: three states, cycled by clicking. Fill and bevel change, not colour
+   alone. */
+.pip {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: var(--stone-3);
+  border: 1px solid var(--gold-lo);
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.6), inset -1px -1px 0 var(--gold-faint);
+}
+.pip[data-level='1'] {
+  background: var(--accent);
+  border-color: var(--gold-lo);
+  box-shadow: inset -1px -1px 0 rgba(0, 0, 0, 0.35), inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+}
+.pip[data-level='2'] {
+  background: radial-gradient(circle at 34% 30%, var(--gold-hi) 0%, var(--gold) 55%, var(--gold-lo) 100%);
+  border-color: var(--gold-hi);
+}
+
+/* Chip: a toggle that carries a word. */
+.chip {
+  font-family: var(--font-data);
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  color: var(--parchment-dim);
+  background-color: var(--stone-3);
+  padding: 5px 12px;
+  border: 1px solid var(--gold-lo);
+  border-radius: 2px;
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.5), inset -1px -1px 0 var(--gold-faint);
+}
+.chip[data-on='true'] {
+  color: var(--seat);
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold) 60%, var(--gold-lo));
+  border-color: var(--gold-lo);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.5);
+}
 
 /* On touch, :hover sticks after the tap, so it only exists where there is a
    real pointer that can move away. */
 @media (hover: hover) {
-  .btn:hover { background: var(--accent); color: var(--ink); border-color: var(--ink); box-shadow: var(--shadow-hard); }
-  .chip:hover { border-color: var(--gold); color: var(--bone); }
-  .chip[data-on='true']:hover { color: var(--ink); }
+  .input:hover, .select:hover, .textarea:hover { border-color: var(--gold); }
+  .btn:not(:disabled, .primary, .ghost, .danger):hover { border-color: var(--gold-hi); background-image: linear-gradient(var(--veil-2), var(--veil-2)); }
+  .btn.primary:not(:disabled):hover { filter: brightness(1.07); }
+  .btn.primary:not(:disabled):hover:focus-visible { filter: brightness(1.07) drop-shadow(0 0 1.5px var(--seat)); }
+  .btn.ghost:not(:disabled):hover { color: var(--gold-hi); border-color: var(--gold); background-image: linear-gradient(var(--veil), var(--veil)); }
+  .btn.danger:not(:disabled):hover { border-color: var(--danger); background-image: linear-gradient(var(--danger-veil), var(--danger-veil)); }
+  .chip:hover { color: var(--gold-hi); border-color: var(--gold); }
+  .chip[data-on='true']:hover { color: var(--seat); }
 }
 
-/* Overflow menu: where the secondary actions fold away once the header runs
-   out of room (phone). */
-.overflow { position: relative; flex: 0 0 auto; }
+/* Overflow menu: the only floating surface in the app. Hairline frame (it is
+   transient and ranks below a panel), --stone-2 ground with a --seat ring,
+   z-index 20 as controls.html settles it. The cast shadow is the one thing that
+   says "floating". */
+.overflow { position: relative; display: inline-block; flex: 0 0 auto; }
 
-.overflow-toggle { padding-inline: 12px; letter-spacing: 0; }
+.overflow-toggle { line-height: 1; padding: 6px 9px; letter-spacing: 0; }
 
 .overflow-sheet {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 7px);
   right: 0;
-  z-index: 40;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 8px;
-  min-width: 200px;
-  padding: 12px;
-  background: var(--ink-2);
-  border: 3px solid var(--ink);
-  border-top: 4px solid var(--accent);
-  box-shadow: 8px 8px 0 var(--ink);
+  z-index: 20;
+  min-width: 184px;
+  padding: 5px;
+  background-color: var(--stone-2);
+  border: 1px solid var(--gold);
+  box-shadow: var(--bevel), 0 0 0 1px var(--seat), 0 8px 22px rgba(0, 0, 0, 0.55);
 }
-
-/* Inside the menu the buttons are rows, not slanted pills: the skew stacked
-   several times vertically reads as noise. */
 .overflow-sheet .btn {
-  transform: none;
+  display: block;
   width: 100%;
   text-align: left;
-  justify-content: flex-start;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 9px 11px;
+  font-size: var(--t-label);
+  letter-spacing: 0.07em;
+  color: var(--parchment);
 }
-.overflow-sheet .btn > span { transform: none; }
-.overflow-sheet .btn:active { transform: translate(2px, 2px); }
+.overflow-sheet .btn + .btn { border-top: 1px solid var(--gold-faint); }
+.overflow-sheet .btn.danger { color: var(--danger); box-shadow: none; }
+.overflow-sheet .btn:active:not(:disabled) { box-shadow: none; color: var(--gold); }
+@media (hover: hover) {
+  .overflow-sheet .btn:not(:disabled):hover { background-image: linear-gradient(var(--veil-2), var(--veil-2)); color: var(--gold-hi); }
+  .overflow-sheet .btn.danger:not(:disabled):hover { background-image: linear-gradient(var(--danger-veil), var(--danger-veil)); color: var(--danger); }
+}
 
 .row { display: flex; align-items: center; gap: 10px; }
 .grow { flex: 1; min-width: 0; }
 .stack { display: flex; flex-direction: column; gap: 12px; }
-.muted { color: var(--bone-dim); }
+.muted { color: var(--parchment-dim); }
 .center { display: grid; place-items: center; }
 
 .empty {
-  border: 2px dashed #3a3742;
+  border: 2px dashed var(--gold-faint);
   padding: 14px;
   text-align: center;
-  color: var(--bone-dim);
-  font-family: var(--font-label);
+  color: var(--parchment-dim);
+  font-family: var(--font-data);
   letter-spacing: 0.14em;
 }
 
@@ -353,6 +511,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bg-fx::before, .bg-burst { animation: none; }
+  .bg-burst { animation: none; opacity: 0.8; }
   * { scroll-behavior: auto; }
 }

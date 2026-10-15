@@ -3,10 +3,12 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Button, HintBar, OverflowMenu } from '@/components/ui/controls'
 import { ABILITIES, formatModifier } from '@/data/rules'
 import { abilityModifier } from '@/data/rules'
+import { DEFAULT_PORTRAIT } from '@/data/defaults'
 import { isTyping } from '@/lib/keys'
 import { useIsPhone } from '@/lib/responsive'
 import { play } from '@/lib/sfx'
 import type { Character } from '@/types/character'
+import { ScreenTitle } from './ScreenTitle'
 
 interface Props {
   characters: Character[]
@@ -96,7 +98,7 @@ export function CharacterSelect({
     card?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
   }, [index])
 
-  const accent = current?.identity.accent ?? 'var(--blood)'
+  const accent = current?.identity.accent ?? 'var(--gold)'
 
   const sessionTag = userEmail && (
     <span className="label session-tag" title={userEmail}>{userEmail}</span>
@@ -129,8 +131,8 @@ export function CharacterSelect({
     <div className="select-screen" style={{ ['--accent' as string]: accent }}>
       <header className="screen-head">
         <div>
-          <span className="slab"><span>Select your character</span></span>
-          <h1 style={{ marginTop: 10 }}>The party</h1>
+          <span className="eyebrow">Select your character</span>
+          <ScreenTitle>The party</ScreenTitle>
         </div>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {isPhone ? (
@@ -170,18 +172,20 @@ export function CharacterSelect({
                   play('confirm')
                   onOpen(current)
                 }}
-                initial={{ opacity: 0, x: 90, rotate: -12, scale: 0.9 }}
-                animate={{ opacity: 1, x: 0, rotate: -3, scale: 1 }}
-                exit={{ opacity: 0, x: -70, rotate: 6, scale: 0.94 }}
+                initial={{ opacity: 0, x: 90, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -70, scale: 0.94 }}
                 transition={{ type: 'spring', stiffness: 240, damping: 24 }}
-                whileHover={{ rotate: -1, scale: 1.02 }}
+                whileHover={{ scale: 1.02 }}
                 style={{ padding: 0, cursor: 'pointer' }}
               >
-                <img src={current.identity.portrait ?? 'assets/portraits/default.svg'} alt="" />
-                <span className="hero-name">{current.identity.name}</span>
-                <span className="hero-sub">
-                  Lv {current.identity.level} · {current.identity.className}
-                  {current.identity.subclass ? ` · ${current.identity.subclass}` : ''}
+                <img src={current.identity.portrait ?? DEFAULT_PORTRAIT} alt="" />
+                <span className="hero-plate">
+                  <span className="hero-name">{current.identity.name}</span>
+                  <span className="hero-sub">
+                    Level {current.identity.level} <b>{current.identity.className}</b>
+                    {current.identity.subclass ? ` · ${current.identity.subclass}` : ''}
+                  </span>
                 </span>
               </motion.button>
             )}
@@ -212,7 +216,7 @@ export function CharacterSelect({
                     <div className="k">{ability.short}</div>
                     <div className="v">
                       {current.abilities[ability.key]}
-                      <span style={{ fontSize: 16, color: 'var(--bone-dim)', marginLeft: 6 }}>
+                      <span style={{ fontSize: 16, color: 'var(--parchment-dim)', marginLeft: 6 }}>
                         {formatModifier(abilityModifier(current.abilities[ability.key]))}
                       </span>
                     </div>
@@ -255,11 +259,11 @@ export function CharacterSelect({
               transition={{ type: 'spring', stiffness: 380, damping: 26 }}
               style={{ ['--accent' as string]: character.identity.accent }}
             >
-              <img src={character.identity.portrait ?? 'assets/portraits/default.svg'} alt="" />
+              <img src={character.identity.portrait ?? DEFAULT_PORTRAIT} alt="" />
               <span className="rc-name">{character.identity.name}</span>
             </motion.button>
           ))}
-          <button type="button" className="roster-card new-card" onClick={() => { play('confirm'); onCreate() }}>
+          <button type="button" className="roster-card new-card" aria-label="New character" onClick={() => { play('confirm'); onCreate() }}>
             +
           </button>
         </div>

@@ -126,7 +126,7 @@ export function CombatSection({ character, update }: SectionProps) {
                   </div>
                 </div>
                 <div className="row" style={{ gap: 6 }}>
-                  <span className="label" style={{ fontSize: 13, color: 'var(--blood-hot)' }}>Failures</span>
+                  <span className="label" style={{ fontSize: 13, color: 'var(--danger)' }}>Failures</span>
                   <div className="tracker">
                     {[0, 1, 2].map((i) => (
                       <CheckBox
@@ -230,7 +230,7 @@ export function CombatSection({ character, update }: SectionProps) {
                       if (a) a.name = e.target.value
                     })}
                   />
-                  <div style={{ fontFamily: 'var(--font-label)', fontSize: 26, color: 'var(--gold)', minWidth: 54, textAlign: 'center' }}>
+                  <div style={{ fontFamily: 'var(--font-data)', fontSize: 26, color: 'var(--gold)', minWidth: 54, textAlign: 'center' }}>
                     {formatModifier(attackBonus(character, attack.ability, attack.proficient))}
                   </div>
                   <Button variant="small ghost danger" cue="back" onClick={() => update((d) => { d.combat.attacks = d.combat.attacks.filter((x) => x.id !== attack.id) })}>

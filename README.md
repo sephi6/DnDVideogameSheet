@@ -2,8 +2,9 @@
 
 Web app for the players at a **Dungeons & Dragons 2024** table to keep their
 character sheets. The point is not the sheet: it is **moving through it like a
-video-game menu** —declared reference: Persona 5—. Cards that tilt, red wipes
-between screens, menu blips and keyboard navigation.
+video-game menu** with a World of Warcraft look: stone, gold filigree and
+cartouches, a gold sweep between screens, warm menu blips and keyboard
+navigation.
 
 ```bash
 npm install
@@ -31,12 +32,12 @@ To publish it on Cloudflare Workers: [`docs/DEPLOY.md`](docs/DEPLOY.md).
 | --- | --- |
 | Title | any key |
 | Character select | `←` `→` switch · `Enter` open · `N` new |
-| Sheet | `↑` `↓` navigate · `1`–`8` go to section · `Esc` back |
+| Sheet | `↑` `↓` navigate · `1`–`7` go to section · `Esc` back |
 
 The mouse works just as well; the keyboard is there so it feels like a gamepad.
 
-The eight sections of the sheet: **Identity, Abilities, Skills, Combat, Spells,
-Equipment, Features and Journal**. Everything is editable and saves itself
+The seven sections of the sheet: **Character, Skills, Combat, Spellbook, Bags,
+Features and Journal**. Everything is editable and saves itself
 (there is a "Saved" indicator in the header). Each character has its own
 **accent color**, which tints the whole menu when selected.
 
@@ -46,7 +47,8 @@ Equipment, Features and Journal**. Everything is editable and saves itself
 - **Heroic Inspiration** and **Exhaustion** levels (−2 to D20 Tests and −5 feet of Speed per level).
 - **Weapon masteries** on every attack.
 - Spell slots worked out per class (full caster, half caster and the Warlock's **Pact Magic**).
-- The 12 classes, 10 species and 16 backgrounds of the 2024 PHB.
+- 25 classes (the 12 of the 2024 PHB plus 13 Warcraft ones, whose mechanics are
+  provisional), 22 species and the 16 backgrounds of the 2024 PHB.
 - Feet and pounds throughout: Speed, ranges, item weights and Carrying Capacity
   (Strength × 15 lb.).
 
@@ -65,7 +67,7 @@ src/
 ├── store/auth.ts        Session: sign in, sign up, magic link, sign out
 ├── store/roster.ts      Party state, per-sheet saving and sync status
 ├── screens/             Title · Sign in · Character select · Sheet
-├── sections/            The eight editable sections
+├── sections/            The seven editable sections
 └── styles/              Tokens and look (self-hosted fonts)
 ```
 
@@ -77,7 +79,7 @@ illustrations made with ChatGPT: the detailed instructions —style bible, promp
 sizes and per-class colors— are in
 [`docs/ASSET_PROMPTS.md`](docs/ASSET_PROMPTS.md).
 
-The fonts (Archivo Black, Barlow Condensed, Bebas Neue — all OFL) are
+The fonts (Cinzel, EB Garamond, Barlow Condensed — all OFL) are
 self-hosted in `public/fonts/`; `scripts/fetch-fonts.sh` regenerates them.
 
 ## Next steps

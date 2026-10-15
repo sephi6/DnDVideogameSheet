@@ -25,12 +25,13 @@ export function TitleScreen({ onStart }: { onStart: () => void }) {
       <div>
         <motion.div
           className="title-mark"
-          initial={{ opacity: 0, y: 60, rotate: -8, scale: 1.2 }}
-          animate={{ opacity: 1, y: 0, rotate: -2, scale: 1 }}
+          initial={{ opacity: 0, y: 60, scale: 1.2 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ type: 'spring', stiffness: 160, damping: 18 }}
         >
           Arcana
         </motion.div>
+        <div className="title-divider" aria-hidden="true" />
         <motion.div
           className="title-sub"
           initial={{ opacity: 0, x: -40 }}
