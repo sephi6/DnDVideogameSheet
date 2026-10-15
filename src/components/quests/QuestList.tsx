@@ -36,7 +36,7 @@ export function QuestList({ quests, objectives, participants, characterId, chara
                 data-active={q.id === selectedId}
                 onClick={() => { play('move'); onSelect(q.id) }}
               >
-                <span className={`lv lv-${d}`} title={DIFFICULTY_LABEL[d]}>{q.recommendedLevel ?? '–'}</span>
+                <span className={`ql-lv ql-lv-${d}`} title={DIFFICULTY_LABEL[d]}>{q.recommendedLevel ?? '–'}</span>
                 <span style={{ minWidth: 0 }}>
                   <span className="t">{q.title || 'Untitled quest'}</span>
                   <span className="s">{[q.location, total ? `${done}/${total}` : ''].filter(Boolean).join(' · ')}</span>

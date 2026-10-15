@@ -63,7 +63,7 @@ export function QuestPage({ quest, objectives, members, characterId, characterLe
                     {o.progress} / {o.target}
                     <button type="button" className="step" aria-label={`One more: ${o.text}`} disabled={o.progress >= o.target}
                       onClick={() => { play('toggle'); setProgress(o.id, o.progress + 1) }}>+</button>
-                    <span className="bar" aria-hidden="true"><i style={{ width: `${(o.progress / o.target) * 100}%` }} /></span>
+                    <span className="qo-bar" aria-hidden="true"><i style={{ width: `${(o.progress / o.target) * 100}%` }} /></span>
                   </>
                 )}
               </span>
@@ -78,10 +78,10 @@ export function QuestPage({ quest, objectives, members, characterId, characterLe
           <h3 className="qp-h">Rewards</h3>
           <div className="qp-rewards">
             {coins.map((k) => (
-              <span key={k} className="rw"><span className={`coin coin-${k}`} />{quest.rewardCoins[k]} <span className="k">{k.toUpperCase()}</span></span>
+              <span key={k} className="qp-rw"><span className={`qp-coin qp-coin-${k}`} />{quest.rewardCoins[k]} <span className="k">{k.toUpperCase()}</span></span>
             ))}
-            {quest.rewardXp > 0 && <span className="rw">{quest.rewardXp} <span className="k">XP</span></span>}
-            {quest.rewardItems.map((item) => <span key={item} className="rw item"><span className="gem" />{item}</span>)}
+            {quest.rewardXp > 0 && <span className="qp-rw">{quest.rewardXp} <span className="k">XP</span></span>}
+            {quest.rewardItems.map((item) => <span key={item} className="qp-rw item"><span className="gem" />{item}</span>)}
             {coins.length === 0 && quest.rewardXp === 0 && quest.rewardItems.length === 0 && <span className="qp-desc">None promised.</span>}
           </div>
         </div>
@@ -89,7 +89,7 @@ export function QuestPage({ quest, objectives, members, characterId, characterLe
           <h3 className="qp-h">On this quest</h3>
           <div className="qp-party">
             {members.map((m) => (
-              <span key={m.id} className="member">
+              <span key={m.id} className="qp-member">
                 <img src={m.identity.portrait ?? DEFAULT_PORTRAIT} alt="" />
                 <span>{m.identity.name}<span className="c">{m.identity.className}</span></span>
               </span>

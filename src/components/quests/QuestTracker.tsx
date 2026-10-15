@@ -22,7 +22,7 @@ export function QuestTracker({ characterId, characterLevel, variant, onOpenLog }
     return (
       <div key={q.id} className="tk-q">
         <div className="t">
-          <span className={`lvn lv-${d}`}>[{q.recommendedLevel ?? '–'}]</span>
+          <span className={`tk-lv ql-lv-${d}`}>[{q.recommendedLevel ?? '–'}]</span>
           <span className="tt">{q.title}</span>
         </div>
         {objectivesOf(objectives, q.id).map((o) => (
@@ -37,7 +37,7 @@ export function QuestTracker({ characterId, characterLevel, variant, onOpenLog }
 
   if (variant === 'column') {
     return (
-      <aside className="tracker" aria-label="Tracked quests">
+      <aside className="quest-tracker" aria-label="Tracked quests">
         <div className="tk-head">Tracked<span>{tracked.length}</span></div>
         {body}
         <Button variant="small ghost" onClick={onOpenLog}>Open quest log ▸</Button>
@@ -48,7 +48,7 @@ export function QuestTracker({ characterId, characterLevel, variant, onOpenLog }
   const firstObjs = objectivesOf(objectives, first.id)
   const firstDone = firstObjs.filter(isDone).length
   return (
-    <aside className="tracker-card" aria-label="Tracked quests" data-no-swipe>
+    <aside className="quest-tracker-card" aria-label="Tracked quests" data-no-swipe>
       <button type="button" className="tk-toggle" aria-expanded={open}
         onClick={() => { play('toggle'); setOpen((v) => !v) }}>
         <span>Tracked</span>
