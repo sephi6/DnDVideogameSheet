@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/controls'
 import { QuestList } from '@/components/quests/QuestList'
+import { QuestEditor } from '@/components/quests/QuestEditor'
 import { QuestPage } from '@/components/quests/QuestPage'
 import { isTyping } from '@/lib/keys'
-import { isTracked, memberIds, objectivesOf, questsForTab, type QuestTab } from '@/lib/quests'
+import { isTracked, memberIds, newQuest, objectivesOf, questsForTab, type QuestTab } from '@/lib/quests'
 import { useMediaQuery } from '@/lib/responsive'
 import { play } from '@/lib/sfx'
 import { useQuests } from '@/store/quests'
 import { useRoster } from '@/store/roster'
+import type { Quest, QuestObjective } from '@/types/quest'
 import type { SectionProps } from './types'
 
 const TABS: [QuestTab, string][] = [['active', 'Active'], ['available', 'Available'], ['finished', 'Finished']]
@@ -18,12 +20,13 @@ const EMPTY: Record<QuestTab, string> = {
 }
 
 export function QuestsSection({ character }: SectionProps) {
-  const { quests, objectives, participants, loaded, setTracked } = useQuests()
+  const { quests, objectives, participants, loaded, setTracked, saveQuest } = useQuests()
   const roster = useRoster((s) => s.characters)
   const narrow = useMediaQuery('(max-width: 1023px)')
   const [tab, setTab] = useState<QuestTab>('active')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showPage, setShowPage] = useState(false)
+  const [editing, setEditing] = useState<{ quest: Quest; objectives: QuestObjective[] } | null>(null)
 
   const list = useMemo(
     () => questsForTab(quests, participants, character.id, tab),
@@ -61,6 +64,10 @@ export function QuestsSection({ character }: SectionProps) {
 
   const listPane = (
     <section className="panel ql-list">
+      <div className="ql-new">
+        <Button variant="small" cue="confirm"
+          onClick={() => setEditing({ quest: newQuest('group', new Date().toISOString()), objectives: [] })}>+ New quest</Button>
+      </div>
       <div className="ql-tabs" role="tablist">
         {TABS.map(([t, label]) => (
           <button key={t} type="button" role="tab" aria-selected={tab === t} className="ql-tab" data-active={tab === t}
@@ -79,8 +86,26 @@ export function QuestsSection({ character }: SectionProps) {
 
   const page = selected && (
     <QuestPage quest={selected} objectives={objectivesOf(objectives, selected.id)} members={members}
-      characterId={character.id} characterLevel={character.identity.level} mode={tab} onEdit={() => {}} />
+      characterId={character.id} characterLevel={character.identity.level} mode={tab} onEdit={() => setEditing({ quest: selected, objectives: objectivesOf(objectives, selected.id) })} />
   )
+
+  if (editing) {
+    return (
+      <QuestEditor
+        initial={editing.quest}
+        initialObjectives={editing.objectives}
+        characterName={character.identity.name}
+        onCancel={() => setEditing(null)}
+        onSave={(quest, objs) => {
+          const id = saveQuest(quest, objs, character.id)
+          setEditing(null)
+          setTab('active')
+          setSelectedId(id)
+          setShowPage(true)
+        }}
+      />
+    )
+  }
 
   if (narrow) {
     return showPage && page ? (
