@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
-URL="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,600&family=Cinzel:wght@400;700&family=EB+Garamond:wght@400;500;600&display=swap"
+URL="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,600&family=Cinzel:wght@400;600;700&family=EB+Garamond:wght@400;500;600&display=swap"
 mkdir -p public/fonts
 tmp="$(mktemp)"
 curl -sS -A "$UA" "$URL" -o "$tmp"
