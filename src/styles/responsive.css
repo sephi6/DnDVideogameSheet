@@ -87,7 +87,7 @@
 
    Two conditions: a coarse pointer (the *primary* one, so a laptop with a touch
    screen still counts as fine and keeps its hints) or a phone-sized window,
-   where there is no keyboard to advertise either. The 1–7 index chip on each
+   where there is no keyboard to advertise either. The 1–8 index chip on each
    section tab is the same hint, so it goes with them. */
 @media (pointer: coarse), (max-width: 599px) {
   .hint-bar { display: none; }
@@ -107,7 +107,7 @@
 
    It applies for two different reasons, hence the condition list:
      · the width has no room for a side column (phone in portrait);
-     · the height has no room for seven stacked items (phone in landscape),
+     · the height has no room for eight stacked items (phone in landscape),
        where the sidebar would also eat 190px of the 852 available width only
        to end up needing to scroll anyway.
    ════════════════════════════════════════════════════════════════════════════ */
@@ -169,7 +169,7 @@
   /* The base rule is a sidebar row (glyph, label, index via order). Here the
      same spans become a compact tab: the index chip is hidden by the hint rule
      above on touch and phone widths (a fine pointer in a short landscape window
-     keeps it, where the keys 1-7 do work), the glyph square and the label stay. The active state keeps the base
+     keeps it, where the keys 1-8 do work), the glyph square and the label stay. The active state keeps the base
      bevel; the lift is done by the component (y: -5). */
   .nav-item {
     width: auto;

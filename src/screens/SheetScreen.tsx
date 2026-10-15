@@ -12,6 +12,7 @@ import { SpellsSection } from '@/sections/SpellsSection'
 import { InventorySection } from '@/sections/InventorySection'
 import { FeaturesSection } from '@/sections/FeaturesSection'
 import { JournalSection } from '@/sections/JournalSection'
+import { QuestsSection } from '@/sections/QuestsSection'
 import type { SectionProps } from '@/sections/types'
 import type { SyncStatus } from '@/store/roster'
 import type { Character } from '@/types/character'
@@ -24,6 +25,7 @@ const SECTIONS: { id: string; label: string; glyph: string; Component: (p: Secti
   { id: 'bags', label: 'Bags', glyph: '◈', Component: InventorySection },
   { id: 'features', label: 'Features', glyph: '✦', Component: FeaturesSection },
   { id: 'journal', label: 'Journal', glyph: '☙', Component: JournalSection },
+  { id: 'quests', label: 'Quests', glyph: '❢', Component: QuestsSection },
 ]
 
 interface Props {
@@ -81,7 +83,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
       } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W' || e.key === 'q' || e.key === 'Q') {
         e.preventDefault()
         goto(index - 1)
-      } else if (/^[1-7]$/.test(e.key)) {
+      } else if (/^[1-8]$/.test(e.key)) {
         e.preventDefault()
         goto(Number(e.key) - 1, 'confirm')
       }
@@ -238,7 +240,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
         <HintBar
           hints={[
             ['↑ ↓', 'Navigate'],
-            ['1-7', 'Go to section'],
+            ['1-8', 'Go to section'],
             ['Esc', 'Back to the party'],
           ]}
         />
