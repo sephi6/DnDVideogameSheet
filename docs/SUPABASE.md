@@ -54,10 +54,14 @@ after a reload.
 Two paths, whichever you prefer:
 
 - **Automatic**: on the first sign-in with an empty table, the app seeds the
-  example party (Kaelith, Brann, Nyx and Sister Maren). It only does it once;
-  if you delete them later, they do not come back.
+  example party (Kaelith, Brann, Nyx and Sister Maren) **and the example quests**
+  (only when the quest log is empty too). It only does it once; if you delete
+  them later, they do not come back. A database whose party was seeded before the
+  quest log existed gets **no example quests automatically**: run `seed.sql`
+  (below) to add them.
 - **Manual**: run [`supabase/seed.sql`](../supabase/seed.sql) in the SQL Editor, after
-  `0001` and `0002` (it also inserts the example quests). It can be run several times
+  `0001` **and** `0002` (it also inserts the example quests, and the editor runs it as
+  one transaction, so without `0002` nothing is inserted). It can be run several times
   without duplicating anything.
 
 That file is generated from the TypeScript so there are never two copies of the
