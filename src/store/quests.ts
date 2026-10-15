@@ -111,11 +111,9 @@ function write(key: string, set: Set_, get: Get_) {
       else inflight.set(key, left)
       if (chains.get(key) === next) chains.delete(key)
       if (left <= 0 && !failed.has(key)) {
-        const late = pending.get(key)
-        if (late) {
-          pending.delete(key)
-          applyNow(late, set)
-        }
+        // A foreign change arrived mid-write: we cannot know which write the
+        // database kept last, so ask it instead of guessing.
+        if (pending.delete(key)) scheduleReload(set)
       }
     })
   chains.set(key, next)
@@ -139,6 +137,19 @@ async function writeOrdered(keys: string[], set: Set_, get: Get_) {
     write(k, set, get)
   }
   await Promise.all(rest.map((k) => chains.get(k) ?? Promise.resolve()))
+}
+
+let reloadTimer: ReturnType<typeof setTimeout> | null = null
+
+/** One authoritative reload for any number of rows that settled together. */
+function scheduleReload(set: Set_) {
+  if (reloadTimer) return
+  const mine = epoch
+  reloadTimer = setTimeout(() => {
+    reloadTimer = null
+    if (mine !== epoch) return
+    void load(set, useQuests.getState).catch((err) => console.error('[arcana] could not reload the quests', err))
+  }, 0)
 }
 
 function changeKey(c: QuestChange): string {
@@ -276,6 +287,8 @@ export const useQuests = create<QuestsState>((set, get) => ({
     sent.clear()
     pending.clear()
     wasDown = false
+    if (reloadTimer) clearTimeout(reloadTimer)
+    reloadTimer = null
     set({ quests: [], objectives: [], participants: [], loaded: false, sync: 'idle', syncError: null })
   },
 
