@@ -29,10 +29,13 @@ import { downscaleImage } from '@/lib/image'
 import { play } from '@/lib/sfx'
 import type { SectionProps } from './types'
 
-export const PORTRAIT_LIBRARY = [
+const CLASS_PORTRAITS = [
   'barbarian', 'bard', 'cleric', 'druid', 'fighter', 'monk',
-  'paladin', 'ranger', 'rogue', 'sorcerer', 'warlock', 'wizard', 'default',
-].map((slug) => `assets/portraits/${slug}.svg`)
+  'paladin', 'ranger', 'rogue', 'sorcerer', 'warlock', 'wizard',
+].map((slug) => `assets/portraits/${slug}.png`)
+
+const DEFAULT_PORTRAIT = 'assets/portraits/default.svg'
+export const PORTRAIT_LIBRARY = [...CLASS_PORTRAITS, DEFAULT_PORTRAIT]
 
 const cycle = (p: Proficiency): Proficiency => ((p + 1) % 3) as Proficiency
 
@@ -226,7 +229,7 @@ export function CharacterSection({ character, update }: SectionProps) {
         <div className="row" style={{ alignItems: 'flex-start', gap: 14 }}>
           <motion.img
             key={identity.portrait ?? 'none'}
-            src={identity.portrait ?? PORTRAIT_LIBRARY[12]}
+            src={identity.portrait ?? DEFAULT_PORTRAIT}
             alt="Character portrait"
             initial={{ opacity: 0, x: -14, rotate: -6 }}
             animate={{ opacity: 1, x: 0, rotate: -3 }}

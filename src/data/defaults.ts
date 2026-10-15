@@ -56,8 +56,8 @@ const PORTRAIT_SLUGS: Record<string, string> = {
 }
 
 export function portraitForClass(className: string): string {
-  const slug = PORTRAIT_SLUGS[className] ?? 'default'
-  return `assets/portraits/${slug}.svg`
+  const slug = PORTRAIT_SLUGS[className]
+  return slug ? `assets/portraits/${slug}.png` : 'assets/portraits/default.svg'
 }
 
 export function createCharacter(partial?: Partial<Character>): Character {
