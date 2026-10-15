@@ -64,7 +64,9 @@ export function useHorizontalSwipe<T extends HTMLElement>({
 
     const onStart = (e: TouchEvent) => {
       // Two fingers is a zoom, and inside a field the finger is placing the caret.
-      tracking = e.touches.length === 1 && !isTyping(e.target)
+      tracking =
+        e.touches.length === 1 && !isTyping(e.target) &&
+        !(e.target instanceof Element && e.target.closest('[data-no-swipe]'))
       if (!tracking) return
       startX = e.touches[0].clientX
       startY = e.touches[0].clientY
