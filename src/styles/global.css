@@ -69,25 +69,9 @@
   --grain-stone:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23s)' opacity='0.45'/%3E%3C/svg%3E");
   --grain-parchment:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.035' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23p)' opacity='0.55'/%3E%3C/svg%3E");
 
-  --ink: #08070a;
-  --ink-2: #121016;
-  --ink-3: #1c1a22;
-  --bone: #f6f1e6;
-  --bone-dim: #b8b2a6;
-  --blood: #e01133;
-  --blood-hot: #ff2a4d;
-  --accent: #e01133;
-  --accent-soft: color-mix(in srgb, var(--accent) 30%, transparent);
-
-  --font-label: 'Bebas Neue', 'Arial Narrow', system-ui, sans-serif;
-
-  /* The slanted grammar costs space: the border and the hard shadow eat 9px a
-     side, which is a detail at 1440px and 5% of the width at 393px. That is why
-     the style constants scale with the viewport, not just the layout. These are
-     the desktop values; responsive.css steps them down on tablet and phone. */
-  --skew: -9deg;
-  --shadow-hard: 6px 6px 0 var(--ink);
-  --edge: 3px solid var(--ink);
+  /* Default accent (title and login screens). A per-character inline
+     --accent overrides it everywhere else. */
+  --accent: var(--gold);
 
   /* Notches and the gesture bar. index.html declares viewport-fit=cover, so
      without these the content slides under the Dynamic Island and the home
@@ -110,8 +94,8 @@ html, body, #root { height: 100%; height: 100dvh; }
 
 body {
   margin: 0;
-  background: var(--ink);
-  color: var(--bone);
+  background: var(--stone);
+  color: var(--parchment);
   font-family: var(--font-body);
   font-size: 17px;
   letter-spacing: 0.01em;
@@ -121,7 +105,7 @@ body {
 
 button, input, select, textarea { font: inherit; color: inherit; }
 
-::selection { background: var(--blood); color: var(--bone); }
+::selection { background: var(--gold); color: var(--seat); }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: #0e0d11; }
@@ -214,18 +198,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* .label lives with the field rules under UI primitives. */
-
-.slab {
-  display: inline-block;
-  background: var(--accent);
-  color: var(--ink);
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  padding: 4px 14px;
-  transform: skewX(var(--skew));
-  box-shadow: var(--shadow-hard);
-}
-.slab > span { display: inline-block; transform: skewX(calc(-1 * var(--skew))); }
 
 /* ── UI primitives ──────────────────────────────────────────────────────────
    Transcribed from design/controls.html. Raised means press it (bevel), inset
@@ -495,15 +467,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .row { display: flex; align-items: center; gap: 10px; }
 .grow { flex: 1; min-width: 0; }
 .stack { display: flex; flex-direction: column; gap: 12px; }
-.muted { color: var(--bone-dim); }
+.muted { color: var(--parchment-dim); }
 .center { display: grid; place-items: center; }
 
 .empty {
   border: 2px dashed #3a3742;
   padding: 14px;
   text-align: center;
-  color: var(--bone-dim);
-  font-family: var(--font-label);
+  color: var(--parchment-dim);
+  font-family: var(--font-data);
   letter-spacing: 0.14em;
 }
 

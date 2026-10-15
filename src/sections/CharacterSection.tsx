@@ -238,7 +238,7 @@ export function CharacterSection({ character, update }: SectionProps) {
               width: 150,
               height: 210,
               objectFit: 'cover',
-              border: '3px solid var(--ink)',
+              border: '3px solid var(--seat)',
               boxShadow: '8px 8px 0 var(--accent)',
               flex: '0 0 auto',
             }}
@@ -318,7 +318,7 @@ export function CharacterSection({ character, update }: SectionProps) {
                   onCycle={() => update((d) => { d.saves[ability.key] = cycle(d.saves[ability.key]) })}
                 />
                 <span className="label" style={{ fontSize: 13 }}>Save</span>
-                <span style={{ fontFamily: 'var(--font-label)', fontSize: 22, color: 'var(--gold)' }}>
+                <span style={{ fontFamily: 'var(--font-data)', fontSize: 22, color: 'var(--gold)' }}>
                   {formatModifier(saveBonus(character, ability.key))}
                 </span>
               </div>
@@ -345,7 +345,7 @@ export function CharacterSection({ character, update }: SectionProps) {
               ] as const).map(([key, label]) => (
                 <div key={key} className="row" style={{ justifyContent: 'space-between' }}>
                   <span className="label" style={{ fontSize: 14 }}>{label}</span>
-                  <span style={{ fontFamily: 'var(--font-label)', fontSize: 26, color: 'var(--gold)' }}>
+                  <span style={{ fontFamily: 'var(--font-data)', fontSize: 26, color: 'var(--gold)' }}>
                     {passive(character, key)}
                   </span>
                 </div>
@@ -358,7 +358,7 @@ export function CharacterSection({ character, update }: SectionProps) {
               {ABILITIES.map((a: { key: AbilityKey; label: string }) => (
                 <div key={a.key} className="row" style={{ justifyContent: 'space-between' }}>
                   <span className="label" style={{ fontSize: 14 }}>{a.label}</span>
-                  <span style={{ fontFamily: 'var(--font-label)', fontSize: 22 }}>
+                  <span style={{ fontFamily: 'var(--font-data)', fontSize: 22 }}>
                     {formatModifier(saveBonus(character, a.key))}
                   </span>
                 </div>

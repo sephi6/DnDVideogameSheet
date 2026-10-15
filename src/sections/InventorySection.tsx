@@ -41,20 +41,20 @@ export function InventorySection({ character, update }: SectionProps) {
         <Panel title="Carrying Capacity">
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <span className="label">Weight carried</span>
-            <span style={{ fontFamily: 'var(--font-label)', fontSize: 26, color: weight > capacity ? 'var(--blood-hot)' : 'var(--gold)' }}>
+            <span style={{ fontFamily: 'var(--font-data)', fontSize: 26, color: weight > capacity ? 'var(--danger)' : 'var(--gold)' }}>
               {weight.toFixed(1)} / {capacity.toFixed(0)} lb.
             </span>
           </div>
           <div className="hp-bar">
             <motion.div
               className="hp-fill"
-              style={{ background: weight > capacity ? 'var(--blood-hot)' : 'linear-gradient(90deg, #7a6a2a, var(--gold))' }}
+              style={{ background: weight > capacity ? 'var(--danger)' : 'linear-gradient(90deg, #7a6a2a, var(--gold))' }}
               animate={{ width: `${Math.min(100, capacity > 0 ? (weight / capacity) * 100 : 0)}%` }}
             />
           </div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 12 }}>
             <span className="label">Attuned items</span>
-            <span style={{ fontFamily: 'var(--font-label)', fontSize: 26, color: attuned > 3 ? 'var(--blood-hot)' : 'var(--gold)' }}>
+            <span style={{ fontFamily: 'var(--font-data)', fontSize: 26, color: attuned > 3 ? 'var(--danger)' : 'var(--gold)' }}>
               {attuned} / 3
             </span>
           </div>
