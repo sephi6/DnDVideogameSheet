@@ -36,13 +36,36 @@ const pKey = (questId: string, characterId: string) => `p:${questId}:${character
 
 /** Writes per row run one after another, so the last click is the last write. */
 const chains = new Map<string, Promise<void>>()
-/** Rows with a write queued or in flight: Realtime echoes for them are ignored. */
+/** Rows with a write queued or in flight. */
 const inflight = new Map<string, number>()
 /** Rows whose last write failed; Retry rewrites them from current state. */
 const failed = new Set<string>()
+/** Recent payloads we sent per row: a Realtime echo of one of them is not news. */
+const sent = new Map<string, { json: string; at: number }[]>()
+const SENT_TTL_MS = 5000
+/** Latest foreign change that arrived while its row was busy; applied when it settles. */
+const pending = new Map<string, QuestChange>()
+/** Bumped by reset(): work started in an older session must not touch the new one. */
+let epoch = 0
 let unsubscribe: (() => void) | null = null
 let hydration: Promise<void> | null = null
 let wasDown = false
+
+function stable(v: unknown): string {
+  if (Array.isArray(v)) return `[${v.map(stable).join(',')}]`
+  if (v && typeof v === 'object') {
+    const o = v as Record<string, unknown>
+    return `{${Object.keys(o).sort().map((k) => `${JSON.stringify(k)}:${stable(o[k])}`).join(',')}}`
+  }
+  return JSON.stringify(v) ?? 'null'
+}
+
+function recordSent(key: string, json: string) {
+  const now = Date.now()
+  const list = (sent.get(key) ?? []).filter((e) => now - e.at < SENT_TTL_MS)
+  list.push({ json, at: now })
+  sent.set(key, list)
+}
 
 /** Writes the row as it is NOW in state: upsert if present, delete if gone. */
 function rowWrite(key: string, get: Get_): Promise<void> {
@@ -50,38 +73,72 @@ function rowWrite(key: string, get: Get_): Promise<void> {
   const s = get()
   if (kind === 'q') {
     const q = s.quests.find((x) => x.id === a)
+    recordSent(key, q ? stable(q) : 'null')
     return q ? questStorage.upsertQuest(q) : questStorage.deleteQuest(a)
   }
   if (kind === 'o') {
     const o = s.objectives.find((x) => x.id === a)
+    recordSent(key, o ? stable(o) : 'null')
     return o ? questStorage.upsertObjective(o) : questStorage.deleteObjective(a)
   }
   const p = participantOf(s.participants, a, b)
+  recordSent(key, p ? stable(p) : 'null')
   return p ? questStorage.upsertParticipant(p) : questStorage.deleteParticipant(a, b)
 }
 
 function write(key: string, set: Set_, get: Get_) {
+  const mine = epoch
   inflight.set(key, (inflight.get(key) ?? 0) + 1)
   set({ sync: 'saving', syncError: null })
   const previous = chains.get(key) ?? Promise.resolve()
-  const next = previous
-    .then(() => rowWrite(key, get))
+  const next: Promise<void> = previous
+    .then(() => (mine === epoch ? rowWrite(key, get) : undefined))
     .then(() => {
+      if (mine !== epoch) return
       failed.delete(key)
       if (failed.size === 0) set({ sync: 'saved', syncError: null })
     })
     .catch((err) => {
+      if (mine !== epoch) return
       failed.add(key)
       console.error('[arcana] failed to save a quest row', key, err)
       set({ sync: 'error', syncError: readableError(err) })
     })
     .finally(() => {
+      if (mine !== epoch) return
       const left = (inflight.get(key) ?? 1) - 1
       if (left <= 0) inflight.delete(key)
       else inflight.set(key, left)
       if (chains.get(key) === next) chains.delete(key)
+      if (left <= 0 && !failed.has(key)) {
+        const late = pending.get(key)
+        if (late) {
+          pending.delete(key)
+          applyNow(late, set)
+        }
+      }
     })
   chains.set(key, next)
+}
+
+/** Quests first (children reference them), then the rest; resolves when all settle. */
+async function writeOrdered(keys: string[], set: Set_, get: Get_) {
+  const mine = epoch
+  const quests = keys.filter((k) => k.startsWith('q:'))
+  for (const k of quests) write(k, set, get)
+  await Promise.all(quests.map((k) => chains.get(k) ?? Promise.resolve()))
+  if (mine !== epoch) return
+  const rest = keys.filter((k) => !k.startsWith('q:'))
+  for (const k of rest) {
+    const [kind, a] = k.split(':')
+    const questId = kind === 'p' ? a : get().objectives.find((o) => o.id === a)?.questId
+    if (questId && failed.has(qKey(questId))) {
+      failed.add(k) // its quest is not in the database yet: stays queued for Retry
+      continue
+    }
+    write(k, set, get)
+  }
+  await Promise.all(rest.map((k) => chains.get(k) ?? Promise.resolve()))
 }
 
 function changeKey(c: QuestChange): string {
@@ -90,9 +147,7 @@ function changeKey(c: QuestChange): string {
   return c.type === 'upsert' ? pKey(c.row.questId, c.row.characterId) : pKey(c.questId, c.characterId)
 }
 
-/** Someone else's change. Ignored while we are writing that same row. */
-function applyChange(c: QuestChange, set: Set_) {
-  if ((inflight.get(changeKey(c)) ?? 0) > 0) return
+function applyNow(c: QuestChange, set: Set_) {
   set((s) => {
     if (c.table === 'quests') {
       if (c.type === 'delete') {
@@ -120,7 +175,34 @@ function applyChange(c: QuestChange, set: Set_) {
   })
 }
 
-/** Merge by key: rows in `incoming` replace same-key rows in `current`. */
+/** A Realtime change: our own echo is dropped, someone else's waits if the row is busy. */
+function applyChange(c: QuestChange, set: Set_) {
+  const key = changeKey(c)
+  const json = c.type === 'upsert' ? stable(c.row) : 'null'
+  const now = Date.now()
+  if ((sent.get(key) ?? []).some((e) => now - e.at < SENT_TTL_MS && e.json === json)) return
+  if ((inflight.get(key) ?? 0) > 0 || failed.has(key)) {
+    pending.set(key, c)
+    return
+  }
+  applyNow(c, set)
+}
+
+/** The server's snapshot replaces state, except rows with a pending or failed write. */
+function replaceFromSnapshot(current: QuestSnapshot, incoming: QuestSnapshot): QuestSnapshot {
+  const busy = (k: string) => (inflight.get(k) ?? 0) > 0 || failed.has(k)
+  for (const k of [...pending.keys()]) if (!busy(k)) pending.delete(k)
+  return {
+    quests: [...incoming.quests.filter((x) => !busy(qKey(x.id))), ...current.quests.filter((x) => busy(qKey(x.id)))],
+    objectives: [...incoming.objectives.filter((x) => !busy(oKey(x.id))), ...current.objectives.filter((x) => busy(oKey(x.id)))],
+    participants: [
+      ...incoming.participants.filter((x) => !busy(pKey(x.questId, x.characterId))),
+      ...current.participants.filter((x) => busy(pKey(x.questId, x.characterId))),
+    ],
+  }
+}
+
+/** Adds rows by key (used by the demo seed). */
 function mergeSnapshot(current: QuestSnapshot, incoming: QuestSnapshot): QuestSnapshot {
   const byId = <T extends { id: string }>(a: T[], b: T[]) => [...a.filter((x) => !b.some((y) => y.id === x.id)), ...b]
   return {
@@ -134,8 +216,10 @@ function mergeSnapshot(current: QuestSnapshot, incoming: QuestSnapshot): QuestSn
 }
 
 async function load(set: Set_, get: Get_) {
+  const mine = epoch
   const snapshot = await questStorage.loadAll()
-  set({ ...mergeSnapshot(get(), snapshot), loaded: true })
+  if (mine !== epoch) return
+  set({ ...replaceFromSnapshot(get(), snapshot), loaded: true })
 }
 
 export const useQuests = create<QuestsState>((set, get) => ({
@@ -148,39 +232,49 @@ export const useQuests = create<QuestsState>((set, get) => ({
 
   hydrate() {
     hydration ??= (async () => {
+      const mine = epoch
       try {
         await load(set, get)
+        if (mine !== epoch) return // reset() ran while loading: open nothing
         unsubscribe?.()
         unsubscribe = questStorage.subscribe(
-          (c) => applyChange(c, set),
+          (c) => {
+            if (mine === epoch) applyChange(c, set)
+          },
           (status) => {
+            if (mine !== epoch) return
             if (status === 'down') {
               wasDown = true
               set({ sync: 'error', syncError: 'Live quest updates are disconnected. Retry reconnects.' })
             } else if (wasDown) {
               wasDown = false
               void load(set, get).then(() => {
-                if (failed.size === 0) set({ sync: 'saved', syncError: null })
+                if (mine === epoch && failed.size === 0) set({ sync: 'saved', syncError: null })
               })
             }
           },
         )
       } catch (err) {
+        if (mine !== epoch) return
         console.error('[arcana] could not read the quests', err)
         set({ loaded: true, sync: 'error', syncError: readableError(err) })
       } finally {
-        hydration = null
+        if (mine === epoch) hydration = null
       }
     })()
     return hydration
   },
 
   reset() {
+    epoch++
     unsubscribe?.()
     unsubscribe = null
+    hydration = null
     chains.clear()
     inflight.clear()
     failed.clear()
+    sent.clear()
+    pending.clear()
     wasDown = false
     set({ quests: [], objectives: [], participants: [], loaded: false, sync: 'idle', syncError: null })
   },
@@ -201,12 +295,12 @@ export const useQuests = create<QuestsState>((set, get) => ({
       quests: [...s.quests.filter((q) => q.id !== stored.id), stored],
       objectives: [...s.objectives.filter((o) => o.questId !== stored.id), ...kept],
     }))
-    write(qKey(stored.id), set, get)
-    // Objectives and participants wait for the quest row (foreign key).
-    void (chains.get(qKey(stored.id)) ?? Promise.resolve()).then(() => {
-      for (const o of kept) write(oKey(o.id), set, get)
-      for (const o of dropped) write(oKey(o.id), set, get)
-      if (isNew && stored.scope === 'personal' && creatorId) get().join(stored.id, creatorId)
+    const mine = epoch
+    // Objectives wait for the quest row (foreign key).
+    void writeOrdered([qKey(stored.id), ...kept.map((o) => oKey(o.id)), ...dropped.map((o) => oKey(o.id))], set, get).then(() => {
+      if (mine !== epoch || !isNew || stored.scope !== 'personal' || !creatorId) return
+      if (!get().quests.some((q) => q.id === stored.id) || failed.has(qKey(stored.id))) return
+      get().join(stored.id, creatorId)
     })
     return stored.id
   },
@@ -269,24 +363,24 @@ export const useQuests = create<QuestsState>((set, get) => ({
   },
 
   async seedDemo(roster) {
-    if (get().quests.length > 0) return
+    const mine = epoch
+    await get().hydrate() // so "no quests yet" is judged after the load
+    if (mine !== epoch || get().quests.length > 0) return
     const demo = demoQuests(roster)
     set((s) => ({ ...mergeSnapshot(s, demo), loaded: true }))
-    for (const q of demo.quests) write(qKey(q.id), set, get)
-    await Promise.all(demo.quests.map((q) => chains.get(qKey(q.id)) ?? Promise.resolve()))
-    for (const o of demo.objectives) write(oKey(o.id), set, get)
-    for (const p of demo.participants) write(pKey(p.questId, p.characterId), set, get)
+    await writeOrdered(
+      [
+        ...demo.quests.map((q) => qKey(q.id)),
+        ...demo.objectives.map((o) => oKey(o.id)),
+        ...demo.participants.map((p) => pKey(p.questId, p.characterId)),
+      ],
+      set,
+      get,
+    )
   },
 
   async retryFailed() {
-    if (wasDown) {
-      await get().hydrate()
-      return
-    }
-    const keys = [...failed]
-    // Quests first: objectives and participants reference them.
-    keys.sort((a, b) => (a.startsWith('q:') ? -1 : 0) - (b.startsWith('q:') ? -1 : 0))
-    for (const key of keys) write(key, set, get)
-    await Promise.all(keys.map((k) => chains.get(k) ?? Promise.resolve()))
+    if (wasDown) await get().hydrate() // reconnect and reload, then retry the failed rows too
+    await writeOrdered([...failed], set, get)
   },
 }))
