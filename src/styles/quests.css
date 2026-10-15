@@ -101,15 +101,28 @@
 .qe-error { margin: 0 auto 0 0; align-self: center; color: var(--danger); font-size: 14px; }
 .quest-editor .btn.disabled { opacity: 0.5; }
 .ql-new { display: flex; justify-content: flex-end; padding: 6px 8px 0; }
-@media (max-width: 1023px) {
+/* Below 1280 px the body is too narrow for the editor's two columns, and the quest
+   page beside the list is only ~320–400 px wide: rewards and party stack. */
+@media (max-width: 1279px) {
   .quest-editor { grid-template-columns: minmax(0, 1fr); }
+  .qp-cols { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 1023px) {
   .quest-log { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 599px) {
   .qe-meta { grid-template-columns: minmax(0, 1fr); }
-  .qp-cols { grid-template-columns: minmax(0, 1fr); }
   .quest-page { padding: 18px 16px 16px; }
   .qp-title { font-size: 24px; }
+  /* Like .entry-head: the objective text gets a line of its own, the controls wrap below. */
+  .qe-objective { flex-wrap: wrap; }
+  .qe-objective > .input.grow { flex: 1 0 100%; }
+}
+/* Touch: the objective boxes and steppers grow like the sheet's tally boxes. */
+@media (pointer: coarse) {
+  .qo { grid-template-columns: 30px minmax(0, 1fr) auto; }
+  .qo .box { width: 30px; height: 30px; }
+  .qo .step { width: 38px; height: 38px; }
 }
 
 /* ── Tracker ─────────────────────────────────────────────────────────────── */

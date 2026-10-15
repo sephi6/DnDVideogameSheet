@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { isTyping } from '@/lib/keys'
 import { play } from '@/lib/sfx'
 import { Button, NumberField, TextAreaField, TextField } from '@/components/ui/controls'
 import { newId } from '@/data/defaults'
@@ -22,6 +23,13 @@ function ScopeChip({ on, locked, onToggle, children }: { on: boolean; locked: bo
   )
 }
 
+/** Keys the sheet and the quest log listen for on window: section moves, 1–8, T. */
+const NAV_KEYS = new Set([
+  'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+  'w', 'a', 's', 'd', 'q', 'e', 'W', 'A', 'S', 'D', 'Q', 'E', 't', 'T',
+  '1', '2', '3', '4', '5', '6', '7', '8',
+])
+
 const COINS = [['pp', 'Platinum'], ['gp', 'Gold'], ['ep', 'Electrum'], ['sp', 'Silver'], ['cp', 'Copper']] as const
 
 interface Props {
@@ -43,22 +51,27 @@ export function QuestEditor({ initial, initialObjectives, characterName, onSave,
     initialObjectives.length ? initialObjectives : [freshObjective(initial.id, 0)],
   )
   const isNew = !initial.id
-  const rootRef = useRef<HTMLDivElement>(null)
   const cancelRef = useRef(onCancel)
   cancelRef.current = onCancel
-  // Keys pressed inside the editor must not reach the window listeners (section
-  // switching, T to track). React 18 delegates at the root container, so a synthetic
-  // stopPropagation runs too late for a native window listener: use a native listener
-  // on the editor element itself (target phase happens before window bubbling).
+  // While the editor is open the draft must survive stray keys wherever focus is,
+  // <body> included. A window CAPTURE listener runs before the sheet's and the quest
+  // log's window listeners: Escape becomes Cancel, and the section-navigation keys
+  // stop here unless they are being typed into a field. Never preventDefault on
+  // those, so typing, buttons and scrolling keep working.
   useEffect(() => {
-    const el = rootRef.current
-    if (!el) return
     const onKey = (e: KeyboardEvent) => {
-      e.stopPropagation()
-      if (e.key === 'Escape') { e.preventDefault(); cancelRef.current() }
+      if (e.key === 'Escape') {
+        e.stopPropagation()
+        e.preventDefault()
+        play('back')
+        cancelRef.current()
+        return
+      }
+      if (isTyping(e.target)) return
+      if (NAV_KEYS.has(e.key)) e.stopPropagation()
     }
-    el.addEventListener('keydown', onKey)
-    return () => el.removeEventListener('keydown', onKey)
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
   }, [])
   const patch = (p: Partial<Quest>) => setQuest((q) => ({ ...q, ...p }))
   const patchObjective = (i: number, p: Partial<QuestObjective>) =>
@@ -87,7 +100,7 @@ export function QuestEditor({ initial, initialObjectives, characterName, onSave,
   }
 
   return (
-    <div className="quest-editor" ref={rootRef}>
+    <div className="quest-editor">
       <section className="panel card">
         <header className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <h3 className="panel-title" style={{ margin: 0 }}><span>{isNew ? 'New quest' : 'Edit quest'}</span></h3>

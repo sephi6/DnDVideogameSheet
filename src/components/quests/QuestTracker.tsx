@@ -62,7 +62,7 @@ export function QuestTracker({ characterId, characterLevel, variant, onOpenLog }
       ) : (
         <div className="tk-sum">
           <span className="tt">{first.title}</span>
-          <span className="n">{firstDone}/{firstObjs.length} objectives</span>
+          <span className="n">{firstObjs.length ? `${firstDone}/${firstObjs.length} objectives` : 'No objectives'}</span>
         </div>
       )}
     </aside>

@@ -81,7 +81,7 @@ export function QuestPage({ quest, objectives, members, characterId, characterLe
               <span key={k} className="qp-rw"><span className={`qp-coin qp-coin-${k}`} />{quest.rewardCoins[k]} <span className="k">{k.toUpperCase()}</span></span>
             ))}
             {quest.rewardXp > 0 && <span className="qp-rw">{quest.rewardXp} <span className="k">XP</span></span>}
-            {quest.rewardItems.map((item) => <span key={item} className="qp-rw item"><span className="gem" />{item}</span>)}
+            {quest.rewardItems.map((item, i) => <span key={i} className="qp-rw item"><span className="gem" />{item}</span>)}
             {coins.length === 0 && quest.rewardXp === 0 && quest.rewardItems.length === 0 && <span className="qp-desc">None promised.</span>}
           </div>
         </div>

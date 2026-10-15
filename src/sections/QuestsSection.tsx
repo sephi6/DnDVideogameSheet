@@ -85,7 +85,7 @@ export function QuestsSection({ character }: SectionProps) {
   )
 
   const page = selected && (
-    <QuestPage quest={selected} objectives={objectivesOf(objectives, selected.id)} members={members}
+    <QuestPage key={selected.id} quest={selected} objectives={objectivesOf(objectives, selected.id)} members={members}
       characterId={character.id} characterLevel={character.identity.level} mode={tab} onEdit={() => setEditing({ quest: selected, objectives: objectivesOf(objectives, selected.id) })} />
   )
 
