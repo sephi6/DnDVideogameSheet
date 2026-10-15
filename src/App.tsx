@@ -6,6 +6,7 @@ import { LoginScreen } from '@/screens/LoginScreen'
 import { SheetScreen } from '@/screens/SheetScreen'
 import { TitleScreen } from '@/screens/TitleScreen'
 import { useAuth } from '@/store/auth'
+import { useQuests } from '@/store/quests'
 import { useRoster } from '@/store/roster'
 import type { Character } from '@/types/character'
 
@@ -17,6 +18,7 @@ export default function App() {
     hydrate, reset, addCharacter, removeCharacter, duplicateCharacter, updateCharacter,
     seedDemo, importLocalRoster, retryFailed,
   } = useRoster()
+  const quests = useQuests()
   const { status: authStatus, user, init: initAuth, signOut } = useAuth()
   const [screen, setScreen] = useState<Screen>('title')
   const [index, setIndex] = useState(0)
@@ -30,12 +32,14 @@ export default function App() {
   useEffect(() => {
     if (authStatus === 'disabled' || authStatus === 'signed-in') {
       void hydrate()
+      void quests.hydrate()
     } else if (authStatus === 'signed-out') {
       reset()
+      quests.reset()
       setScreen((current) => (current === 'sheet' ? 'title' : current))
       setActiveId(null)
     }
-  }, [authStatus, hydrate, reset])
+  }, [authStatus, hydrate, reset, quests.hydrate, quests.reset])
 
   const active = characters.find((c) => c.id === activeId) ?? null
   const accent =
@@ -60,6 +64,10 @@ export default function App() {
     setIndex(characters.length)
     openSheet(created)
   }
+
+  const SYNC_RANK = { idle: 0, saved: 1, saving: 2, error: 3 } as const
+  const sheetSync = SYNC_RANK[quests.sync] > SYNC_RANK[sync] ? quests.sync : sync
+  const sheetSyncError = syncError ?? quests.syncError
 
   const needsLogin = authStatus !== 'disabled' && authStatus !== 'signed-in'
 
@@ -105,9 +113,12 @@ export default function App() {
         <SheetScreen
           key={active.id}
           character={active}
-          sync={sync}
-          syncError={syncError}
-          onRetry={() => void retryFailed()}
+          sync={sheetSync}
+          syncError={sheetSyncError}
+          onRetry={() => {
+            void retryFailed()
+            void quests.retryFailed()
+          }}
           update={(recipe) => updateCharacter(active.id, recipe)}
           onExit={backToSelect}
         />

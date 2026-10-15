@@ -35,15 +35,34 @@ Dashboard → **SQL Editor** → *New query* → paste the whole of
 It creates the `characters` table, its indexes, the trigger that keeps
 `updated_at` current, and the RLS policies.
 
-## 3. Example data
+## 3. Quest log tables
+
+Same place, a second query: paste the whole of
+[`supabase/migrations/0002_quests.sql`](../supabase/migrations/0002_quests.sql) → *Run*.
+It must come **after** `0001_init.sql` (it reuses its `touch_updated_at` function and
+references `characters`). It is safe to run again.
+
+It creates `quests`, `quest_objectives` and `quest_participants`, the same
+open-to-authenticated policies as the sheets, and adds the three tables to the
+`supabase_realtime` publication so quest changes reach everyone live. To check:
+Dashboard → **Database** → **Replication** should list the three tables under
+`supabase_realtime`. Without the publication the quest log still saves, but changes from other people only show
+after a reload.
+
+## 4. Example data
 
 Two paths, whichever you prefer:
 
 - **Automatic**: on the first sign-in with an empty table, the app seeds the
-  example party (Kaelith, Brann, Nyx and Sister Maren). It only does it once;
-  if you delete them later, they do not come back.
-- **Manual**: run [`supabase/seed.sql`](../supabase/seed.sql) in the SQL Editor.
-  It can be run several times without duplicating anything.
+  example party (Kaelith, Brann, Nyx and Sister Maren) **and the example quests**
+  (only when the quest log is empty too). It only does it once; if you delete
+  them later, they do not come back. A database whose party was seeded before the
+  quest log existed gets **no example quests automatically**: run `seed.sql`
+  (below) to add them.
+- **Manual**: run [`supabase/seed.sql`](../supabase/seed.sql) in the SQL Editor, after
+  `0001` **and** `0002` (it also inserts the example quests, and the editor runs it as
+  one transaction, so without `0002` nothing is inserted). It can be run several times
+  without duplicating anything.
 
 That file is generated from the TypeScript so there are never two copies of the
 same data:
@@ -52,7 +71,7 @@ same data:
 node scripts/generate-seed.mjs
 ```
 
-## 4. Enable email access
+## 5. Enable email access
 
 Dashboard → **Authentication** → *Sign In / Providers* → **Email** enabled.
 
@@ -69,7 +88,7 @@ The sign-in screen offers email + password and, as an alternative, a magic link
 > (*Allow new users to sign up*). With the current permission model, anyone who
 > registers in this project sees and edits every sheet.
 
-## 5. Permission model
+## 6. Permission model
 
 As requested, **all authenticated users have the same permissions**: read,
 create, edit and delete *any* sheet. That is the natural thing for a party where
@@ -85,13 +104,15 @@ What that implies:
 To lock it down later, the strict per-owner policies are at the end of
 `0001_init.sql`, commented out and ready to use.
 
-## 6. How the code is put together
+## 7. How the code is put together
 
 ```
 src/lib/supabase.ts     Client and detection of whether credentials exist
 src/lib/storage.ts      Read and write services (local | supabase)
 src/store/auth.ts       Session: sign in, sign up, magic link, sign out
 src/store/roster.ts     Party state, saving and sync status
+src/lib/questStorage.ts Quest read/write per row and Realtime (local | supabase)
+src/store/quests.ts     Shared quest log state
 src/screens/LoginScreen.tsx
 ```
 
@@ -109,12 +130,12 @@ Details that matter:
   development, and without that guard the example party got seeded twice.
 - **Ids are real UUIDs**, so they can be the table's primary key.
 
-## 7. What is still missing
+## 8. What is still missing
 
 - **Portraits in Storage.** Today an uploaded image is stored as a data-url
   inside the jsonb; it is downscaled to 1000×1400 before saving so the row does
   not blow up. The right thing would be a `portraits` bucket, storing only the URL.
-- **Real time.** `supabase.channel('characters')` with `postgres_changes` would
-  let the DM watch the party's Hit Points move live.
+- **Real time for sheets.** Quests are already live (`postgres_changes` on the three
+  quest tables); the same on `characters` would let the DM watch Hit Points move.
 - **Games/tables.** Today there is a single party: every sheet in the database.
   If tables ever needed separating, it would take a `campaigns` table to filter by.

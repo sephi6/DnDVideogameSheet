@@ -189,8 +189,8 @@ Follows the approved canvas. Real app classes from spec 1; the new rules go to
   reorder by position), rewards (five coins, XP, items one per line). Save / Cancel.
   Delete asks for confirmation inline (no browser dialog).
 - Empty states with one line each ("No active quests. Create one with + New quest.").
-- Keyboard: `T` tracks / untracks the selected quest (filtered by `isTyping`);
-  ↑/↓ inside the list move the selection only while the list has focus.
+- Keyboard: `T` tracks / untracks the selected quest (filtered by `isTyping`). ↑/↓ keep
+  moving between sections, as on every other section; the list is clicked or tabbed.
 
 ### 6.2 Tracker — `src/components/quests/QuestTracker.tsx`
 

@@ -38,6 +38,7 @@ npm run preview    # serves the dist/ build
 npm run typecheck  # types only
 
 node scripts/generate-seed.mjs     # regenerates supabase/seed.sql from src/data/defaults.ts (uses esbuild, ships with Vite)
+node scripts/check-quests.mjs      # assertions over the pure quest rules (src/lib/quests.ts); no test runner, esbuild bundles it
 node scripts/generate-assets.mjs   # regenerates the SVG emblem portraits in public/assets/portraits/
 bash scripts/fetch-fonts.sh        # regenerates the self-hosted fonts in public/fonts/
 ```
@@ -143,8 +144,45 @@ stored**: they are computed at render. Deliberate exception: changing class in
 `spellcasting.ability` and swaps the default portrait; changing level writes
 `combat.hitDiceTotal` and `spellcasting.slots`. Because afterwards those are fields the player edits by hand.
 
-**Sheet sections — `src/sections/`.** Seven components
-`({ character, update }: SectionProps) => JSX`. The order, the `1`–`7` keys, the glyphs and
+**Quests — shared, live quest log (section 8 + tracker).** Unlike the sheet, a quest is
+not part of any `Character`: it is its own entity in **three tables** (`quests`,
+`quest_objectives`, `quest_participants`; types in `src/types/quest.ts`, migration
+`0002_quests.sql`). `scope` is `group` (every roster character is on it; a participant row only carries
+`tracked`, `joined` is ignored, and the UI offers no Leave) or `personal` (only characters
+with a `joined` row are on it). `tracked` says whether that character pins it in the tracker.
+`src/lib/quests.ts` holds the pure rules (difficulty band vs. character level, membership,
+progress, tab filters) and is covered by `scripts/check-quests.mjs`.
+- **`src/lib/questStorage.ts`** — `QuestStorage` with **one-row operations**
+  (quest / objective / participant upserts and deletes, `loadAll`) so two people editing
+  the same quest do not overwrite each other's fields, plus the Realtime
+  `postgres_changes` subscription in the cloud. `localQuestStorage` keeps one snapshot
+  under a single key and has no live updates; `questStorage` picks like `storage`.
+- **`src/store/quests.ts` (zustand)** — optimistic updates. Writes are **serial per row**
+  (a promise chain per row key), so the last click is the last write. Rows with a write
+  queued or in flight, and recently sent payloads (each matches exactly one echo), are used to
+  **filter Realtime echoes** of our own writes; a foreign change that lands on a busy row
+  is stashed, and when the row settles an authoritative reload is scheduled (the stash is
+  never applied directly). A per-key write counter keeps rows written while a reload was
+  running from being overwritten by it. `reset()` bumps an **epoch** so work from the previous
+  session cannot touch the new one. Reloads are **coalesced** and authoritative (also run
+  after a Realtime reconnect; `createdAt` is normalized before comparing). Failed rows go into a `failed` set; `retryFailed()`
+  rewrites them from current state, **quests before their children** (FK order). Like
+  `roster.ts`, `hydrate()` is guarded against double execution. `created_by` defaults to
+  `auth.uid()` in SQL and is **never sent by the client**.
+- **UI** — `src/sections/QuestsSection.tsx` (tabs Active / Available / Finished, list +
+  page, `T` toggles tracking of the selected quest, only on the Active tab, with a quest selected
+  and not while editing) and `src/components/quests/`
+  (`QuestList`, `QuestPage`, `QuestEditor`, `QuestTracker`). The editor **writes on Save**:
+  no live co-editing of text; objective progress, status, join/leave and tracking are the
+  live, per-row actions. The tracker is a column beside the section when the viewport is at least
+  1024 px wide and more than 500 px tall; otherwise it is a **collapsible sticky card at the
+  bottom of the body**. It is not shown on the Quests section itself, and only while
+  something is tracked. `↑`/`↓` keep moving between sections.
+- Demo data: `demoQuests(roster)` in `defaults.ts` (deterministic ids), also emitted into
+  `seed.sql`.
+
+**Sheet sections — `src/sections/`.** Eight components
+`({ character, update }: SectionProps) => JSX`. The order, the `1`–`8` keys, the glyphs and
 the registry live in the `SECTIONS` array of `src/screens/SheetScreen.tsx` — adding or
 reordering a section is done there.
 
@@ -192,7 +230,14 @@ Database and migrations in `supabase/` (there is no Supabase CLI project: no
   *any* sheet (a party where everyone trusts each other); `anon` has no policy. At the end,
   commented out, the strict per-owner policies. The file also drops the older Spanish
   policy names so it stays re-runnable on databases created before the rename.
+- **`supabase/migrations/0002_quests.sql`** — `quests`, `quest_objectives`,
+  `quest_participants` (FKs to `characters`, cascade deletes), `updated_at` triggers, the
+  same open-to-authenticated RLS policies (re-runnable: drops and recreates them),
+  `replica identity full` (so Realtime deletes carry the old row) and adds the three
+  tables to the `supabase_realtime` publication. Needs `0001` first (reuses
+  `touch_updated_at`, references `characters`). `created_by` defaults to `auth.uid()`.
 - **`supabase/seed.sql`** — the example party with fixed UUID ids, `on conflict do nothing`.
+  Its quest part also needs `0002` (run order: `0001` → `0002` → `seed.sql`).
   **Generated** by `node scripts/generate-seed.mjs` from `src/data/defaults.ts` (esbuild
   bundles the TS and imports it). Do not edit by hand.
 - These SQL files are run in the **SQL Editor** of the Supabase dashboard, in order. The
@@ -205,7 +250,7 @@ local mode. The user's project: `dtybrsbjgatjqllsdhhi.supabase.co`.
 
 **What is left to wire it up** (all on the dashboard/environment side, the code is done):
 1. `.env.local` with the URL + publishable key.
-2. Run `0001_init.sql` (and optionally `seed.sql`) in the SQL Editor.
+2. Run `0001_init.sql`, then `0002_quests.sql` (and optionally `seed.sql`) in the SQL Editor.
 3. Authentication → Email provider enabled; decide on "Confirm email"; add
    `http://localhost:5173` to the Redirect URLs for the magic link.
 4. Once the table's players all have accounts, turn off "Allow new users to sign up".
