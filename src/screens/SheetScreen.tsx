@@ -4,7 +4,10 @@ import { Button, HintBar, OverflowMenu } from '@/components/ui/controls'
 import { isMuted, play, setMuted } from '@/lib/sfx'
 import { DEFAULT_PORTRAIT } from '@/data/defaults'
 import { isTyping } from '@/lib/keys'
-import { useHorizontalSwipe, useIsPhone } from '@/lib/responsive'
+import { useHorizontalSwipe, useIsPhone, useMediaQuery } from '@/lib/responsive'
+import { isTracked } from '@/lib/quests'
+import { QuestTracker } from '@/components/quests/QuestTracker'
+import { useQuests } from '@/store/quests'
 import { CharacterSection } from '@/sections/CharacterSection'
 import { SkillsSection } from '@/sections/SkillsSection'
 import { CombatSection } from '@/sections/CombatSection'
@@ -58,6 +61,13 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
   const active = SECTIONS[index]
   const isPhone = useIsPhone()
   const navRef = useRef<HTMLElement>(null)
+  const wide = useMediaQuery('(min-width: 1024px)')
+  const onQuests = active.id === 'quests'
+  const questsIndex = SECTIONS.findIndex((s) => s.id === 'quests')
+  // A boolean, so the selector never returns a fresh object.
+  const trackingSomething = useQuests((s) =>
+    s.quests.some((q) => isTracked(q, s.participants, character.id)),
+  )
 
   // The sound fires outside the updater: StrictMode invokes them twice.
   const goto = useCallback(
@@ -138,7 +148,9 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
   )
 
   return (
-    <div className="sheet" style={{ ['--accent' as string]: character.identity.accent }}>
+    <div
+      className={`sheet${wide && !onQuests && trackingSomething ? ' with-tracker' : ''}`}
+      style={{ ['--accent' as string]: character.identity.accent }}>
       <div className="sheet-ident">
         <img className="portrait" src={character.identity.portrait ?? DEFAULT_PORTRAIT} alt="" />
         <div className="who">
@@ -234,7 +246,24 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
             <Section character={character} update={update} />
           </motion.div>
         </AnimatePresence>
+        {!wide && !onQuests && (
+          <QuestTracker
+            variant="card"
+            characterId={character.id}
+            characterLevel={character.identity.level}
+            onOpenLog={() => goto(questsIndex, 'confirm')}
+          />
+        )}
       </div>
+
+      {wide && !onQuests && (
+        <QuestTracker
+          variant="column"
+          characterId={character.id}
+          characterLevel={character.identity.level}
+          onOpenLog={() => goto(questsIndex, 'confirm')}
+        />
+      )}
 
       <div className="sheet-hints">
         <HintBar
