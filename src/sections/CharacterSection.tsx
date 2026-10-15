@@ -239,7 +239,7 @@ export function CharacterSection({ character, update }: SectionProps) {
               height: 210,
               objectFit: 'cover',
               border: '3px solid var(--seat)',
-              boxShadow: '8px 8px 0 var(--accent)',
+              boxShadow: 'var(--bevel), 0 0 0 1px var(--accent)',
               flex: '0 0 auto',
             }}
           />
