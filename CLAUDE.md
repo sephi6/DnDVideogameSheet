@@ -6,8 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **ARCANA** — web app for keeping a **D&D 2024** character sheet. The design goal is not
 the sheet itself but **navigating it like a video-game menu** (declared reference:
-Persona 5): tilted cards, a diagonal red wipe between screens, synthesized menu blips and
-keyboard navigation.
+World of Warcraft UI): stone panels, three-tone gold, filigree corners, cartouche headers,
+a gold sweep between screens, warm synthesized menu cues and keyboard navigation. The
+branch `azeroth-reskin` replaced an earlier Persona 5 skin.
 
 **Two modes, decided automatically** (`src/lib/supabase.ts` → `isSupabaseConfigured`):
 - **Local** — no `.env.local`. Saves to `localStorage`, no login.
@@ -24,7 +25,9 @@ when adding code.
 Rules terminology follows the **2024 Player's Handbook**: official class, species,
 background, condition, damage type, weapon mastery, spell school and language names, and
 **imperial units** (Speed and ranges in feet, weights in pounds, Carrying Capacity =
-Strength × 15 lb.).
+Strength × 15 lb.). Warcraft classes and species coexist with the PHB ones in the same
+lists; the field vocabulary (conditions, damage types, masteries, schools, languages)
+stays 2024 PHB.
 
 ## Commands
 
@@ -54,7 +57,7 @@ Import alias: `@/` → `src/` (defined in `vite.config.ts` and `tsconfig.app.jso
 session) puts `LoginScreen` on top of `select`/`sheet`. `App` calls `hydrate()` when
 `authStatus` is `'signed-in'` or `'disabled'`, and `reset()` on sign-out.
 
-**Transitions — `useWipe()` (`src/components/fx/Wipe.tsx`).** The red wipe covers, runs
+**Transitions — `useWipe()` (`src/components/fx/Wipe.tsx`).** The gold sweep covers, runs
 the screen change and uncovers. The navigation side effect lives in a `useEffect` (phase
 `reveal`), **never inside a `setState` updater**: StrictMode invokes them twice and the
 action would be lost. With `prefers-reduced-motion` the wipe is skipped; there is a 1.2 s
@@ -92,7 +95,9 @@ on **every read**, in both adapters, so old sheets display correctly straight aw
 migrated version is written back the next time the sheet is edited. It only rewrites the
 **enumerated** fields (class, species, background, alignment, conditions, damage types,
 weapon masteries, spell schools, languages, portrait) plus the unit conversions (Speed
-m → ft., item weights kg → lb.). Free text the player typed —attack and item names,
+m → ft., item weights kg → lb.). Schema v3 (the Azeroth reskin) re-tunes a stored
+accent only if it still equals the old default class accent; v2 sheets skip the
+Spanish/metric step. Free text the player typed —attack and item names,
 ranges, notes, journal— is deliberately left alone. `Character.schemaVersion` guards it:
 a sheet already at `SCHEMA_VERSION` is returned untouched, so a converted Speed is never
 converted twice. **Bump `SCHEMA_VERSION` and extend `migrateCharacter()` whenever a stored
@@ -118,23 +123,28 @@ migrations: the model evolves and the `jsonb` follows. `id` is a **real UUID**
 sheets with `pc_xxx` ids so they can be regenerated when imported to the cloud.
 
 **Rules data — `src/data/`.**
-- `rules.ts`: static D&D 2024 tables (12 classes with hit die/saves/caster type, 18 skills,
-  full-caster and pact spell slot tables, proficiency bonus, plus species, backgrounds,
-  alignments, conditions, damage types, weapon masteries, spell schools and languages).
-  `findClass(name)` resolves by display name.
+- `rules.ts`: static tables. 25 classes (12 PHB + 13 Warcraft, each with `origin`, hit
+  die/saves/caster type; the Warcraft ones are `provisional` until D&D: World of Warcraft
+  is published), `SPECIALIZATIONS` per Warcraft class, 22 species objects with `origin`,
+  18 skills, full-caster and pact spell slot tables, proficiency bonus, backgrounds,
+  alignments, conditions, damage types, weapon masteries, spell schools and languages.
+  `findClass(name)` resolves by display name and returns the PHB entry for the five names
+  both books share. `resolveClass` in `CharacterSection` infers the book from the stored
+  accent (limitation: a hand-picked accent on a shared name resolves to PHB).
 - `defaults.ts`: `createCharacter(partial?)` (factory, level 1 Fighter by default) and
-  `demoRoster()` (4 example characters with **every section filled in** — attacks, spells,
+  `demoRoster()` (8 example characters, 4 PHB and 4 with Warcraft-only class names, with **every section filled in** — attacks, spells,
   gear, features, journal). The demo uses deterministic nested ids (`${slug}-atk-1`) and a
-  fixed `DEMO_TIMESTAMP` so `generate-seed.mjs` produces a stable `seed.sql`.
+  fixed `DEMO_TIMESTAMP` so `generate-seed.mjs` produces a stable `seed.sql` (8 fixed ids).
 
 **Derived values — `src/lib/derive.ts`.** Pure functions (`mod`, `pb`, `saveBonus`,
 `skillBonus`, `spellSaveDC`, `initiative`, `carryCapacity`…). **Derived values are not
-stored**: they are computed at render. Deliberate exception: changing class or level in
-`IdentitySection` rewrites `combat.hitDieSize`, `combat.hitDiceTotal` and
-`spellcasting.slots`, because afterwards those are fields the player edits by hand.
+stored**: they are computed at render. Deliberate exception: changing class in
+`CharacterSection` writes `identity.accent`, `combat.hitDieSize`, `spellcasting.slots` and
+`spellcasting.ability` and swaps the default portrait; changing level writes
+`combat.hitDiceTotal` and `spellcasting.slots`. Because afterwards those are fields the player edits by hand.
 
-**Sheet sections — `src/sections/`.** Eight components
-`({ character, update }: SectionProps) => JSX`. The order, the `1`–`8` keys, the glyphs and
+**Sheet sections — `src/sections/`.** Seven components
+`({ character, update }: SectionProps) => JSX`. The order, the `1`–`7` keys, the glyphs and
 the registry live in the `SECTIONS` array of `src/screens/SheetScreen.tsx` — adding or
 reordering a section is done there.
 
@@ -149,19 +159,27 @@ Mute persisted in `arcana:sfx-muted`.
 `useEffect`. They all filter with `isTyping(e.target)` (`src/lib/keys.ts`) so typing in
 fields is not hijacked. There are WASD/QE aliases next to the arrow keys.
 
-**Styles.** Plain CSS in `src/styles/` (`fonts`, `global`, `screens`, `sheet`), imported in
-`src/main.tsx`. The `--accent` custom property is set per character (inline style on the
-containers) and tints the whole menu.
+**Styles.** Plain CSS in `src/styles/` (`fonts`, `global`, `screens`, `sheet`, `responsive`), imported in
+`src/main.tsx`. Tokens live in `global.css`: `--stone*`, `--parchment*`, `--gold` /
+`-hi` / `-lo` (`-lo` is never text), `--seat`, `--veil*`, `--danger`, `--bevel`,
+`--grain-*`, `--t-*` sizes. No hard-coded hex or old Persona literals. `.bg-fx` (fixed,
+global.css) is the stone ground under every screen, so the screen roots paint no
+background of their own. The `--accent` custom property is set per character (inline
+style on the containers) and tints the whole menu.
+
+**Fonts.** Cinzel (display), EB Garamond (body), Barlow Condensed (data), self-hosted in
+`public/fonts/` by `scripts/fetch-fonts.sh`, which also rewrites `src/styles/fonts.css`.
 
 ## Assets
 
-The portraits in `public/assets/portraits/*.svg` are **provisional emblems generated by
-code**, one per class, named after the English class slug (`wizard.svg`, `barbarian.svg`…).
-To replace them with real illustrations: style guide and prompts in
-`docs/ASSET_PROMPTS.md`. If the extension changes (`.svg` → `.png`) it has to be updated
-in two places: `PORTRAIT_SLUGS` / `portraitForClass()` in `src/data/defaults.ts` and
-`PORTRAIT_LIBRARY` in `src/sections/IdentitySection.tsx`. Portrait paths are **relative**
-(`assets/portraits/…`, no leading slash).
+`public/assets/portraits/` mixes **.png** (provisional PHB class portraits from the
+partner) and **.svg** (emblems generated by `scripts/generate-assets.mjs`, used for the
+Warcraft-only classes and the default). The single exported `CLASS_PORTRAITS` map and
+`DEFAULT_PORTRAIT` in `src/data/defaults.ts` are the one place to edit; `portraitForClass()`
+and `PORTRAIT_LIBRARY` (`CharacterSection`) derive from them. Style guide and prompts for
+real illustrations: `docs/ASSET_PROMPTS.md`. `public/assets/ui/` is reserved for future
+filigree SVGs. Portrait paths used from JS are **relative** (`assets/portraits/…`, no
+leading slash); CSS `url()` needs the leading slash.
 
 ## Supabase
 
