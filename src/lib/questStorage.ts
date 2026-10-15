@@ -115,8 +115,9 @@ interface ParticipantRow { quest_id: string; character_id: string; joined: boole
 const questFromRow = (r: QuestRow): Quest => ({
   id: r.id, scope: r.scope, status: r.status, title: r.title, description: r.description,
   giver: r.giver, location: r.location, recommendedLevel: r.recommended_level,
-  rewardCoins: { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0, ...(r.reward_coins as Partial<Quest['rewardCoins']>) },
-  rewardXp: r.reward_xp, rewardItems: r.reward_items ?? [], createdAt: r.created_at,
+  // A Realtime UPDATE may omit unchanged TOASTed columns: leave those undefined so the store keeps its local value.
+  rewardCoins: r.reward_coins === undefined ? (undefined as unknown as Quest['rewardCoins']) : { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0, ...(r.reward_coins as Partial<Quest['rewardCoins']>) },
+  rewardXp: r.reward_xp, rewardItems: r.reward_items === undefined ? (undefined as unknown as string[]) : r.reward_items ?? [], createdAt: r.created_at,
 })
 const questToRow = (q: Quest): QuestRow => ({
   id: q.id, scope: q.scope, status: q.status, title: q.title, description: q.description,
