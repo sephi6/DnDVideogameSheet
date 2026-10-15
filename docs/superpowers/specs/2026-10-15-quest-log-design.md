@@ -98,8 +98,8 @@ row.
 ### 3.2 TypeScript — `src/types/quest.ts`
 
 `Quest`, `QuestObjective`, `QuestParticipant` mirror the three tables with camelCase
-fields (`recommendedLevel: number | null`, `rewardCoins: Coins` reusing the coin type
-from `types/character.ts`, `rewardItems: string[]`). `Character` is **not** changed:
+fields (`recommendedLevel: number | null`, `rewardCoins` with the same shape as
+`Character['inventory']['coins']` — `{ pp, gp, ep, sp, cp }` —, `rewardItems: string[]`). `Character` is **not** changed:
 no `SCHEMA_VERSION` bump.
 
 ### 3.3 Pure rules — `src/lib/quests.ts`
