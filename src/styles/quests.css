@@ -125,7 +125,7 @@
 .tk-o[data-done='true'] { color: var(--parchment-dim); text-decoration: line-through; text-decoration-color: var(--gold-lo); }
 
 /* Desktop: a third column beside the body. */
-@media (min-width: 1024px) {
+@media (min-width: 1024px) and (min-height: 501px) {
   .sheet.with-tracker {
     grid-template-columns: clamp(190px, 19vw, 250px) minmax(0, 1fr) 248px;
     grid-template-areas:
@@ -140,3 +140,7 @@
 .tracker-card { position: sticky; bottom: 0; z-index: 2; margin-top: 12px; display: flex; flex-direction: column; gap: 8px; padding: 8px; background: var(--stone-2); border: 1px solid var(--gold-faint); box-shadow: 0 -8px 18px rgba(0, 0, 0, .35); }
 .tk-toggle { display: flex; align-items: center; justify-content: space-between; min-height: var(--touch); padding: 0 6px; background: transparent; border: 0; color: var(--gold-hi); font-family: var(--font-display); font-weight: 700; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; cursor: pointer; }
 .tk-count { font-family: var(--font-data); letter-spacing: .04em; color: var(--parchment-dim); }
+.tk-sum { display: flex; align-items: baseline; gap: 8px; padding: 0 6px 4px; font-family: var(--font-body); font-size: 15px; color: var(--parchment); }
+.tk-sum .tt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--gold-hi); }
+.tk-sum .n { font-family: var(--font-data); font-weight: 700; color: var(--gold); white-space: nowrap; }
+.tk-scroll { display: flex; flex-direction: column; gap: 8px; max-height: 50dvh; overflow: auto; }

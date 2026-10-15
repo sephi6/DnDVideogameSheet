@@ -61,7 +61,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
   const active = SECTIONS[index]
   const isPhone = useIsPhone()
   const navRef = useRef<HTMLElement>(null)
-  const wide = useMediaQuery('(min-width: 1024px)')
+  const wide = useMediaQuery('(min-width: 1024px) and (min-height: 501px)')
   const onQuests = active.id === 'quests'
   const questsIndex = SECTIONS.findIndex((s) => s.id === 'quests')
   // A boolean, so the selector never returns a fresh object.

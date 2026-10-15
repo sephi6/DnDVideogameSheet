@@ -17,8 +17,7 @@ export function QuestTracker({ characterId, characterLevel, variant, onOpenLog }
   const tracked = quests.filter((q) => isTracked(q, participants, characterId))
   if (tracked.length === 0) return null
 
-  const shown = variant === 'card' && !open ? tracked.slice(0, 1) : tracked
-  const body = shown.map((q) => {
+  const body = tracked.map((q) => {
     const d = difficulty(q.recommendedLevel, characterLevel)
     return (
       <div key={q.id} className="tk-q">
@@ -45,15 +44,27 @@ export function QuestTracker({ characterId, characterLevel, variant, onOpenLog }
       </aside>
     )
   }
+  const first = tracked[0]
+  const firstObjs = objectivesOf(objectives, first.id)
+  const firstDone = firstObjs.filter(isDone).length
   return (
-    <aside className="tracker-card" aria-label="Tracked quests">
+    <aside className="tracker-card" aria-label="Tracked quests" data-no-swipe>
       <button type="button" className="tk-toggle" aria-expanded={open}
         onClick={() => { play('toggle'); setOpen((v) => !v) }}>
         <span>Tracked</span>
-        <span className="tk-count">{open ? 'Hide ▾' : `${tracked.length > 1 ? `1 of ${tracked.length} ` : ''}▴`}</span>
+        <span className="tk-count">{open ? 'Hide ▾' : `${tracked.length > 1 ? `${tracked.length} quests ` : ''}▴`}</span>
       </button>
-      {body}
-      {open && <Button variant="small ghost" onClick={onOpenLog}>Open quest log ▸</Button>}
+      {open ? (
+        <div className="tk-scroll">
+          {body}
+          <Button variant="small ghost" onClick={onOpenLog}>Open quest log ▸</Button>
+        </div>
+      ) : (
+        <div className="tk-sum">
+          <span className="tt">{first.title}</span>
+          <span className="n">{firstDone}/{firstObjs.length} objectives</span>
+        </div>
+      )}
     </aside>
   )
 }
