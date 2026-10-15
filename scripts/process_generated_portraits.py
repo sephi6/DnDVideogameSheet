@@ -1,3 +1,6 @@
+# LEGACY, one-off script: its source paths are hard-coded to local files on one machine,
+# and it quantizes to the old Persona palette. Do not run it on new art; use the Pillow
+# snippet in docs/ASSET_PROMPTS.md instead.
 from __future__ import annotations
 
 import os

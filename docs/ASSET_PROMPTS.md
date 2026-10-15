@@ -467,7 +467,10 @@ The app uses these files as CSS **masks**: only the alpha matters, and the colou
 from `background-color: var(--gold)` on the masked element. (`currentColor` keeps them
 tintable if they are ever inlined instead.) The current CSS inlines a corner as a mask
 data-URI in `sheet.css` / `screens.css`, so once the files exist the CSS can switch to
-`mask-image: url(assets/ui/frame-corner-tl.svg)`.
+`mask-image: url(/assets/ui/frame-corner-tl.svg)`. In CSS the URL needs the leading
+slash (Vite resolves a relative CSS `url()` against the stylesheet, so it would 404 in
+the built bundle); the no-leading-slash rule applies only to paths used from JS, such as
+portrait paths.
 
 **Check when swapping:** the current inline corner masks use a **48-unit** viewBox, the
 new corners are **64**. Review `mask-size` and `mask-position` in `sheet.css`,
