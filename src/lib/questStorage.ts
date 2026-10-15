@@ -1,6 +1,7 @@
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import type { Quest, QuestChange, QuestObjective, QuestParticipant, QuestSnapshot } from '@/types/quest'
 import { isSupabaseConfigured, requireSupabase } from '@/lib/supabase'
+import { newId } from '@/data/defaults'
 
 /**
  * Quest persistence: one small operation per row, so two people editing the
@@ -203,7 +204,7 @@ export const supabaseQuestStorage: QuestStorage = {
     const onChange: typeof rawOnChange = (c) => { if (active) rawOnChange(c) }
     const onStatus: typeof rawOnStatus = (st) => { if (active) rawOnStatus(st) }
     const channel = client
-      .channel(`arcana-quests-${crypto.randomUUID()}`)
+      .channel(`arcana-quests-${newId()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'quests' }, (p: Payload<QuestRow & Record<string, unknown>>) => {
         if (p.eventType === 'DELETE') onChange({ table: 'quests', type: 'delete', id: (p.old as QuestRow).id })
         else onChange({ table: 'quests', type: 'upsert', row: questFromRow(p.new as QuestRow) })

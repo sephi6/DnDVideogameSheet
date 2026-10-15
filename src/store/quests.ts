@@ -13,8 +13,14 @@ interface QuestsState extends QuestSnapshot {
   syncError: string | null
   hydrate: () => Promise<void>
   reset: () => void
-  /** From the editor: writes the quest, its objectives, and removes dropped ones. */
-  saveQuest: (quest: Quest, objectives: QuestObjective[], creatorId: string | null) => string
+  /**
+   * From the editor: writes the quest and its changed objectives, and removes the
+   * ones it dropped. Status and objective progress are kept from the live store.
+   * `initialObjectiveIds` (the ids the editor opened with) limits deletions to
+   * objectives the editor actually removed; without it, every objective of the
+   * quest that is not in `objectives` is removed.
+   */
+  saveQuest: (quest: Quest, objectives: QuestObjective[], creatorId: string | null, initialObjectiveIds?: string[]) => string
   setStatus: (questId: string, status: QuestStatus) => void
   deleteQuest: (questId: string) => void
   setProgress: (objectiveId: string, progress: number) => void
@@ -51,6 +57,9 @@ let unsubscribe: (() => void) | null = null
 let hydration: Promise<void> | null = null
 let wasDown = false
 let hydrateFailed = false
+/** Loads running now, and whether a write settled during one (see write()). */
+let loading = 0
+let reloadAfterLoad = false
 /** Counts every write started or foreign change applied per row: a reload that began before it must not overwrite the row. */
 const seqs = new Map<string, number>()
 const touch = (key: string) => seqs.set(key, (seqs.get(key) ?? 0) + 1)
@@ -98,6 +107,14 @@ function rowWrite(key: string, get: Get_): Promise<void> {
   return p ? questStorage.upsertParticipant(p) : questStorage.deleteParticipant(a, b)
 }
 
+const DOWN_MESSAGE = 'Live quest updates are disconnected. Retry reconnects.'
+
+/** Nothing failed: 'saved', unless the live channel is still down, which stays shown. */
+function settledStatus(set: Set_) {
+  if (wasDown) set({ sync: 'error', syncError: DOWN_MESSAGE })
+  else set({ sync: 'saved', syncError: null })
+}
+
 function write(key: string, set: Set_, get: Get_) {
   const mine = epoch
   touch(key)
@@ -109,7 +126,7 @@ function write(key: string, set: Set_, get: Get_) {
     .then(() => {
       if (mine !== epoch) return
       failed.delete(key)
-      if (failed.size === 0) set({ sync: 'saved', syncError: null })
+      if (failed.size === 0) settledStatus(set)
     })
     .catch((err) => {
       if (mine !== epoch) return
@@ -129,6 +146,10 @@ function write(key: string, set: Set_, get: Get_) {
         // database kept last, so ask it instead of guessing.
         if (pending.delete(key)) scheduleReload(set)
       }
+      // A load running now keeps this row as it is here (touched above), so it
+      // cannot bring in a foreign change that landed on it meanwhile and that
+      // Realtime missed: read once more after that load.
+      if (loading > 0) reloadAfterLoad = true
     })
   chains.set(key, next)
 }
@@ -147,7 +168,7 @@ async function writeOrdered(keys: string[], set: Set_, get: Get_) {
     if (kind === 'p' && !get().quests.some((q) => q.id === a)) {
       // the quest was deleted meanwhile: nothing to write, nothing to retry
       failed.delete(k)
-      if (failed.size === 0 && inflight.size === 0) get().sync === 'saving' && set({ sync: 'saved', syncError: null })
+      if (failed.size === 0 && inflight.size === 0 && get().sync === 'saving') settledStatus(set)
       continue
     }
     const questId = kind === 'p' ? a : get().objectives.find((o) => o.id === a)?.questId
@@ -277,9 +298,22 @@ function mergeSnapshot(current: QuestSnapshot, incoming: QuestSnapshot): QuestSn
 async function load(set: Set_, get: Get_) {
   const mine = epoch
   const since = new Map(seqs)
-  const snapshot = await questStorage.loadAll()
-  if (mine !== epoch) return
-  set({ ...replaceFromSnapshot(get(), snapshot, since), loaded: true })
+  loading++
+  try {
+    const snapshot = await questStorage.loadAll()
+    if (mine !== epoch) return
+    set({ ...replaceFromSnapshot(get(), snapshot, since), loaded: true })
+  } finally {
+    if (mine === epoch) {
+      loading--
+      // One follow-up for every write that settled during the loads that just
+      // ended; the follow-up only repeats if writes settle during it too.
+      if (loading === 0 && reloadAfterLoad) {
+        reloadAfterLoad = false
+        scheduleReload(set)
+      }
+    }
+  }
 }
 
 export const useQuests = create<QuestsState>((set, get) => ({
@@ -294,9 +328,10 @@ export const useQuests = create<QuestsState>((set, get) => ({
     hydration ??= (async () => {
       const mine = epoch
       try {
-        await load(set, get)
-        if (mine !== epoch) return // reset() ran while loading: open nothing
-        hydrateFailed = false
+        // Subscribe first, then read: a change committed after the snapshot but
+        // before the channel opened would otherwise be lost. Changes arriving
+        // during the load touch their row, so the older snapshot does not undo them.
+        // reset() during the load closes this channel and bumps the epoch.
         unsubscribe?.()
         unsubscribe = questStorage.subscribe(
           (c) => {
@@ -306,7 +341,7 @@ export const useQuests = create<QuestsState>((set, get) => ({
             if (mine !== epoch) return
             if (status === 'down') {
               wasDown = true
-              set({ sync: 'error', syncError: 'Live quest updates are disconnected. Retry reconnects.' })
+              set({ sync: 'error', syncError: DOWN_MESSAGE })
             } else if (wasDown) {
               wasDown = false
               void load(set, get)
@@ -319,6 +354,9 @@ export const useQuests = create<QuestsState>((set, get) => ({
             }
           },
         )
+        await load(set, get)
+        if (mine !== epoch) return // reset() ran while loading
+        hydrateFailed = false
       } catch (err) {
         if (mine !== epoch) return
         hydrateFailed = true
@@ -343,6 +381,8 @@ export const useQuests = create<QuestsState>((set, get) => ({
     pending.clear()
     wasDown = false
     hydrateFailed = false
+    loading = 0
+    reloadAfterLoad = false
     seqs.clear()
     holding.clear()
     if (reloadTimer) clearTimeout(reloadTimer)
@@ -350,24 +390,32 @@ export const useQuests = create<QuestsState>((set, get) => ({
     set({ quests: [], objectives: [], participants: [], loaded: false, sync: 'idle', syncError: null })
   },
 
-  saveQuest(quest, objectives, creatorId) {
-    const isNew = !get().quests.some((q) => q.id === quest.id)
-    const stored: Quest = { ...quest, id: quest.id || newId() }
-    const kept = objectives.map((o, i) => ({
-      ...o,
-      id: o.id || newId(),
-      questId: stored.id,
-      position: i,
-      target: Math.max(1, Math.min(999, Math.round(o.target))),
-      progress: clampProgress(o.progress, Math.max(1, Math.min(999, Math.round(o.target)))),
-    }))
-    const dropped = get().objectives.filter((o) => o.questId === stored.id && !kept.some((k) => k.id === o.id))
+  saveQuest(quest, objectives, creatorId, initialObjectiveIds) {
+    const current = get().quests.find((q) => q.id === quest.id)
+    const isNew = !current
+    // The editor never edits status, and progress is live: both come from the store
+    // as it is now, so a Save does not undo what others changed while it was open.
+    const stored: Quest = { ...quest, id: quest.id || newId(), status: current?.status ?? quest.status }
+    const live = new Map(get().objectives.filter((o) => o.questId === stored.id).map((o) => [o.id, o]))
+    const kept: QuestObjective[] = objectives.map((o, i) => {
+      const target = Math.max(1, Math.min(999, Math.round(o.target) || 1))
+      const id = o.id || newId()
+      return { ...o, id, questId: stored.id, position: i, target, progress: clampProgress(live.get(id)?.progress ?? o.progress, target) }
+    })
+    const keptIds = new Set(kept.map((o) => o.id))
+    // Only objectives the editor started with and removed are deleted, never ones
+    // somebody added meanwhile. Without the initial list: everything not kept.
+    const initial = initialObjectiveIds ? new Set(initialObjectiveIds) : null
+    const dropped = [...live.values()].filter((o) => !keptIds.has(o.id) && (!initial || initial.has(o.id)))
+    const droppedIds = new Set(dropped.map((o) => o.id))
+    // An objective identical to its live row needs no write.
+    const changed = kept.filter((o) => !live.has(o.id) || stable(o) !== stable(live.get(o.id)))
     // A new personal quest lists the creator at once, so it shows in their Active tab; the row is written later.
     const creatorRow: QuestParticipant | null =
       isNew && stored.scope === 'personal' && creatorId ? { questId: stored.id, characterId: creatorId, joined: true, tracked: true } : null
     set((s) => ({
       quests: [...s.quests.filter((q) => q.id !== stored.id), stored],
-      objectives: [...s.objectives.filter((o) => o.questId !== stored.id), ...kept],
+      objectives: [...s.objectives.filter((o) => !keptIds.has(o.id) && !droppedIds.has(o.id)), ...kept],
       participants: creatorRow
         ? [...s.participants.filter((p) => !(p.questId === creatorRow.questId && p.characterId === creatorRow.characterId)), creatorRow]
         : s.participants,
@@ -376,7 +424,7 @@ export const useQuests = create<QuestsState>((set, get) => ({
     // the creator's row is held so a reload does not drop it, and it joins Retry if the quest write fails.
     const creatorKey = creatorRow ? [pKey(creatorRow.questId, creatorRow.characterId)] : []
     for (const k of creatorKey) holding.add(k)
-    void writeOrdered([qKey(stored.id), ...kept.map((o) => oKey(o.id)), ...dropped.map((o) => oKey(o.id)), ...creatorKey], set, get)
+    void writeOrdered([qKey(stored.id), ...changed.map((o) => oKey(o.id)), ...dropped.map((o) => oKey(o.id)), ...creatorKey], set, get)
     return stored.id
   },
 

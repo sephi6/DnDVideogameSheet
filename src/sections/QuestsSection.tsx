@@ -97,7 +97,7 @@ export function QuestsSection({ character }: SectionProps) {
         characterName={character.identity.name}
         onCancel={() => setEditing(null)}
         onSave={(quest, objs) => {
-          const id = saveQuest(quest, objs, character.id)
+          const id = saveQuest(quest, objs, character.id, editing.objectives.map((o) => o.id))
           setEditing(null)
           if (!editing.quest.id) setTab('active')
           setSelectedId(id)
