@@ -108,10 +108,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 ::selection { background: var(--gold); color: var(--seat); }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #0e0d11; }
+::-webkit-scrollbar-track { background: var(--seat); }
 ::-webkit-scrollbar-thumb {
   background: var(--accent);
-  border: 2px solid #0e0d11;
+  border: 2px solid var(--seat);
 }
 
 :focus-visible {
@@ -471,7 +471,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .center { display: grid; place-items: center; }
 
 .empty {
-  border: 2px dashed #3a3742;
+  border: 2px dashed var(--gold-faint);
   padding: 14px;
   text-align: center;
   color: var(--parchment-dim);

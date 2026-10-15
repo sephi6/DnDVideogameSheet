@@ -48,7 +48,7 @@ export function InventorySection({ character, update }: SectionProps) {
           <div className="hp-bar">
             <motion.div
               className="hp-fill"
-              style={{ background: weight > capacity ? 'var(--danger)' : 'linear-gradient(90deg, #7a6a2a, var(--gold))' }}
+              style={{ background: weight > capacity ? 'var(--danger)' : 'linear-gradient(90deg, var(--gold-lo), var(--gold))' }}
               animate={{ width: `${Math.min(100, capacity > 0 ? (weight / capacity) * 100 : 0)}%` }}
             />
           </div>

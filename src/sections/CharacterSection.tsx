@@ -231,8 +231,8 @@ export function CharacterSection({ character, update }: SectionProps) {
             key={identity.portrait ?? 'none'}
             src={identity.portrait ?? DEFAULT_PORTRAIT}
             alt="Character portrait"
-            initial={{ opacity: 0, x: -14, rotate: -6 }}
-            animate={{ opacity: 1, x: 0, rotate: -3 }}
+            initial={{ opacity: 0, x: -14, rotate: 0 }}
+            animate={{ opacity: 1, x: 0, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 240, damping: 22 }}
             style={{
               width: 150,
@@ -257,7 +257,7 @@ export function CharacterSection({ character, update }: SectionProps) {
                     }}
                     style={{
                       padding: 0,
-                      border: identity.portrait === src ? '3px solid var(--gold)' : '2px solid #34313d',
+                      border: identity.portrait === src ? '3px solid var(--gold)' : '2px solid var(--stone-3)',
                       background: 'none',
                       cursor: 'pointer',
                       aspectRatio: '5 / 7',

@@ -39,7 +39,7 @@ export default function App() {
 
   const active = characters.find((c) => c.id === activeId) ?? null
   const accent =
-    screen === 'title' ? '#e01133' : active?.identity.accent ?? characters[index]?.identity.accent ?? '#e01133'
+    screen === 'title' ? 'var(--gold)' : active?.identity.accent ?? characters[index]?.identity.accent ?? 'var(--gold)'
 
   const openSheet = (character: Character) => {
     run(character.identity.name, () => {
