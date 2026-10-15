@@ -1,10 +1,13 @@
 /* ── Quest log (spec 3) — from the approved Claude Design canvas ─────────── */
 
+/* The three tabs share one row of the 330px list; at the old 12px padding
+   "Finished" dropped to a second row on its own. */
 .ql-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
 .ql-tab {
-  display: inline-flex; align-items: center; gap: 8px;
-  min-height: 36px; padding: 7px 12px;
-  font-family: var(--font-display); font-weight: 600; font-size: 14px; letter-spacing: .06em;
+  flex: 1 1 auto; justify-content: center;
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px; padding: 7px 8px;
+  font-family: var(--font-display); font-weight: 600; font-size: 13px; letter-spacing: .04em;
   color: var(--parchment-dim);
   background: var(--stone-2);
   border: 1px solid var(--gold-lo);
@@ -90,6 +93,12 @@
 
 .qp-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .qp-actions .spacer { flex: 1; }
+/* Ghost buttons are transparent with pale text, made for stone. On the
+   parchment page that text vanished (Failed, Leave, Keep it): ink instead. */
+.quest-page .btn.ghost,
+.quest-page .btn.ghost:not(:disabled):hover { color: var(--seat); }
+.quest-page .btn.ghost.danger,
+.quest-page .btn.ghost.danger:not(:disabled):hover { color: color-mix(in srgb, var(--danger) 75%, var(--seat)); }
 .qp-confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-family: var(--font-body); color: var(--seat); }
 
 .ql-back { margin-bottom: 10px; }

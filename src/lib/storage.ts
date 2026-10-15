@@ -1,6 +1,6 @@
 import type { Character } from '@/types/character'
 import { migrateRoster } from '@/lib/migrate'
-import { isSupabaseConfigured, requireSupabase } from '@/lib/supabase'
+import { isSupabaseConfigured, requireSupabase, supabase } from '@/lib/supabase'
 
 /**
  * Read and write services for character sheets.
@@ -100,6 +100,19 @@ function toRow(character: Character, ownerId: string | null): Omit<CharacterRow,
   }
 }
 
+/**
+ * Id of the signed-in user, kept up to date from the auth events. Saves used to
+ * ask `auth.getUser()`, a network round trip per save: when that request
+ * stalled, the upsert was never sent and the sheet sat on "Saving…" for good.
+ */
+let currentUserId: string | null = null
+supabase?.auth.onAuthStateChange((_event, session) => {
+  currentUserId = session?.user.id ?? null
+})
+
+/** A write that never answers has to end up as an error, not as "Saving…" forever. */
+const WRITE_TIMEOUT_MS = 15_000
+
 export const supabaseAdapter: StorageAdapter = {
   name: 'supabase',
 
@@ -116,21 +129,20 @@ export const supabaseAdapter: StorageAdapter = {
 
   async save(character) {
     const client = requireSupabase()
-    const { data: auth } = await client.auth.getUser()
     const { error } = await client
       .from('characters')
-      .upsert(toRow(character, auth.user?.id ?? null), { onConflict: 'id' })
+      .upsert(toRow(character, currentUserId), { onConflict: 'id' })
+      .abortSignal(AbortSignal.timeout(WRITE_TIMEOUT_MS))
     if (error) throw error
   },
 
   async saveMany(characters) {
     if (characters.length === 0) return
     const client = requireSupabase()
-    const { data: auth } = await client.auth.getUser()
-    const ownerId = auth.user?.id ?? null
     const { error } = await client
       .from('characters')
-      .upsert(characters.map((c) => toRow(c, ownerId)), { onConflict: 'id' })
+      .upsert(characters.map((c) => toRow(c, currentUserId)), { onConflict: 'id' })
+      .abortSignal(AbortSignal.timeout(WRITE_TIMEOUT_MS))
     if (error) throw error
   },
 

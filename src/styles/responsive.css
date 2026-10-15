@@ -258,6 +258,7 @@
      the plate means shrinking the type with it: "Join the party" has to stay
      inside the chamfers. */
   .screen-title { width: min(260px, 100%); flex-basis: 260px; }
+  .screen-head > :first-child { flex-basis: 260px; }
   .screen-title h1 { font-size: 15px; letter-spacing: 0.1em; }
 
   .select-body {
@@ -350,6 +351,10 @@
    ════════════════════════════════════════════════════════════════════════════ */
 @media (min-width: 1024px) {
   .abilities-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  /* The top-right filigree corner (up to 64px plus its 4px inset) is wider
+     than the sheet's side padding, and its rules ran across the Exit button.
+     The header buttons stop where the corner ends. */
+  .sheet-head { padding-right: calc(clamp(44px, 5vw, 64px) + 4px - clamp(14px, 3vw, 40px)); }
 }
 
 /* ── Phone in landscape ─────────────────────────────────────────────────────
