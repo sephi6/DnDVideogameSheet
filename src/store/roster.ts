@@ -3,6 +3,7 @@ import type { Character } from '@/types/character'
 import { createCharacter, demoRoster, isUuid, newId } from '@/data/defaults'
 import { readLocalRoster, storage, usingCloud } from '@/lib/storage'
 import { readableError } from '@/lib/supabase'
+import { useQuests } from '@/store/quests'
 
 type Updater = (draft: Character) => void
 
@@ -97,6 +98,7 @@ async function hydrateOnce(set: Set_) {
     const demo = demoRoster()
     set({ characters: demo, loaded: true })
     await storage.saveMany(demo)
+    await useQuests.getState().seedDemo(demo)
     if (usingCloud) localStorage.setItem(SEEDED_KEY, '1')
     set({ sync: 'saved' })
   } catch (err) {
@@ -161,6 +163,7 @@ export const useRoster = create<RosterState>((set, get) => ({
     try {
       await storage.remove(id)
       failed.delete(id)
+      useQuests.getState().removeCharacter(id)
       set({ sync: 'saved' })
     } catch (err) {
       console.error('[arcana] could not delete the sheet', err)
@@ -186,6 +189,7 @@ export const useRoster = create<RosterState>((set, get) => ({
     set({ characters: [...get().characters, ...demo], sync: 'saving', syncError: null })
     try {
       await storage.saveMany(demo)
+      await useQuests.getState().seedDemo(demo)
       if (usingCloud) localStorage.setItem(SEEDED_KEY, '1')
       set({ sync: 'saved' })
     } catch (err) {
