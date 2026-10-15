@@ -24,7 +24,7 @@
   color: var(--gold);
 }
 .ql-group::after { content: ''; flex: 1; height: 1px; background: var(--gold-faint); }
-.ql-group:first-child { margin-top: 0; }
+.ql-scroll > :first-child .ql-group { margin-top: 0; }
 
 .ql-row {
   display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 10px;
@@ -72,13 +72,13 @@
 .qo .count { display: flex; align-items: center; gap: 6px; font-family: var(--font-data); font-weight: 700; font-size: 16px; color: var(--seat); }
 .qo .step { width: 28px; height: 28px; display: grid; place-items: center; font-family: var(--font-data); font-weight: 700; font-size: 16px; line-height: 1; color: var(--seat); background: rgba(255, 255, 255, .25); border: 1px solid var(--gold-lo); cursor: pointer; }
 .qo .step:disabled { opacity: .4; cursor: default; }
-.bar { position: relative; width: 70px; height: 6px; background: rgba(13, 10, 8, .18); }
+.bar { position: relative; width: 70px; height: 6px; background: color-mix(in srgb, var(--seat) 18%, transparent); }
 .bar > i { position: absolute; inset: 0 auto 0 0; background: var(--gold-lo); }
 
 .qp-rewards { display: flex; flex-wrap: wrap; gap: 10px; }
 .rw { display: flex; align-items: center; gap: 8px; padding: 6px 10px; font-family: var(--font-data); font-weight: 700; font-size: 16px; color: var(--seat); background: rgba(255, 255, 255, .22); border: 1px solid var(--gold-lo); }
 .rw .k { font-weight: 600; font-size: 13px; letter-spacing: .06em; color: color-mix(in srgb, var(--seat) 78%, var(--parchment)); }
-.rw .coin { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset -2px -2px 0 rgba(0, 0, 0, .25), 0 0 0 1px rgba(13, 10, 8, .5); }
+.rw .coin { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset -2px -2px 0 rgba(0, 0, 0, .25), 0 0 0 1px color-mix(in srgb, var(--seat) 50%, transparent); }
 .coin-pp { background: var(--parchment); } .coin-gp { background: var(--gold); } .coin-ep { background: var(--gold-hi); } .coin-sp { background: var(--parchment-dim); } .coin-cp { background: var(--gold-lo); }
 .rw.item { font-family: var(--font-body); font-weight: 600; }
 .rw.item .gem { width: 10px; height: 10px; transform: rotate(45deg); background: var(--rarity-uncommon); box-shadow: 0 0 0 1px var(--seat); }

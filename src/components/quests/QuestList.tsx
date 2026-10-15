@@ -20,8 +20,8 @@ export function QuestList({ quests, objectives, participants, characterId, chara
   return (
     <div className="ql-scroll" role="listbox" aria-label="Quests">
       {groups.map(([label, list]) => list.length > 0 && (
-        <div key={label} style={{ display: 'contents' }}>
-          <div className="ql-group">{label}</div>
+        <div key={label} role="group" aria-labelledby={`ql-group-${label}`} style={{ display: 'contents' }}>
+          <div className="ql-group" id={`ql-group-${label}`}>{label}</div>
           {list.map((q) => {
             const d = difficulty(q.recommendedLevel, characterLevel)
             const { done, total } = questProgress(objectivesOf(objectives, q.id))

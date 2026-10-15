@@ -37,13 +37,16 @@ export function QuestsSection({ character }: SectionProps) {
 
   // A quest deleted or moved out of this tab elsewhere: fall back to the first.
   useEffect(() => {
-    if (selectedId && !list.some((q) => q.id === selectedId)) setSelectedId(list[0]?.id ?? null)
+    if (selectedId && !list.some((q) => q.id === selectedId)) {
+      setSelectedId(list[0]?.id ?? null)
+      setShowPage(false)
+    }
   }, [list, selectedId])
 
   // T tracks / untracks the selected active quest.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e.target) || (e.key !== 't' && e.key !== 'T') || tab !== 'active' || !selected) return
+      if (e.ctrlKey || e.metaKey || e.altKey || e.repeat || isTyping(e.target) || (e.key !== 't' && e.key !== 'T') || tab !== 'active' || !selected) return
       e.preventDefault()
       play('toggle')
       setTracked(selected.id, character.id, !isTracked(selected, participants, character.id))
