@@ -32,14 +32,18 @@ To publish it on Cloudflare Workers: [`docs/DEPLOY.md`](docs/DEPLOY.md).
 | --- | --- |
 | Title | any key |
 | Character select | `←` `→` switch · `Enter` open · `N` new |
-| Sheet | `↑` `↓` navigate · `1`–`7` go to section · `Esc` back |
+| Sheet | `↑` `↓` navigate · `1`–`8` go to section · `Esc` back |
 
 The mouse works just as well; the keyboard is there so it feels like a gamepad.
 
-The seven sections of the sheet: **Character, Skills, Combat, Spellbook, Bags,
-Features and Journal**. Everything is editable and saves itself
+The eight sections of the sheet: **Character, Skills, Combat, Spellbook, Bags,
+Features, Journal and Quests**. Everything is editable and saves itself
 (there is a "Saved" indicator in the header). Each character has its own
 **accent color**, which tints the whole menu when selected.
+
+The **Quests** section is a log shared by the whole party and updated live: group and
+personal quests with ordered objectives, rewards and per-character tracking, plus a
+tracker that follows you through the other sections (the live part needs Supabase).
 
 ## 2024 rules already covered
 
@@ -60,14 +64,17 @@ src/
 ├── data/defaults.ts     Character factory and example party
 ├── types/character.ts   Sheet model (serialized as-is to Supabase)
 ├── lib/derive.ts        Derived values (modifiers, DC, initiative…)
+├── lib/quests.ts        Pure quest rules (difficulty, membership, progress)
+├── lib/questStorage.ts  Quest persistence and Realtime (local | supabase)
 ├── lib/sfx.ts           Menu sounds synthesized with WebAudio (no assets)
 ├── lib/supabase.ts      Supabase client and credential detection
 ├── lib/storage.ts       Read and write services (local | supabase)
 ├── lib/image.ts         Downscaling of uploaded portraits
 ├── store/auth.ts        Session: sign in, sign up, magic link, sign out
 ├── store/roster.ts      Party state, per-sheet saving and sync status
+├── store/quests.ts      Shared quest log: per-row writes, Realtime merge
 ├── screens/             Title · Sign in · Character select · Sheet
-├── sections/            The seven editable sections
+├── sections/            The eight editable sections
 └── styles/              Tokens and look (self-hosted fonts)
 ```
 
@@ -98,4 +105,5 @@ self-hosted in `public/fonts/`; `scripts/fetch-fonts.sh` regenerates them.
 | `npm run preview` | Serves the build |
 | `npm run typecheck` | Types only |
 | `node scripts/generate-seed.mjs` | Regenerates `supabase/seed.sql` from the TypeScript |
+| `node scripts/check-quests.mjs` | Assertions over the quest rules |
 | `node scripts/generate-assets.mjs` | Regenerates the provisional portraits |
