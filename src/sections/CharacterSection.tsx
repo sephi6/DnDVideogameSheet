@@ -106,9 +106,9 @@ export function CharacterSection({ character, update }: SectionProps) {
   }
 
   return (
-    <div className="grid g2">
+    <div className="grid character-grid">
       <Panel title="Identity">
-        <div className="grid g2" style={{ gap: 10 }}>
+        <div className="grid identity-fields" style={{ gap: 10 }}>
           <TextField label="Name" value={identity.name} onChange={(v) => update((d) => { d.identity.name = v })} />
           <TextField label="Player" value={identity.player} onChange={(v) => update((d) => { d.identity.player = v })} />
           <label className="field" htmlFor={classId}>
@@ -213,7 +213,7 @@ export function CharacterSection({ character, update }: SectionProps) {
           }}
         />
         {portraitError && <p className="login-error" style={{ marginTop: 0 }}>{portraitError}</p>}
-        <div className="row" style={{ alignItems: 'flex-start', gap: 14 }}>
+        <div className="portrait-pane">
           <motion.img
             key={identity.portrait ?? 'none'}
             src={identity.portrait ?? DEFAULT_PORTRAIT}
@@ -230,41 +230,39 @@ export function CharacterSection({ character, update }: SectionProps) {
               flex: '0 0 auto',
             }}
           />
-          <div className="stack grow" style={{ gap: 10 }}>
-            <div className="field">
-              <span className="label">Gallery</span>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(52px, 1fr))', gap: 6 }}>
-                {PORTRAIT_LIBRARY.map((src) => (
-                  <button
-                    key={src}
-                    type="button"
-                    onClick={() => {
-                      play('toggle')
-                      update((d) => { d.identity.portrait = src })
-                    }}
-                    style={{
-                      padding: 0,
-                      border: identity.portrait === src ? '3px solid var(--gold)' : '2px solid var(--stone-3)',
-                      background: 'none',
-                      cursor: 'pointer',
-                      aspectRatio: '5 / 7',
-                    }}
-                  >
-                    <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                  </button>
-                ))}
-              </div>
+          <label className="field portrait-accent">
+            <span className="label">Menu accent color</span>
+            <input
+              type="color"
+              className="input"
+              style={{ height: 42, padding: 3 }}
+              value={identity.accent}
+              onChange={(e) => update((d) => { d.identity.accent = e.target.value })}
+            />
+          </label>
+          <div className="field portrait-gallery">
+            <span className="label">Gallery</span>
+            <div className="gallery-grid">
+              {PORTRAIT_LIBRARY.map((src) => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => {
+                    play('toggle')
+                    update((d) => { d.identity.portrait = src })
+                  }}
+                  style={{
+                    padding: 0,
+                    border: identity.portrait === src ? '3px solid var(--gold)' : '2px solid var(--stone-3)',
+                    background: 'none',
+                    cursor: 'pointer',
+                    aspectRatio: '5 / 7',
+                  }}
+                >
+                  <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                </button>
+              ))}
             </div>
-            <label className="field">
-              <span className="label">Menu accent color</span>
-              <input
-                type="color"
-                className="input"
-                style={{ height: 42, padding: 3 }}
-                value={identity.accent}
-                onChange={(e) => update((d) => { d.identity.accent = e.target.value })}
-              />
-            </label>
           </div>
         </div>
       </Panel>

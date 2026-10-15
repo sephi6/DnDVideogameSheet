@@ -266,6 +266,33 @@
 
 .abilities-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
 
+/* Character pane: exactly two columns, identity wider than the portrait. An
+   auto-fit .g2 opened a third, empty column on wide screens. */
+.character-grid { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: start; }
+.identity-fields { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+
+/* Portrait panel: the picture and the accent picker side by side, the gallery
+   underneath at full width so twenty-one thumbnails wrap into rows instead of
+   one tall column. */
+.portrait-pane {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  grid-template-areas: 'img accent' 'gallery gallery';
+  gap: 14px;
+  align-items: start;
+}
+.portrait-pane > img { grid-area: img; }
+.portrait-accent { grid-area: accent; }
+.portrait-gallery { grid-area: gallery; }
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px; }
+
+/* Journal: each panel fills its grid cell and the text area fills the panel, so
+   a row of panels lines up instead of leaving ragged empty space. */
+.journal-cell { display: flex; }
+.journal-cell > .panel { flex: 1; display: flex; flex-direction: column; }
+.journal-cell .field { flex: 1; }
+.journal-cell .textarea { flex: 1; }
+
 /* global.css gives .panel no padding of its own; it lives here (14px, the
    panel-body padding of section-header.html). */
 .card { padding: 14px; }
@@ -492,14 +519,20 @@
 }
 
 /* ── Coins ──────────────────────────────────────────────────────────────── */
-.coin-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+/* Five fixed columns squeezed "Electrum" into its neighbour; wrap instead. */
+.coin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 8px; }
 
-.coin { text-align: center; }
+.coin { text-align: center; min-width: 0; }
 .coin .cn {
   font-family: var(--font-data);
   font-weight: 600;
-  font-size: var(--t-small);
-  letter-spacing: 0.08em;
+  /* A notch under --t-small with no tracking: "Platinum" has to fit a 64px
+     column in Barlow Condensed without an ellipsis. */
+  font-size: 12px;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-transform: uppercase;
   /* item-slot.html: one colour for every coin label; the letters carry the metal. */
   color: var(--parchment-dim);

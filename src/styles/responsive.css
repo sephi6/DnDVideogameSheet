@@ -220,7 +220,12 @@
 
   /* ── Content grids ─────────────────────────────────────────────────────── */
   .grid { gap: 10px; }
-  .g2, .g3, .g4 { grid-template-columns: minmax(0, 1fr); }
+  .g2, .g3, .character-grid, .identity-fields { grid-template-columns: minmax(0, 1fr); }
+  /* The four headline numbers (Armor Class, Initiative, Speed, Hit Dice) as
+     2×2: one per row spent a whole screen on four numbers. */
+  .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portrait-pane { grid-template-columns: 120px minmax(0, 1fr); }
+  .portrait-pane > img { width: 120px !important; height: 168px !important; }
 
   /* Six ability scores as 3×2: two columns leave the block too tall to take in
      at a glance, which is exactly what it is for. The modifier follows
@@ -332,6 +337,9 @@
 
   .abilities-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .g4 { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+  /* Two 260px columns here would squeeze the identity fields into one each;
+     stacked, the identity panel gets its own two field columns back. */
+  .character-grid { grid-template-columns: minmax(0, 1fr); }
 
   .select-body { gap: 20px; }
   .hero-card { height: min(100%, 440px); }

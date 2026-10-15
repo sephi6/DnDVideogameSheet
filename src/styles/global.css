@@ -208,6 +208,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
   box-shadow: var(--bevel);
 }
 
+/* Panel header (title + actions): wrap rather than push the actions past the
+   frame when the panel is narrow. */
+.panel > header.row { flex-wrap: wrap; gap: 8px; }
+
 /* Tier 3 of section-header.html: a rule and a class-coloured lozenge, no
    ornament. Padding on the panel itself comes from .card (sheet.css). */
 .panel-title {
