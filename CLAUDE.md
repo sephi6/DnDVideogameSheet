@@ -147,9 +147,9 @@ stored**: they are computed at render. Deliberate exception: changing class in
 **Quests — shared, live quest log (section 8 + tracker).** Unlike the sheet, a quest is
 not part of any `Character`: it is its own entity in **three tables** (`quests`,
 `quest_objectives`, `quest_participants`; types in `src/types/quest.ts`, migration
-`0002_quests.sql`). `scope` is `group` (everyone in the roster is a member unless their
-participant row says otherwise) or `personal` (only characters with a `joined` row).
-`tracked` on the participant row says whether that character pins it in the tracker.
+`0002_quests.sql`). `scope` is `group` (every roster character is on it; a participant row only carries
+`tracked`, `joined` is ignored, and the UI offers no Leave) or `personal` (only characters
+with a `joined` row are on it). `tracked` says whether that character pins it in the tracker.
 `src/lib/quests.ts` holds the pure rules (difficulty band vs. character level, membership,
 progress, tab filters) and is covered by `scripts/check-quests.mjs`.
 - **`src/lib/questStorage.ts`** — `QuestStorage` with **one-row operations**
@@ -159,21 +159,25 @@ progress, tab filters) and is covered by `scripts/check-quests.mjs`.
   under a single key and has no live updates; `questStorage` picks like `storage`.
 - **`src/store/quests.ts` (zustand)** — optimistic updates. Writes are **serial per row**
   (a promise chain per row key), so the last click is the last write. Rows with a write
-  queued or in flight, and recently sent payloads, are used to **filter Realtime echoes**
-  of our own writes; a foreign change that lands on a busy row is stashed and applied (or
-  triggers a reload) when it settles. `reset()` bumps an **epoch** so work from the previous
+  queued or in flight, and recently sent payloads (each matches exactly one echo), are used to
+  **filter Realtime echoes** of our own writes; a foreign change that lands on a busy row
+  is stashed, and when the row settles an authoritative reload is scheduled (the stash is
+  never applied directly). A per-key write counter keeps rows written while a reload was
+  running from being overwritten by it. `reset()` bumps an **epoch** so work from the previous
   session cannot touch the new one. Reloads are **coalesced** and authoritative (also run
-  after a Realtime reconnect). Failed rows go into a `failed` set; `retryFailed()`
+  after a Realtime reconnect; `createdAt` is normalized before comparing). Failed rows go into a `failed` set; `retryFailed()`
   rewrites them from current state, **quests before their children** (FK order). Like
   `roster.ts`, `hydrate()` is guarded against double execution. `created_by` defaults to
   `auth.uid()` in SQL and is **never sent by the client**.
 - **UI** — `src/sections/QuestsSection.tsx` (tabs Active / Available / Finished, list +
-  page, `T` toggles tracking of the selected quest) and `src/components/quests/`
+  page, `T` toggles tracking of the selected quest, only on the Active tab, with a quest selected
+  and not while editing) and `src/components/quests/`
   (`QuestList`, `QuestPage`, `QuestEditor`, `QuestTracker`). The editor **writes on Save**:
   no live co-editing of text; objective progress, status, join/leave and tracking are the
-  live, per-row actions. The tracker is a column beside the section on desktop; below
-  1024 px it is a **collapsible sticky card at the bottom of the body**. It is not shown
-  on the Quests section itself. `↑`/`↓` keep moving between sections.
+  live, per-row actions. The tracker is a column beside the section when the viewport is at least
+  1024 px wide and more than 500 px tall; otherwise it is a **collapsible sticky card at the
+  bottom of the body**. It is not shown on the Quests section itself, and only while
+  something is tracked. `↑`/`↓` keep moving between sections.
 - Demo data: `demoQuests(roster)` in `defaults.ts` (deterministic ids), also emitted into
   `seed.sql`.
 
