@@ -9,6 +9,7 @@ import type {
   SkillKey,
   SpellEntry,
 } from '@/types/character'
+import type { QuestSnapshot } from '@/types/quest'
 import { SCHEMA_VERSION } from '@/lib/migrate'
 import { CLASSES, SKILLS, findClass, slotsForClass } from './rules'
 
@@ -767,4 +768,64 @@ export function demoRoster(): Character[] {
       },
     }),
   ]
+}
+
+/**
+ * Example quests over the example party. Characters are found by class, so it
+ * works whatever ids the roster carries; quest and objective ids are fixed so
+ * generate-seed.mjs stays stable. A class missing from the roster just leaves
+ * that quest without that member.
+ */
+export function demoQuests(roster: Character[]): QuestSnapshot {
+  const byClass = (name: string) => roster.find((c) => c.identity.className === name)?.id
+  const mage = byClass('Mage')
+  const shaman = byClass('Shaman')
+  const q = (n: number) => `b1000000-0000-4000-8000-00000000000${n}`
+  const o = (n: number) => `b2000000-0000-4000-8000-0000000000${String(n).padStart(2, '0')}`
+  const coins = (gp: number) => ({ pp: 0, gp, ep: 0, sp: 0, cp: 0 })
+  const at = (day: number) => `2026-09-0${day}T18:00:00.000Z`
+
+  const quests: QuestSnapshot['quests'] = [
+    { id: q(1), scope: 'group', status: 'active', title: 'Fever on the Greenwater',
+      description: 'A fever is spreading through the Greenwater villages and healing magic will not touch it. Sister Odila believes the river is poisoned upstream, past the abandoned mill. She needs samples from the riverbed and someone unafraid to find out who is behind it.',
+      giver: 'Sister Odila', location: 'Greenwater villages', recommendedLevel: 3,
+      rewardCoins: coins(50), rewardXp: 300, rewardItems: ['Potion of Greater Healing'], createdAt: at(1) },
+    { id: q(2), scope: 'group', status: 'active', title: 'Escort to Mistport',
+      description: 'Three supply wagons must reach Mistport before the autumn storms close the coast road. Bandits have been seen at the Hollow Bridge.',
+      giver: 'Quartermaster Hale', location: 'The coast road', recommendedLevel: 5,
+      rewardCoins: coins(120), rewardXp: 450, rewardItems: [], createdAt: at(2) },
+    { id: q(3), scope: 'personal', status: 'active', title: "Aldren's Lost Grimoire",
+      description: 'Aldren the Grey vanished twenty years ago and his tower is still sealed. Master Corwen swears the grimoire is inside — torn into loose pages that the ravens carried across the valley.',
+      giver: 'Master Corwen', location: "Aldren's Tower", recommendedLevel: 4,
+      rewardCoins: coins(25), rewardXp: 450, rewardItems: ['Ring of Protection'], createdAt: at(3) },
+    { id: q(4), scope: 'personal', status: 'active', title: 'A Letter for Brightwater',
+      description: 'A sealed letter waits at the Greyford post house, addressed in a hand Isolde has not seen since she left home.',
+      giver: 'Postmaster Wynn', location: 'Greyford', recommendedLevel: 1,
+      rewardCoins: coins(0), rewardXp: 50, rewardItems: [], createdAt: at(4) },
+    { id: q(5), scope: 'group', status: 'completed', title: 'Wolves at the Mill',
+      description: 'A pack of wolves had taken over the old mill and was raiding the sheepfolds.',
+      giver: 'Miller Tobs', location: 'Old mill', recommendedLevel: 2,
+      rewardCoins: coins(30), rewardXp: 200, rewardItems: [], createdAt: at(5) },
+  ]
+
+  const objectives: QuestSnapshot['objectives'] = [
+    { id: o(1), questId: q(1), position: 0, text: 'Speak to the healer at Greyford', target: 1, progress: 1 },
+    { id: o(2), questId: q(1), position: 1, text: 'Water samples from the riverbed', target: 3, progress: 2 },
+    { id: o(3), questId: q(1), position: 2, text: 'Find the source of the fever', target: 1, progress: 0 },
+    { id: o(4), questId: q(2), position: 0, text: 'Cross the Hollow Bridge', target: 1, progress: 0 },
+    { id: o(5), questId: q(2), position: 1, text: 'Wagons delivered to Mistport', target: 3, progress: 0 },
+    { id: o(6), questId: q(3), position: 0, text: 'Find the key to the tower', target: 1, progress: 0 },
+    { id: o(7), questId: q(3), position: 1, text: 'Grimoire pages', target: 7, progress: 3 },
+    { id: o(8), questId: q(4), position: 0, text: 'Collect the letter at Greyford', target: 1, progress: 0 },
+    { id: o(9), questId: q(5), position: 0, text: 'Wolves driven off', target: 6, progress: 6 },
+  ]
+
+  const participants: QuestSnapshot['participants'] = []
+  if (mage) {
+    participants.push({ questId: q(3), characterId: mage, joined: true, tracked: true })
+    participants.push({ questId: q(4), characterId: mage, joined: true, tracked: false })
+  }
+  if (shaman) participants.push({ questId: q(3), characterId: shaman, joined: true, tracked: true })
+
+  return { quests, objectives, participants }
 }
