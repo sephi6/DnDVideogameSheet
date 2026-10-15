@@ -71,7 +71,7 @@ export default function App() {
       {screen === 'title' && <TitleScreen onStart={() => run('Arcana', () => setScreen('select'))} />}
 
       {screen !== 'title' && needsLogin && (
-        authStatus === 'loading' ? <div className="center" style={{ height: '100%' }}>
+        authStatus === 'loading' ? <div className="center" style={{ height: '100%', position: 'relative', zIndex: 1 }}>
           <span className="label">Checking session…</span>
         </div> : <LoginScreen />
       )}

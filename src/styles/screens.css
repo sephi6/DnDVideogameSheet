@@ -18,9 +18,7 @@
   z-index: 1;
   height: 100%;
   color: var(--parchment);
-  background-color: var(--stone);
-  background-image: var(--grain-stone);
-  background-blend-mode: soft-light;
+  /* No ground of its own: .bg-fx (global.css) is the stone underneath. */
 }
 
 .title-screen::before,
@@ -373,7 +371,9 @@
 }
 .roster-card.new-card::before,
 .roster-card.new-card::after { content: none; }
-.roster-card.new-card:hover { color: var(--gold-hi); border-color: var(--gold); }
+@media (hover: hover) {
+  .roster-card.new-card:hover { color: var(--gold-hi); border-color: var(--gold); }
+}
 
 /* Keyboard hint bar: controls.html */
 .hint-bar {

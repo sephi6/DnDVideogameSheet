@@ -190,13 +190,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* ── Shared typography ──────────────────────────────────────────────────── */
-.display {
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  line-height: 0.92;
-  letter-spacing: -0.01em;
-}
-
 /* .label lives with the field rules under UI primitives. */
 
 /* ── UI primitives ──────────────────────────────────────────────────────────
@@ -246,7 +239,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .label {
   display: block;
   font-family: var(--font-data);
-  font-weight: 500;
+  font-weight: 600;
   font-size: var(--t-label);
   letter-spacing: 0.04em;
   color: var(--parchment-dim);

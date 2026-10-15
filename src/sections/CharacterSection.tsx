@@ -18,7 +18,6 @@ import {
   SPECIES,
   findClass,
   formatModifier,
-  proficiencyBonus,
   slotsForClass,
 } from '@/data/rules'
 import type { ClassInfo } from '@/data/rules'
@@ -171,12 +170,6 @@ export function CharacterSection({ character, update }: SectionProps) {
           <SelectField label="Alignment" value={identity.alignment} options={ALIGNMENTS} onChange={(v) => update((d) => { d.identity.alignment = v })} />
           <NumberField label="Level" value={identity.level} min={1} max={20} onChange={changeLevel} />
           <NumberField label="Experience Points" value={identity.xp} min={0} max={999999} onChange={(v) => update((d) => { d.identity.xp = v })} />
-          <div className="field">
-            <span className="label">Proficiency Bonus</span>
-            <div className="input num" style={{ color: 'var(--gold)' }}>
-              +{proficiencyBonus(identity.level)}
-            </div>
-          </div>
         </div>
         {resolved?.provisional && (
           <p className="note-provisional">
@@ -282,7 +275,7 @@ export function CharacterSection({ character, update }: SectionProps) {
             <motion.div
               key={ability.key}
               className="ability-block"
-              initial={{ opacity: 0, y: 24, rotate: -2 }}
+              initial={{ opacity: 0, y: 24, rotate: 0 }}
               animate={{ opacity: 1, y: 0, rotate: 0 }}
               transition={{ delay: i * 0.03, type: 'spring', stiffness: 320, damping: 26 }}
             >

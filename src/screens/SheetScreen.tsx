@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Button, HintBar, OverflowMenu } from '@/components/ui/controls'
 import { isMuted, play, setMuted } from '@/lib/sfx'
+import { DEFAULT_PORTRAIT } from '@/data/defaults'
 import { isTyping } from '@/lib/keys'
 import { useHorizontalSwipe, useIsPhone } from '@/lib/responsive'
 import { CharacterSection } from '@/sections/CharacterSection'
@@ -137,7 +138,7 @@ export function SheetScreen({ character, update, onExit, sync, syncError, onRetr
   return (
     <div className="sheet" style={{ ['--accent' as string]: character.identity.accent }}>
       <div className="sheet-ident">
-        <img className="portrait" src={character.identity.portrait ?? 'assets/portraits/default.svg'} alt="" />
+        <img className="portrait" src={character.identity.portrait ?? DEFAULT_PORTRAIT} alt="" />
         <div className="who">
           <div className="n">{character.identity.name}</div>
           <div className="c">

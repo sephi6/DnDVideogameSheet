@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Button, HintBar, OverflowMenu } from '@/components/ui/controls'
 import { ABILITIES, formatModifier } from '@/data/rules'
 import { abilityModifier } from '@/data/rules'
+import { DEFAULT_PORTRAIT } from '@/data/defaults'
 import { isTyping } from '@/lib/keys'
 import { useIsPhone } from '@/lib/responsive'
 import { play } from '@/lib/sfx'
@@ -178,7 +179,7 @@ export function CharacterSelect({
                 whileHover={{ scale: 1.02 }}
                 style={{ padding: 0, cursor: 'pointer' }}
               >
-                <img src={current.identity.portrait ?? 'assets/portraits/default.svg'} alt="" />
+                <img src={current.identity.portrait ?? DEFAULT_PORTRAIT} alt="" />
                 <span className="hero-plate">
                   <span className="hero-name">{current.identity.name}</span>
                   <span className="hero-sub">
@@ -258,7 +259,7 @@ export function CharacterSelect({
               transition={{ type: 'spring', stiffness: 380, damping: 26 }}
               style={{ ['--accent' as string]: character.identity.accent }}
             >
-              <img src={character.identity.portrait ?? 'assets/portraits/default.svg'} alt="" />
+              <img src={character.identity.portrait ?? DEFAULT_PORTRAIT} alt="" />
               <span className="rc-name">{character.identity.name}</span>
             </motion.button>
           ))}
