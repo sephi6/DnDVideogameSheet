@@ -119,6 +119,7 @@ function write(key: string, set: Set_, get: Get_) {
     })
     .finally(() => {
       if (mine !== epoch) return
+      touch(key) // a reload that began before this write settled must not overwrite the row
       const left = (inflight.get(key) ?? 1) - 1
       if (left <= 0) inflight.delete(key)
       else inflight.set(key, left)
@@ -143,7 +144,12 @@ async function writeOrdered(keys: string[], set: Set_, get: Get_) {
   for (const k of rest) {
     holding.delete(k)
     const [kind, a] = k.split(':')
-    if (kind === 'p' && !get().quests.some((q) => q.id === a)) continue // the quest was deleted meanwhile
+    if (kind === 'p' && !get().quests.some((q) => q.id === a)) {
+      // the quest was deleted meanwhile: nothing to write, nothing to retry
+      failed.delete(k)
+      if (failed.size === 0 && inflight.size === 0) get().sync === 'saving' && set({ sync: 'saved', syncError: null })
+      continue
+    }
     const questId = kind === 'p' ? a : get().objectives.find((o) => o.id === a)?.questId
     if (questId && failed.has(qKey(questId))) {
       failed.add(k) // its quest is not in the database yet: stays queued for Retry
@@ -213,7 +219,14 @@ function applyNow(c: QuestChange, set: Set_) {
 /** A Realtime change: each payload we sent has one echo, which is dropped; anything else is someone else's. */
 function applyChange(c: QuestChange, set: Set_, get: Get_) {
   const key = changeKey(c)
-  if (c.table === 'quests' && c.type === 'upsert') c = { ...c, row: mergeQuest(get().quests, c.row) }
+  if (c.table === 'quests' && c.type === 'upsert') {
+    const row = c.row
+    if (!get().quests.some((q) => q.id === row.id) && Object.values(row).some((v) => v === undefined)) {
+      scheduleReload(set) // a partial row for a quest we do not have: ask for the whole thing
+      return
+    }
+    c = { ...c, row: mergeQuest(get().quests, row) }
+  }
   const json = c.type === 'upsert' ? stable(c.row) : 'null'
   const now = Date.now()
   const echo = (sent.get(key) ?? []).find((e) => now - e.at < SENT_TTL_MS && !e.echoed && e.json === json)
@@ -233,13 +246,18 @@ function replaceFromSnapshot(current: QuestSnapshot, incoming: QuestSnapshot, si
   const busy = (k: string) =>
     (inflight.get(k) ?? 0) > 0 || failed.has(k) || holding.has(k) || (seqs.get(k) ?? 0) !== (since.get(k) ?? 0)
   for (const k of [...pending.keys()]) if (!busy(k)) pending.delete(k)
+  const quests = [...incoming.quests.filter((x) => !busy(qKey(x.id))), ...current.quests.filter((x) => busy(qKey(x.id)))]
+  const alive = (questId: string) => quests.some((q) => q.id === questId) // no orphans of a quest deleted meanwhile
   return {
-    quests: [...incoming.quests.filter((x) => !busy(qKey(x.id))), ...current.quests.filter((x) => busy(qKey(x.id)))],
-    objectives: [...incoming.objectives.filter((x) => !busy(oKey(x.id))), ...current.objectives.filter((x) => busy(oKey(x.id)))],
+    quests,
+    objectives: [
+      ...incoming.objectives.filter((x) => !busy(oKey(x.id))),
+      ...current.objectives.filter((x) => busy(oKey(x.id))),
+    ].filter((x) => alive(x.questId)),
     participants: [
       ...incoming.participants.filter((x) => !busy(pKey(x.questId, x.characterId))),
       ...current.participants.filter((x) => busy(pKey(x.questId, x.characterId))),
-    ],
+    ].filter((x) => alive(x.questId)),
   }
 }
 
@@ -368,6 +386,9 @@ export const useQuests = create<QuestsState>((set, get) => ({
   },
 
   deleteQuest(questId) {
+    // Rows of this quest that failed or wait to be written no longer matter.
+    for (const k of [...failed, ...holding]) if (k.startsWith(`p:${questId}:`)) { failed.delete(k); holding.delete(k) }
+    for (const o of get().objectives) if (o.questId === questId) failed.delete(oKey(o.id))
     set((s) => ({
       quests: s.quests.filter((q) => q.id !== questId),
       objectives: s.objectives.filter((o) => o.questId !== questId),
