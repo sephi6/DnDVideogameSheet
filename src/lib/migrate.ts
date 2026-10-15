@@ -3,8 +3,8 @@
  *
  * Renaming the domain values (classes, species, portrait files…) and moving to
  * imperial units left the already stored sheets pointing at things that no
- * longer exist — most visibly `assets/portraits/mago.svg`, whose file is now
- * `wizard.svg`. This module rewrites those sheets on load.
+ * longer exist — most visibly `assets/portraits/mago.svg`, whose current file
+ * is `wizard.webp`. This module rewrites those sheets on load.
  *
  * Only the **enumerated** fields are touched, the ones the interface itself
  * fills from a fixed list. Free text written by the player (attack and item
@@ -16,8 +16,9 @@ import { CLASSES as CLASS_TABLE } from '@/data/rules'
 /**
  * Sheets without `schemaVersion` (v1) are Spanish and metric. v2 is English and
  * imperial. v3 re-tuned the default class accents to the Azeroth palette.
+ * v4 moves generated class portraits to their compressed WebP files.
  */
-export const SCHEMA_VERSION = 3
+export const SCHEMA_VERSION = 4
 
 const CLASSES: Record<string, string> = {
   'Bárbaro': 'Barbarian', 'Bardo': 'Bard', 'Brujo': 'Warlock', 'Clérigo': 'Cleric',
@@ -93,6 +94,12 @@ const PORTRAIT_SLUGS: Record<string, string> = {
   mago: 'wizard', monje: 'monk', picaro: 'rogue',
 }
 
+const GENERATED_PORTRAIT_SLUGS = new Set([
+  'barbarian', 'bard', 'cleric', 'druid', 'fighter', 'monk', 'paladin', 'ranger',
+  'rogue', 'sorcerer', 'warlock', 'wizard', 'death-knight', 'demon-hunter',
+  'evoker', 'hunter', 'mage', 'priest', 'shaman', 'warrior',
+])
+
 const map = (table: Record<string, string>, value: string): string => table[value] ?? value
 
 /**
@@ -104,7 +111,17 @@ function migratePortrait(portrait: string | null): string | null {
   const match = /^assets\/portraits\/([a-z]+)\.svg$/.exec(portrait)
   if (!match) return portrait
   const slug = PORTRAIT_SLUGS[match[1]]
-  return slug ? `assets/portraits/${slug}.svg` : portrait
+  return slug ? `assets/portraits/${slug}.webp` : portrait
+}
+
+/** v3 → v4: standard generated portraits changed from PNG/SVG to WebP. */
+function migrateGeneratedPortrait(c: Character): void {
+  const portrait = c.identity.portrait
+  if (!portrait) return
+  const match = /^assets\/portraits\/([a-z-]+)\.(?:png|svg)$/.exec(portrait)
+  if (match && GENERATED_PORTRAIT_SLUGS.has(match[1])) {
+    c.identity.portrait = `assets/portraits/${match[1]}.webp`
+  }
 }
 
 /** Metres to feet, on the 5-foot grid: 9 m → 30 ft., 12 m → 40 ft. */
@@ -141,7 +158,8 @@ function migrateAccent(character: Character): void {
 /**
  * Brings one sheet up to the current schema, one version step at a time:
  * v1 → v2 translates the Spanish values and converts metric to imperial;
- * v2 → v3 re-tunes a default accent. A sheet already stamped with
+ * v2 → v3 re-tunes a default accent; v3 → v4 points generated portraits at
+ * their compressed WebP files. A sheet already stamped with
  * `SCHEMA_VERSION` is returned untouched, and the v1 step only runs on v1
  * sheets, so a speed that has already been converted is never converted twice.
  */
@@ -154,6 +172,7 @@ export function migrateCharacter(character: Character): Character {
   if (from < 2) migrateSpanishMetric(c)
   // After the Spanish step, so a v1 'Mago' is already 'Wizard' when compared.
   if (from < 3) migrateAccent(c)
+  if (from < 4) migrateGeneratedPortrait(c)
 
   c.schemaVersion = SCHEMA_VERSION
   return c

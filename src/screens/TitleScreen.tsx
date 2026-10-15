@@ -31,17 +31,7 @@ export function TitleScreen({ onStart }: { onStart: () => void }) {
         >
           Arcana
         </motion.div>
-        <div className="title-divider">
-          <svg className="orn" viewBox="0 0 240 16" aria-hidden="true">
-            <g strokeWidth="1.4" strokeLinecap="round" vectorEffect="non-scaling-stroke">
-              <path d="M0 8 H98" />
-              <path d="M142 8 H240" />
-              <path d="M120 1.5 L126.5 8 L120 14.5 L113.5 8 Z" />
-              <path d="M104 5.5 L106.5 8 L104 10.5 L101.5 8 Z" />
-              <path d="M136 5.5 L138.5 8 L136 10.5 L133.5 8 Z" />
-            </g>
-          </svg>
-        </div>
+        <div className="title-divider" aria-hidden="true" />
         <motion.div
           className="title-sub"
           initial={{ opacity: 0, x: -40 }}
