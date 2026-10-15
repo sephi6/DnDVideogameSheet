@@ -16,7 +16,7 @@ create table if not exists public.quests (
   reward_coins      jsonb not null default '{"pp":0,"gp":0,"ep":0,"sp":0,"cp":0}',
   reward_xp         int  not null default 0 check (reward_xp >= 0),
   reward_items      text[] not null default '{}',
-  created_by        uuid references auth.users (id) on delete set null,
+  created_by        uuid default auth.uid() references auth.users (id) on delete set null,
   created_at        timestamptz not null default now(),
   updated_at        timestamptz not null default now()
 );
