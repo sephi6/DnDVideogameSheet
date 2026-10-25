@@ -57,14 +57,17 @@ end $$;
 
 -- ── Storage: codex images ──────────────────────────────────────────────────
 -- Public read (object names are random UUIDs), so images load with a plain URL
--- and cache well. Writes need a signed-in user.
+-- and cache well. Writes need a signed-in user; Storage remove() and update() also need a select policy.
 insert into storage.buckets (id, name, public)
 values ('codex', 'codex', true)
 on conflict (id) do nothing;
 
+drop policy if exists "party reads codex images" on storage.objects;
 drop policy if exists "party uploads codex images" on storage.objects;
 drop policy if exists "party replaces codex images" on storage.objects;
 drop policy if exists "party deletes codex images" on storage.objects;
+create policy "party reads codex images" on storage.objects
+  for select to authenticated using (bucket_id = 'codex');
 create policy "party uploads codex images" on storage.objects
   for insert to authenticated with check (bucket_id = 'codex');
 create policy "party replaces codex images" on storage.objects
