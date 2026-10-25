@@ -9,6 +9,8 @@ plus a handful of gold filigree pieces. This guide holds every prompt needed.
 - **Code** (the filigree SVGs) goes to the Codex chat (section 6).
 - No scripts and no API keys: raster art is non-reproducible by nature and is committed
   as an artifact.
+- **Codex art** (NPCs, places, factions, creatures, lore for section 7) has its own
+  brief for Codex: `docs/CODEX_ASSETS.md`.
 
 ---
 
