@@ -42,6 +42,8 @@ const seqs = new Map<string, number>()
 const touch = (id: string) => seqs.set(id, (seqs.get(id) ?? 0) + 1)
 /** Entries created on this screen: their Realtime INSERT echo is not a discovery. */
 const mine = new Set<string>()
+/** Image of a deleted entry, discarded from Storage only once its row delete has landed. */
+const pendingImages = new Map<string, string>()
 /** Bumped by reset(): work started in an older session must not touch the new one. */
 let epoch = 0
 let unsubscribe: (() => void) | null = null
@@ -92,6 +94,12 @@ function write(id: string, set: Set_, get: Get_) {
     .then(() => {
       if (at !== epoch) return
       failed.delete(id)
+      const image = pendingImages.get(id)
+      if (image) {
+        pendingImages.delete(id)
+        // Re-saved meanwhile (by us or another player): the row lives on and still needs its image.
+        if (!get().entries.some((e) => e.id === id)) discardImages([image])
+      }
       settled(set)
     })
     .catch((err) => {
@@ -213,7 +221,9 @@ export const useCodex = create<CodexState>((set, get) => ({
         )
         await load(set, get)
         if (at !== epoch) return
+        const recovered = hydrateFailed
         hydrateFailed = false
+        if (recovered) settled(set) // a retried first load clears the old error
       } catch (err) {
         if (at !== epoch) return
         hydrateFailed = true
@@ -237,6 +247,7 @@ export const useCodex = create<CodexState>((set, get) => ({
     stashed.clear()
     seqs.clear()
     mine.clear()
+    pendingImages.clear()
     wasDown = false
     hydrateFailed = false
     loading = 0
@@ -267,8 +278,8 @@ export const useCodex = create<CodexState>((set, get) => ({
   deleteEntry(id) {
     const gone = get().entries.find((e) => e.id === id)
     set((s) => ({ entries: s.entries.filter((e) => e.id !== id), fresh: s.fresh.filter((f) => f !== id) }))
+    if (gone?.image) pendingImages.set(id, gone.image)
     write(id, set, get)
-    if (gone?.image) discardImages([gone.image])
   },
 
   markSeen(id) {
@@ -281,7 +292,7 @@ export const useCodex = create<CodexState>((set, get) => ({
   async seedDemo(roster) {
     const at = epoch
     await get().hydrate() // so "empty" is judged after the load
-    if (at !== epoch || get().entries.length > 0) return
+    if (at !== epoch || hydrateFailed || get().entries.length > 0) return
     const demo = demoCodex(roster)
     for (const e of demo) mine.add(e.id)
     set((s) => ({ entries: [...s.entries, ...demo], loaded: true }))
