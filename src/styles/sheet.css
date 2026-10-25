@@ -182,7 +182,11 @@
   gap: 6px;
   min-height: 0;
   overflow-y: auto;
-  padding: 4px 0 4px 2px;
+  /* The active row juts 14px to the right (SheetScreen). overflow-y: auto clips
+     the x axis too, so the rail reaches into the column gap to hold it instead
+     of cutting it off behind a horizontal scrollbar. */
+  padding: 4px 14px 4px 2px;
+  margin-right: -14px;
 }
 
 .nav-item {

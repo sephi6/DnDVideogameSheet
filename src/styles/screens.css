@@ -183,7 +183,10 @@
   min-width: 0;
 }
 
-.screen-head > :first-child { min-width: 0; }
+/* The eyebrow and the cartouche share this column. Without a basis it shrink-wraps
+   to the eyebrow text, the fixed-ratio cartouche follows it down to ~150px and
+   the title spills over its filigree. */
+.screen-head > :first-child { min-width: 0; flex: 0 1 340px; }
 
 .select-body {
   display: grid;

@@ -43,19 +43,40 @@ let hydration: Promise<void> | null = null
 type Set_ = (partial: Partial<RosterState>) => void
 type Get_ = () => RosterState
 
-async function writeNow(id: string, set: Set_, get: Get_) {
-  const character = get().characters.find((c) => c.id === id)
-  if (!character) return
+/**
+ * One write chain per sheet: a save waits for the previous one of the same
+ * sheet, so an older snapshot can never land after a newer one.
+ */
+const chains = new Map<string, Promise<void>>()
+/** Writes queued or in flight, across every sheet. */
+let pending = 0
+
+function writeNow(id: string, set: Set_, get: Get_): Promise<void> {
+  pending++
   set({ sync: 'saving', syncError: null })
-  try {
-    await storage.save(character)
-    failed.delete(id)
-    set(failed.size === 0 ? { sync: 'saved', syncError: null } : { sync: 'error' })
-  } catch (err) {
-    failed.add(id)
-    console.error('[arcana] failed to save the sheet', err)
-    set({ sync: 'error', syncError: readableError(err) })
+  const run = async () => {
+    // Read the sheet when its turn comes, not when it was queued.
+    const character = get().characters.find((c) => c.id === id)
+    try {
+      if (character) await storage.save(character)
+      failed.delete(id)
+    } catch (err) {
+      failed.add(id)
+      console.error('[arcana] failed to save the sheet', err)
+      set({ sync: 'error', syncError: readableError(err) })
+    } finally {
+      pending--
+    }
+    if (pending === 0) {
+      set(failed.size === 0 ? { sync: 'saved', syncError: null } : { sync: 'error' })
+    }
   }
+  const next = (chains.get(id) ?? Promise.resolve()).then(run)
+  chains.set(id, next)
+  void next.then(() => {
+    if (chains.get(id) === next) chains.delete(id)
+  })
+  return next
 }
 
 function scheduleSave(id: string, set: Set_, get: Get_) {
