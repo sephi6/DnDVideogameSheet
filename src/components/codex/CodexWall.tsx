@@ -104,6 +104,22 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
     return () => window.removeEventListener('keydown', onKey)
   }, [drawerOpen, ids, selected, onOpen, focusCard])
 
+  // Escape inside the Search or Attitude field only leaves the field (the text
+  // stays); a CAPTURE listener runs before the sheet's Escape, which would
+  // otherwise return to the party. The next Escape, with nothing focused, does.
+  useEffect(() => {
+    if (drawerOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || !isTyping(e.target)) return
+      if (!(e.target instanceof HTMLElement) || !anchor.current?.contains(e.target)) return
+      e.stopPropagation()
+      e.preventDefault()
+      e.target.blur()
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [drawerOpen])
+
   // The page: a CAPTURE listener runs before the sheet's window listeners.
   // Escape closes the page instead of leaving the sheet; section keys are held
   // back unless typed into a field; ← → (A D) page through the wall.

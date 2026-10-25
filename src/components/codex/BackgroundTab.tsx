@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { Panel, TextAreaField } from '@/components/ui/controls'
 import type { SectionProps } from '@/sections/types'
 import type { Journal } from '@/types/character'
@@ -15,15 +15,16 @@ const FIELDS: { key: keyof Journal; label: string; rows: number; placeholder: st
 
 /** The sheet's private roleplay fields (character.journal). Not shared with the party. */
 export function BackgroundTab({ character, update }: SectionProps) {
+  const reduce = useReducedMotion()
   return (
     <div className="grid g2">
       {FIELDS.map((field, i) => (
         <motion.div
           key={field.key}
           className="journal-cell"
-          initial={{ opacity: 0, y: 20 }}
+          initial={reduce ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.04 }}
+          transition={{ delay: reduce ? 0 : i * 0.04 }}
           // Session notes close the grid at full width, so it never sits alone
           // in a row beside empty columns.
           style={{ gridColumn: field.key === 'notes' ? '1 / -1' : undefined }}
