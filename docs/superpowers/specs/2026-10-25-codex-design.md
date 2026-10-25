@@ -297,6 +297,81 @@ on moving the selection; controls play their own.
   entrance animation on the cards beyond the existing section transition.
 - The quest tracker column / card keeps working beside the Journal as today.
 
+### 7.6 Visual direction — a vivid, modern game menu
+
+Built with the frontend-design skill on top of the Azeroth tokens (no new hex values; any
+new colour is a `color-mix` of existing tokens). The codex should feel like opening a
+collection journal in a modern game, not a form-filled database. Boldness is spent in
+**one place — the cards** — and everything around them stays quiet.
+
+- **The card is the hero.** Three-tone gold band frame, the art bleeding to the frame,
+  name plate set in Cinzel over a dark foot fade, attitude gem with a soft glow.
+- **Selection is an event**: the selected / focused card rises, gains the accent ring and
+  a single **gold glint** sweeps across its frame once (a masked gradient, 450ms). The
+  same treatment for mouse hover (pointer devices only) and keyboard focus, so both
+  input methods get the same feedback.
+- **The page unfurls**: the parchment page slides in with a short ease-out and the image
+  settles from 1.04 to 1 scale; closing reverses it faster. One orchestrated moment, no
+  staggered card entrances.
+- **New discoveries**: an entry that arrives live from another player (Realtime insert)
+  plays the glint once and wears a small "New" gem until this viewer opens it (seen ids
+  kept per viewer in `localStorage`, try/catch).
+- **Settled entries** (Deceased, Defeated, Solved) recede: grayscale art, a ribbon with
+  the word, sorted last.
+- Every motion is disabled under `prefers-reduced-motion` (state changes still show
+  through ring, colour and the ribbon words).
+- Before each UI task the frontend-design skill is loaded, and the result is
+  screenshot-reviewed at desktop, iPad and phone sizes (section 10).
+
+### 7.7 Input methods — keyboard, mouse and touch
+
+Every action is reachable with each input method alone. No gamepad support (out of scope).
+
+- **Mouse / touch**: everything is a real `<button>` / field; touch targets ≥ `--touch`
+  (44px); hover effects only under `(hover: hover)`.
+- **Keyboard**: the bindings of 7.4. Cards are buttons in DOM order with a **roving
+  tabindex** (the selected card is the tab stop; arrows move focus *and* selection
+  together), so Tab reaches tabs → toolbar → wall → page in a sensible order. Focus is
+  always visible (`:focus-visible` gold-hi ring plus the card's selection treatment).
+  Opening the page moves focus to its heading; closing it returns focus to the card.
+  The editor traps focus while open (Tab cycles inside it).
+
+### 7.8 Forms and text — legible on every device
+
+- Inputs, selects and textareas render at **≥ 16px** on every breakpoint (iOS zooms
+  into smaller fields), with labels always visible above the field (no placeholder-only
+  labels) and parchment-on-stone contrast ≥ 4.5:1.
+- **Editor layout**: two columns (image + fields) from 1024px wide; one column below,
+  image first. The **Save / Cancel / Delete** bar is sticky at the bottom of the editor so
+  it stays reachable with the on-screen keyboard open (`dvh`-based heights, no `vh`).
+- Notes textarea: min 6 rows, grows with its content (`field-sizing: content` where
+  supported, otherwise `resize: vertical`).
+- Damage-type and status toggles are `Chip`s at ≥ 44px tall on touch.
+- The related-entry search lists results as full-width rows with thumbnail and kind
+  (not a dropdown), navigable with the arrow keys, Enter to add.
+- Reading the page: body text 17px EB Garamond, line length ≤ 70ch, line-height 1.6.
+
+### 7.9 Art pipeline — Codex step (like the character portraits)
+
+The same workflow used for the class portraits (`docs/ASSET_PROMPTS.md` +
+`tmp/process_generated_assets.py`), as a self-contained brief that can be handed to
+Codex:
+
+- **`docs/CODEX_ASSETS.md`** — the brief for Codex: the style bible of `ASSET_PROMPTS.md`
+  section 1 adapted per kind (NPC / faction / creature / lore: 5:7 portrait, bottom third
+  dark for the name plate; place: 16:9 landscape, horizon in the upper half), one
+  ready-to-paste prompt per demo entry and per kind's generic placeholder, the file
+  names to produce in `tmp/imagegen_raw/codex/<slug>.png`, and the exact commands to run
+  afterwards.
+- **`scripts/process-codex-assets.py`** — generalises the existing processing script:
+  centre-crops each raw image to its kind's ratio, resizes (1000×1400 or 1600×900),
+  writes WebP under 300 KB to `public/assets/codex/<slug>.webp`.
+- After processing, the brief tells Codex to add one line per image to
+  `src/data/codexGallery.ts` and to set the matching demo entries' `image` in
+  `demoCodex()`, then run `node scripts/generate-seed.mjs` and `npm run build`.
+- Implementation ships with the SVG emblems only; the generated art is a separate,
+  optional step the partner runs in Codex when ready.
+
 ## 8. Demo data
 
 `demoCodex(roster)` in `src/data/defaults.ts`, deterministic ids, about ten entries
@@ -327,13 +402,21 @@ emblems), `addedBy` set to demo characters. Emitted into `supabase/seed.sql` by
 - `node scripts/generate-seed.mjs` produces a stable `seed.sql` (run twice, no diff).
 - Manual, in the browser, local mode: create / edit / delete one entry of each kind,
   upload an image, pick one from the gallery, link two entries and follow the link both
-  ways, keyboard paths of 7.4, phone width.
+  ways.
+- **Viewport matrix** (screenshot-reviewed with the browser resized to each size): desktop
+  1440×900 · **iPad portrait 820×1180 and 768×1024 · iPad landscape 1180×820 and
+  1366×1024** · phone 390×844. At each one: wall, open page, editor with the notes field
+  focused. Pass criteria: no horizontal scroll, every control ≥ 44px on touch sizes,
+  fields ≥ 16px, the Save bar visible, the quest tracker not covering the page.
+- **Input matrix**: the full create → link → navigate → edit → delete path done once
+  with the mouse only and once with the keyboard only (focus always visible, never lost
+  behind the scrim).
 - Manual, cloud mode with two browser sessions: an entry created in one appears in the
   other with its image; Storage object deleted when the image is replaced.
 
 ## 11. Out of scope
 
-Private entries or per-player notes on an entry · a session diary · a map · image
+Gamepad support · private entries or per-player notes on an entry · a session diary · a map · image
 cropping / focal-point UI · roles and permissions · importing from other tools ·
 moving sheet portraits to Storage (still a README next step).
 
@@ -348,6 +431,7 @@ New:
 - `src/styles/codex.css` (imported in `main.tsx`)
 - `public/assets/codex/default-*.svg` (generated)
 - `scripts/check-codex.mjs`
+- `docs/CODEX_ASSETS.md`, `scripts/process-codex-assets.py`
 
 Changed:
 - `src/sections/JournalSection.tsx` (codex shell), `src/App.tsx` (hydrate / reset),
