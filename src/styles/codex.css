@@ -123,7 +123,7 @@
 
 /* ── Drawer: scrim and the parchment page, over the sheet body ── */
 .cx-scrim { position: fixed; z-index: 30; background: color-mix(in srgb, var(--seat) 58%, transparent); }
-.cx-drawer { position: fixed; z-index: 31; container: cx-drawer / inline-size; overflow-y: auto; scrollbar-gutter: stable; overscroll-behavior: contain; scroll-padding-bottom: 96px; }
+.cx-drawer { position: fixed; z-index: 31; container: cx-drawer / inline-size; overflow-y: auto; overscroll-behavior: contain; scroll-padding-bottom: 96px; }
 .cx-drawer .quest-page { min-height: 100%; }
 /* The global gold-hi focus ring vanishes on parchment: inside the page it is seat-dark. */
 .cx-drawer :focus-visible { outline-color: var(--seat); }
