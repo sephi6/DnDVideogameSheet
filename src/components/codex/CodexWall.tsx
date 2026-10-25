@@ -101,9 +101,16 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
   }
   const remove = () => {
     const id = editing?.entry.id
+    // The deleted card takes its focus with it: hand the selection to its neighbour.
+    const after = id ? moveSelection(ids, id, 1) : null
+    const neighbour = after && after !== id ? after : id ? moveSelection(ids, id, -1) : null
     setEditing(null)
     onOpen(null)
     if (id) deleteEntry(id)
+    if (neighbour && neighbour !== id) {
+      setSelectedId(neighbour)
+      focusCard(neighbour)
+    }
   }
 
   // The wall: ← → (A D) move the selection, Enter opens it.

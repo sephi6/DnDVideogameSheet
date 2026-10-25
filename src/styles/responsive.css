@@ -395,3 +395,64 @@
   .title-mark { font-size: clamp(36px, 12vh, 72px); }
   .title-cta { margin-top: 18px; }
 }
+
+/* ── Codex ──────────────────────────────────────────────────────────────── */
+/* Touch layouts: every codex control meets the fingertip minimum. */
+@media (pointer: coarse) {
+  .cx-tab { min-height: var(--touch); }
+  .cx-chip { min-height: var(--touch); }
+  .cx-damage .cx-chips .chip { min-height: var(--touch); padding-inline: 12px; }
+  .cx-chip-remove { width: var(--touch); height: var(--touch); }
+  .cx-page-bar .btn { min-height: var(--touch); }
+}
+
+/* Tablet (iPad portrait, small landscape): the editor goes to one column with the
+   image beside its buttons; the page keeps a narrower image column. */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .cx-editor .cx-editor-grid { grid-template-columns: minmax(0, 1fr); }
+  .cx-image-block { grid-template-columns: minmax(140px, 220px) minmax(0, 1fr); align-items: start; }
+  .cx-editor[data-shape='landscape'] .cx-image-block { grid-template-columns: minmax(0, 1fr); }
+  .cx-page-grid { grid-template-columns: minmax(130px, 200px) minmax(0, 1fr); gap: 18px; }
+}
+
+/* Phone: two cards per row (places one), the page fills the body, the tabs scroll
+   sideways instead of wrapping into three rows. */
+@media (max-width: 599px) {
+  .cx-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -4px; padding: 0 4px 4px; }
+  .cx-tabs::-webkit-scrollbar { display: none; }
+  .cx-tab { flex: 0 0 auto; }
+  .cx-tab-private { margin-left: 0; }
+  .cx-search, .cx-filter { flex: 1 1 100%; max-width: none; }
+  .cx-tools > .btn { width: 100%; justify-content: center; }
+  .cx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 10px; }
+  .cx-wall[data-shape='landscape'] .cx-grid { grid-template-columns: minmax(0, 1fr); }
+  .cx-name { font-size: 14px; }
+  .cx-drawer .quest-page { padding: 18px 16px 16px; }
+  .cx-page-grid, .cx-editor .cx-editor-grid { grid-template-columns: minmax(0, 1fr); }
+  .cx-editor .cx-editor-grid { gap: 16px; }
+  .cx-page-plate { max-width: 260px; margin-inline: auto; width: 100%; }
+  .cx-page[data-shape='landscape'] .cx-page-plate { max-width: none; }
+  .cx-image-block .cx-plate { max-width: 220px; justify-self: center; width: 100%; }
+  .cx-editor[data-shape='landscape'] .cx-image-block .cx-plate { max-width: none; }
+  .cx-editor-bar { margin: 18px -16px -16px; padding-inline: 16px; }
+  .cx-editor-bar .btn.primary { flex: 1 1 auto; }
+}
+
+/* The drawer is 70% of the sheet body, so on a landscape iPad it is far narrower than
+   the viewport suggests (413px at 1180). The page and the editor therefore lay out by the
+   drawer's own width: first the image column shrinks, then the grid stacks. */
+@container cx-drawer (max-width: 560px) {
+  .cx-page-grid { grid-template-columns: minmax(110px, 150px) minmax(0, 1fr); gap: 16px; }
+  .cx-editor .cx-editor-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .cx-image-block { grid-template-columns: minmax(130px, 200px) minmax(0, 1fr); align-items: start; }
+  .cx-editor[data-shape='landscape'] .cx-image-block { grid-template-columns: minmax(0, 1fr); }
+  .cx-page .qp-title { overflow-wrap: anywhere; }
+}
+@container cx-drawer (max-width: 460px) {
+  .cx-page-grid { grid-template-columns: minmax(0, 1fr); }
+  .cx-page-plate { max-width: 260px; margin-inline: auto; width: 100%; }
+  .cx-page[data-shape='landscape'] .cx-page-plate { max-width: none; }
+  .cx-image-block { grid-template-columns: minmax(0, 1fr); }
+  .cx-image-block .cx-plate { max-width: 220px; justify-self: center; width: 100%; }
+  .cx-editor[data-shape='landscape'] .cx-image-block .cx-plate { max-width: none; }
+}

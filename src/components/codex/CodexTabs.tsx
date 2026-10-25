@@ -17,7 +17,7 @@ export function CodexTabs({ tab, counts, onChange }: {
   onChange: (tab: CodexTab) => void
 }) {
   return (
-    <div className="cx-tabs" role="tablist" aria-label="Journal">
+    <div className="cx-tabs" role="tablist" aria-label="Journal" data-no-swipe>
       {TAB_ORDER.map((t) => (
         <button
           key={t}

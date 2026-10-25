@@ -36,12 +36,22 @@ export function CodexEditor({ initial, isNew, entries, cancelRef, onSave, onCanc
   const [showGallery, setShowGallery] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const root = useRef<HTMLDivElement>(null)
+  const bar = useRef<HTMLDivElement>(null)
+  const confirmShown = useRef(false)
   /** Uploads of this session not yet handed to the store (mirrors `uploaded`, readable from cleanups and late callbacks). */
   const uploadedRef = useRef<string[]>([])
   const busyRef = useRef(false)
   const closedRef = useRef(false)
   const file = useRef<HTMLInputElement>(null)
   const info = kindInfo(draft.kind)
+
+  // Delete swaps itself for Keep / Delete in the same slot: without this the focused button
+  // unmounts and the keyboard falls back to the page. Land on Keep (the safe answer), and back on Delete.
+  useEffect(() => {
+    if (confirmShown.current === confirmDelete) return
+    confirmShown.current = confirmDelete
+    bar.current?.querySelectorAll<HTMLElement>('.btn')[confirmDelete ? 1 : 0]?.focus()
+  }, [confirmDelete])
 
   /** Deletes this session's uploads not handed to the store; safe to call twice. */
   const releaseUploads = () => {
@@ -211,7 +221,7 @@ export function CodexEditor({ initial, isNew, entries, cancelRef, onSave, onCanc
         </div>
       </div>
 
-      <div className="cx-editor-bar">
+      <div className="cx-editor-bar" ref={bar}>
         {!isNew && !confirmDelete && (
           <Button variant="small danger" onClick={() => setConfirmDelete(true)}>Delete</Button>
         )}

@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { kindInfo, resolveRelated, searchEntries } from '@/lib/codex'
 import { imageUrl } from '@/lib/codexImages'
 import { play } from '@/lib/sfx'
@@ -16,6 +16,18 @@ export function RelatedPicker({ value, entries, selfId, onChange }: {
   const [active, setActive] = useState(0)
   const current = resolveRelated(entries, value)
   const results = searchEntries(entries, query, [selfId, ...value])
+  const list = useRef<HTMLUListElement>(null)
+  const hasResults = results.length > 0
+
+  // The results open under the field, which on a phone or iPad sits behind the sticky
+  // Save bar (and the on-screen keyboard): bring the whole list into view, then follow
+  // the highlighted row. The drawer's scroll-padding keeps both clear of the bar.
+  useEffect(() => {
+    if (query && hasResults) list.current?.scrollIntoView({ block: 'nearest' })
+  }, [query, hasResults])
+  useEffect(() => {
+    if (query) list.current?.children[active]?.scrollIntoView({ block: 'nearest' })
+  }, [active]) // query is read, not a trigger: the first effect already handled it
 
   const add = (entryId: string) => {
     play('toggle')
@@ -83,7 +95,7 @@ export function RelatedPicker({ value, entries, selfId, onChange }: {
         data-escape-clears
       />
       {results.length > 0 && (
-        <ul className="cx-results" id={`${id}-results`} role="listbox">
+        <ul ref={list} className="cx-results" id={`${id}-results`} role="listbox">
           {results.map((e, i) => (
             <li key={e.id} id={`${id}-${e.id}`} role="option" aria-selected={i === active}>
               <button type="button" className="cx-result" data-active={i === active} onClick={() => add(e.id)}>
