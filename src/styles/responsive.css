@@ -440,15 +440,18 @@
 
 /* The drawer is 70% of the sheet body, so on a landscape iPad it is far narrower than
    the viewport suggests (413px at 1180). The page and the editor therefore lay out by the
-   drawer's own width: first the image column shrinks, then the grid stacks. */
-@container cx-drawer (max-width: 560px) {
+   drawer's own width: first the image column shrinks, then the grid stacks. The drawer keeps
+   its scrollbar gutter (codex.css) so the measured width never depends on whether it scrolls,
+   and the 520px step leaves the 567px desktop drawer (1440 with a tracked quest) 47px of margin
+   even in an engine that measures the content box without the 10px scrollbar. */
+@container cx-drawer (max-width: 520px) {
   .cx-page-grid { grid-template-columns: minmax(110px, 150px) minmax(0, 1fr); gap: 16px; }
   .cx-editor .cx-editor-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .cx-image-block { grid-template-columns: minmax(130px, 200px) minmax(0, 1fr); align-items: start; }
   .cx-editor[data-shape='landscape'] .cx-image-block { grid-template-columns: minmax(0, 1fr); }
   .cx-page .qp-title { overflow-wrap: anywhere; }
 }
-@container cx-drawer (max-width: 460px) {
+@container cx-drawer (max-width: 450px) {
   .cx-page-grid { grid-template-columns: minmax(0, 1fr); }
   .cx-page-plate { max-width: 260px; margin-inline: auto; width: 100%; }
   .cx-page[data-shape='landscape'] .cx-page-plate { max-width: none; }
