@@ -71,8 +71,16 @@ export function RelatedPicker({ value, entries, selfId, onChange }: {
           } else if (e.key === 'Enter' && results[active]) {
             e.preventDefault()
             add(results[active].id)
+          } else if (e.key === 'Escape' && query) {
+            // Only dismisses the suggestions; the wall lets this Escape through (data-escape-clears).
+            // With an empty query Escape cancels the editor, as everywhere else.
+            e.preventDefault()
+            e.stopPropagation()
+            setQuery('')
+            setActive(0)
           }
         }}
+        data-escape-clears
       />
       {results.length > 0 && (
         <ul className="cx-results" id={`${id}-results`} role="listbox">

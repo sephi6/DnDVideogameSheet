@@ -18,8 +18,12 @@ interface CodexState {
   fresh: string[]
   hydrate: () => Promise<void>
   reset: () => void
-  /** Writes the whole entry (last Save wins); returns its id, new or existing. */
-  saveEntry: (entry: CodexEntry) => string
+  /**
+   * Writes the whole entry (last Save wins); returns its id, new or existing.
+   * `discardAfter` are Storage images this Save replaced or never kept: they are
+   * deleted only once the write has landed and the entry no longer uses them.
+   */
+  saveEntry: (entry: CodexEntry, discardAfter?: string[]) => string
   deleteEntry: (id: string) => void
   markSeen: (id: string) => void
   seedDemo: (roster: Character[]) => Promise<void>
@@ -42,8 +46,8 @@ const seqs = new Map<string, number>()
 const touch = (id: string) => seqs.set(id, (seqs.get(id) ?? 0) + 1)
 /** Entries created on this screen: their Realtime INSERT echo is not a discovery. */
 const mine = new Set<string>()
-/** Image of a deleted entry, discarded from Storage only once its row delete has landed. */
-const pendingImages = new Map<string, string>()
+/** Images to discard from Storage per entry, only once that entry's write (a delete, or a Save that replaced them) has landed. */
+const pendingImages = new Map<string, string[]>()
 /** Bumped by reset(): work started in an older session must not touch the new one. */
 let epoch = 0
 let unsubscribe: (() => void) | null = null
@@ -80,6 +84,10 @@ function settled(set: Set_) {
   else set({ sync: 'saved', syncError: null, failedCount: 0 })
 }
 
+function queueDiscard(id: string, images: string[]) {
+  pendingImages.set(id, [...new Set([...(pendingImages.get(id) ?? []), ...images])])
+}
+
 function write(id: string, set: Set_, get: Get_) {
   const at = epoch
   touch(id)
@@ -94,11 +102,12 @@ function write(id: string, set: Set_, get: Get_) {
     .then(() => {
       if (at !== epoch) return
       failed.delete(id)
-      const image = pendingImages.get(id)
-      if (image) {
+      const pending = pendingImages.get(id)
+      if (pending?.length) {
         pendingImages.delete(id)
-        // Re-saved meanwhile (by us or another player): the row lives on and still needs its image.
-        if (!get().entries.some((e) => e.id === id)) discardImages([image])
+        // Re-saved meanwhile (by us or another player): the row lives on and still needs the image it uses now.
+        const kept = get().entries.find((e) => e.id === id)?.image
+        discardImages(pending.filter((image) => image !== kept))
       }
       settled(set)
     })
@@ -257,7 +266,7 @@ export const useCodex = create<CodexState>((set, get) => ({
     set({ entries: [], loaded: false, sync: 'idle', syncError: null, failedCount: 0, fresh: [] })
   },
 
-  saveEntry(entry) {
+  saveEntry(entry, discardAfter = []) {
     const id = entry.id || newId()
     const now = new Date().toISOString()
     const current = get().entries.find((e) => e.id === id)
@@ -271,6 +280,7 @@ export const useCodex = create<CodexState>((set, get) => ({
       updatedAt: now,
     }
     set((s) => ({ entries: [...s.entries.filter((e) => e.id !== id), stored] }))
+    if (discardAfter.length > 0) queueDiscard(id, discardAfter)
     write(id, set, get)
     return id
   },
@@ -278,7 +288,7 @@ export const useCodex = create<CodexState>((set, get) => ({
   deleteEntry(id) {
     const gone = get().entries.find((e) => e.id === id)
     set((s) => ({ entries: s.entries.filter((e) => e.id !== id), fresh: s.fresh.filter((f) => f !== id) }))
-    if (gone?.image) pendingImages.set(id, gone.image)
+    if (gone?.image) queueDiscard(id, [gone.image])
     write(id, set, get)
   },
 

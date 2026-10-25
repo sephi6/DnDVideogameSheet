@@ -89,8 +89,8 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
   const startEdit = () => {
     if (open) setEditing({ entry: structuredClone(open), isNew: false })
   }
-  const save = (entry: CodexEntry) => {
-    const id = saveEntry(entry)
+  const save = (entry: CodexEntry, discardAfter: string[]) => {
+    const id = saveEntry(entry, discardAfter)
     setEditing(null)
     setSelectedId(id)
     onOpen(id)
@@ -154,6 +154,8 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
     if (!drawerOpen) return
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
+        // A search with text in it clears itself first (its own handler stops the event).
+        if (editing && e.target instanceof HTMLInputElement && e.target.hasAttribute('data-escape-clears') && e.target.value) return
         e.stopPropagation()
         e.preventDefault()
         if (editing) cancelRef.current?.()

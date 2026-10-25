@@ -14,15 +14,17 @@ const DAMAGE_GROUPS: [DamageKey, string][] = [['vulnerabilities', 'Vulnerable to
 
 /**
  * The page in edit mode. A local draft, written on Save, dropped on Cancel.
- * Uploads happen at once (so the preview is real), and every upload this
- * session does not keep is deleted from Storage on Save or Cancel.
+ * Uploads happen at once (so the preview is real). Every upload the entry does
+ * not end up using is deleted from Storage on every way out: Cancel, Delete,
+ * an upload that lands after the editor closed, and an unmount. On Save the
+ * replaced images go to the store, which deletes them once the write has landed.
  */
 export function CodexEditor({ initial, isNew, entries, cancelRef, onSave, onCancel, onDelete }: {
   initial: CodexEntry
   isNew: boolean
   entries: CodexEntry[]
   cancelRef: MutableRefObject<(() => void) | null>
-  onSave: (entry: CodexEntry) => void
+  onSave: (entry: CodexEntry, discardAfter: string[]) => void
   onCancel: () => void
   onDelete: () => void
 }) {
@@ -34,8 +36,27 @@ export function CodexEditor({ initial, isNew, entries, cancelRef, onSave, onCanc
   const [showGallery, setShowGallery] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const root = useRef<HTMLDivElement>(null)
+  /** Uploads of this session not yet handed to the store (mirrors `uploaded`, readable from cleanups and late callbacks). */
+  const uploadedRef = useRef<string[]>([])
+  const busyRef = useRef(false)
+  const closedRef = useRef(false)
   const file = useRef<HTMLInputElement>(null)
   const info = kindInfo(draft.kind)
+
+  /** Deletes this session's uploads not handed to the store; safe to call twice. */
+  const releaseUploads = () => {
+    discardImages(uploadedRef.current)
+    uploadedRef.current = []
+  }
+  // Any way out that is not Save or Delete (a click on the header, another section, a sign-out) unmounts
+  // the editor: its uploads go too, and a late upload is discarded when it lands (see onFile).
+  useEffect(() => {
+    closedRef.current = false
+    return () => {
+      closedRef.current = true
+      releaseUploads() // touches refs only, so this first-render closure is current
+    }
+  }, [])
 
   // Focus the first text field (Name) when the editor opens.
   useEffect(() => {
@@ -51,33 +72,51 @@ export function CodexEditor({ initial, isNew, entries, cancelRef, onSave, onCanc
     })
 
   const cancel = () => {
-    discardImages(imagesToDiscard(initial.image, initial.image, uploaded))
+    closedRef.current = true
+    releaseUploads()
     onCancel()
   }
   cancelRef.current = cancel
 
   const save = () => {
-    if (busy) return
-    discardImages(imagesToDiscard(initial.image, draft.image, uploaded))
-    onSave({ ...draft, name: draft.name.trim() || 'Unnamed' })
+    if (busyRef.current) return
+    closedRef.current = true
+    const discardAfter = imagesToDiscard(initial.image, draft.image, uploadedRef.current)
+    uploadedRef.current = [] // handed to the store: it deletes them once the write has landed
+    onSave({ ...draft, name: draft.name.trim() || 'Unnamed' }, discardAfter)
+  }
+
+  const remove = () => {
+    closedRef.current = true
+    releaseUploads() // the entry's stored image is discarded by the store once the delete lands
+    onDelete()
   }
 
   const onFile = async (picked: File | undefined) => {
-    if (!picked) return
+    if (!picked || busyRef.current) return
+    busyRef.current = true
     setBusy(true)
     setImageError(null)
     try {
       const { image, preview: dataUrl } = await uploadImage(picked, draft.kind)
+      if (closedRef.current) {
+        discardImages([image]) // the editor closed while this was uploading: nobody will use it
+        return
+      }
+      uploadedRef.current = [...uploadedRef.current, image]
       setUploaded((list) => [...list, image])
       setPreview(dataUrl)
       patch({ image })
       setShowGallery(false)
       play('confirm')
     } catch (err) {
-      setImageError(readableError(err))
-      play('error')
+      if (!closedRef.current) {
+        setImageError(readableError(err))
+        play('error')
+      }
     } finally {
-      setBusy(false)
+      busyRef.current = false
+      if (!closedRef.current) setBusy(false)
       if (file.current) file.current.value = ''
     }
   }
@@ -95,7 +134,7 @@ export function CodexEditor({ initial, isNew, entries, cancelRef, onSave, onCanc
         <div className="cx-image-block">
           <span className="cx-plate"><img src={shownImage} alt="" /></span>
           <div className="cx-image-actions">
-            <Button variant="small" onClick={() => file.current?.click()}>Upload</Button>
+            <Button variant="small" onClick={() => { if (!busyRef.current) file.current?.click() }}>Upload</Button>
             <Button variant="small" onClick={() => setShowGallery((v) => !v)}>Gallery</Button>
             {draft.image && (
               <Button variant="small ghost" cue="back" onClick={() => { patch({ image: null }); setPreview(null) }}>Remove</Button>
@@ -179,7 +218,7 @@ export function CodexEditor({ initial, isNew, entries, cancelRef, onSave, onCanc
         {confirmDelete && (
           <>
             <span className="cx-confirm">Delete for everyone?</span>
-            <Button variant="small danger" cue="back" onClick={onDelete}>Delete</Button>
+            <Button variant="small danger" cue="back" onClick={remove}>Delete</Button>
             <Button variant="small" onClick={() => setConfirmDelete(false)}>Keep</Button>
           </>
         )}
