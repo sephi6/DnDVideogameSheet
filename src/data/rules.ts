@@ -164,6 +164,12 @@ export const DAMAGE_TYPES = [
   'Piercing', 'Poison', 'Psychic', 'Radiant', 'Slashing', 'Thunder',
 ]
 
+/** Creature types (2024 rules glossary), for the codex bestiary. */
+export const CREATURE_TYPES = [
+  'Aberration', 'Beast', 'Celestial', 'Construct', 'Dragon', 'Elemental', 'Fey',
+  'Fiend', 'Giant', 'Humanoid', 'Monstrosity', 'Ooze', 'Plant', 'Undead',
+]
+
 /** Weapon mastery properties (new in 2024). */
 export const WEAPON_MASTERIES = [
   '—', 'Cleave', 'Graze', 'Nick', 'Push', 'Sap', 'Slow', 'Topple', 'Vex',
