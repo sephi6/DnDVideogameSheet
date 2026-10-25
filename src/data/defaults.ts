@@ -10,6 +10,7 @@ import type {
   SpellEntry,
 } from '@/types/character'
 import type { QuestSnapshot } from '@/types/quest'
+import type { CodexEntry } from '@/types/codex'
 import { SCHEMA_VERSION } from '@/lib/migrate'
 import { CLASSES, SKILLS, findClass, slotsForClass } from './rules'
 
@@ -828,4 +829,10 @@ export function demoQuests(roster: Character[]): QuestSnapshot {
   if (shaman) participants.push({ questId: q(3), characterId: shaman, joined: true, tracked: true })
 
   return { quests, objectives, participants }
+}
+
+/** Example codex for the demo party (content added with the demo data). */
+export function demoCodex(roster: Character[]): CodexEntry[] {
+  void roster
+  return []
 }
