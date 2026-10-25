@@ -116,4 +116,24 @@ assert.equal(c.moveSelection(['a', 'b', 'c'], 'a', 1), 'b')
 assert.equal(c.moveSelection(['a', 'b', 'c'], 'c', 1), 'c')
 assert.equal(c.moveSelection(['a', 'b', 'c'], 'a', -1), 'a')
 
+// demo codex: stable ids, valid kinds / statuses, every link resolves, authors from the roster
+const d = await load('src/data/defaults.ts')
+const roster = d.demoRoster()
+const demo = d.demoCodex(roster)
+assert.equal(demo.length, 12)
+assert.equal(new Set(demo.map((x) => x.id)).size, 12)
+assert.deepEqual(d.demoCodex(roster).map((x) => x.id), demo.map((x) => x.id)) // deterministic
+const ids = new Set(demo.map((x) => x.id))
+const rosterIds = new Set(roster.map((x) => x.id))
+for (const x of demo) {
+  const info = c.kindInfo(x.kind)
+  assert.ok(x.related.every((id) => ids.has(id)), `${x.name}: dangling link`)
+  assert.ok(!x.related.includes(x.id), `${x.name}: links itself`)
+  assert.equal(x.status === null ? info.statuses.length === 0 : info.statuses.includes(x.status), true, `${x.name}: status`)
+  assert.equal(x.attitude === null, !info.hasAttitude, `${x.name}: attitude`)
+  assert.deepEqual(c.sanitizeDetails(x.kind, x.details), x.details, `${x.name}: details`)
+  assert.ok(x.addedBy === null || rosterIds.has(x.addedBy), `${x.name}: author`)
+}
+for (const kind of ['npc', 'place', 'faction', 'creature', 'lore']) assert.ok(demo.some((x) => x.kind === kind), kind)
+
 console.log('check-codex: all assertions passed')
