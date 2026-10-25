@@ -2,7 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Button, SelectField, TextField } from '@/components/ui/controls'
-import { ATTITUDES, ATTITUDE_LABEL, entriesForTab, kindInfo, moveSelection } from '@/lib/codex'
+import { ATTITUDES, ATTITUDE_LABEL, entriesForTab, kindInfo, moveSelection, newEntry } from '@/lib/codex'
 import { useFocusTrap, useSheetBodyRect } from '@/lib/focus'
 import { isTyping } from '@/lib/keys'
 import { useIsPhone, useMediaQuery } from '@/lib/responsive'
@@ -11,6 +11,7 @@ import { useCodex } from '@/store/codex'
 import { useRoster } from '@/store/roster'
 import type { Attitude, CodexEntry, CodexKind } from '@/types/codex'
 import { CodexCard } from './CodexCard'
+import { CodexEditor } from './CodexEditor'
 import { CodexPage } from './CodexPage'
 
 /** Keys the sheet and the Journal listen for on window: held back while the page is open. */
@@ -28,7 +29,7 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
   onOpen: (id: string | null) => void
   onNavigate: (entry: CodexEntry) => void
 }) {
-  const { entries, fresh, loaded, failedCount, markSeen, retryFailed } = useCodex()
+  const { entries, fresh, loaded, failedCount, markSeen, retryFailed, saveEntry, deleteEntry } = useCodex()
   const roster = useRoster((s) => s.characters)
   const info = kindInfo(kind)
   const isPhone = useIsPhone()
@@ -40,27 +41,28 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
   const cards = useRef(new Map<string, HTMLButtonElement>())
   const anchor = useRef<HTMLDivElement>(null)
   const drawer = useRef<HTMLDivElement>(null)
+  const [editing, setEditing] = useState<{ entry: CodexEntry; isNew: boolean } | null>(null)
+  const cancelRef = useRef<(() => void) | null>(null)
 
   const list = useMemo(() => entriesForTab(entries, kind, query, attitude), [entries, kind, query, attitude])
   const ids = useMemo(() => list.map((e) => e.id), [list])
   const selected = selectedId && ids.includes(selectedId) ? selectedId : ids[0] ?? null
   const open = openId ? entries.find((e) => e.id === openId) ?? null : null
-  const drawerOpen = open !== null
+  const drawerOpen = open !== null || editing !== null
   const rect = useSheetBodyRect(anchor, drawerOpen)
   useFocusTrap(drawer, drawerOpen)
-
-  // The editor (next task) creates entries for this character.
-  void characterId
 
   useEffect(() => {
     setQuery('')
     setAttitude(null)
+    setEditing(null)
   }, [kind])
 
-  // The open entry was deleted (here or elsewhere): close the page.
+  // The open entry was deleted (here or elsewhere): close the page. A draft being
+  // edited survives; its Save writes the entry again.
   useEffect(() => {
-    if (openId && !open) onOpen(null)
-  }, [openId, open, onOpen])
+    if (openId && !open && !editing) onOpen(null)
+  }, [openId, open, editing, onOpen])
 
   useEffect(() => {
     if (!open) return
@@ -73,11 +75,36 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
   }, [])
 
   const close = useCallback(() => {
-    const back = openId
+    const back = openId ?? selected
     play('back')
+    setEditing(null)
     onOpen(null)
     if (back) focusCard(back)
-  }, [openId, onOpen, focusCard])
+  }, [openId, selected, onOpen, focusCard])
+
+  const startNew = () => {
+    play('open')
+    setEditing({ entry: newEntry(kind, characterId, new Date().toISOString()), isNew: true })
+  }
+  const startEdit = () => {
+    if (open) setEditing({ entry: structuredClone(open), isNew: false })
+  }
+  const save = (entry: CodexEntry) => {
+    const id = saveEntry(entry)
+    setEditing(null)
+    setSelectedId(id)
+    onOpen(id)
+  }
+  const endEdit = () => {
+    if (editing?.isNew) close()
+    else setEditing(null)
+  }
+  const remove = () => {
+    const id = editing?.entry.id
+    setEditing(null)
+    onOpen(null)
+    if (id) deleteEntry(id)
+  }
 
   // The wall: ← → (A D) move the selection, Enter opens it.
   useEffect(() => {
@@ -129,7 +156,8 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
       if (e.key === 'Escape') {
         e.stopPropagation()
         e.preventDefault()
-        close()
+        if (editing) cancelRef.current?.()
+        else close()
         return
       }
       if (isTyping(e.target)) return
@@ -137,7 +165,7 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
         e.stopPropagation()
         return
       }
-      if (open && (PREV.has(e.key) || NEXT.has(e.key))) {
+      if (!editing && open && (PREV.has(e.key) || NEXT.has(e.key))) {
         e.stopPropagation()
         e.preventDefault()
         const next = moveSelection(ids, open.id, PREV.has(e.key) ? -1 : 1)
@@ -149,7 +177,7 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
     }
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
-  }, [drawerOpen, open, ids, close, onOpen])
+  }, [drawerOpen, editing, open, ids, close, onOpen])
 
   const width = rect ? (isPhone ? rect.width : Math.min(640, rect.width * (isTablet ? 0.85 : 0.7))) : 0
   // Portal into .sheet: fixed positioning stays relative to the viewport even
@@ -179,12 +207,13 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
             <Button variant="small danger" onClick={() => void retryFailed()}>Retry</Button>
           </span>
         )}
+        <Button variant="primary" cue="confirm" onClick={startNew}>+ New {info.singular}</Button>
       </div>
 
       {!loaded && <p className="cx-empty">Opening the codex…</p>}
       {loaded && list.length === 0 && (
         <p className="cx-empty">
-          {query ? `Nothing matches "${query}".` : attitude ? `No ${ATTITUDE_LABEL[attitude].toLowerCase()} ${info.label.toLowerCase()}.` : `No ${info.label.toLowerCase()} yet.`}
+          {query ? `Nothing matches "${query}".` : attitude ? `No ${ATTITUDE_LABEL[attitude].toLowerCase()} ${info.label.toLowerCase()}.` : `No ${info.label.toLowerCase()} yet. Add the first one with + New ${info.singular}.`}
         </p>
       )}
 
@@ -203,6 +232,11 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
             }}
           />
         ))}
+        {loaded && (
+          <button type="button" className="cx-card cx-add" tabIndex={-1} onClick={startNew}>
+            <span className="cx-plate"><span className="cx-add-label"><b>+</b>New {info.singular}</span></span>
+          </button>
+        )}
       </div>
 
       {host && createPortal(
@@ -216,7 +250,7 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: reduce ? 0 : 0.18 }}
-              onClick={close}
+              onClick={editing ? undefined : close}
             />
           )}
           {drawerOpen && rect && (
@@ -233,13 +267,24 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
               exit={reduce ? { opacity: 0 } : { x: 32, opacity: 0, transition: { duration: 0.14 } }}
               transition={{ duration: reduce ? 0 : 0.22, ease: [0.2, 0.8, 0.2, 1] }}
             >
-              {open && (
+              {editing ? (
+                <CodexEditor
+                  key={editing.entry.id || 'new'}
+                  initial={editing.entry}
+                  isNew={editing.isNew}
+                  entries={entries}
+                  cancelRef={cancelRef}
+                  onSave={save}
+                  onCancel={endEdit}
+                  onDelete={remove}
+                />
+              ) : open && (
                 <CodexPage
                   entry={open}
                   entries={entries}
                   roster={roster}
                   isPhone={isPhone}
-                  onEdit={() => play('error')}
+                  onEdit={startEdit}
                   onClose={close}
                   onNavigate={onNavigate}
                 />
