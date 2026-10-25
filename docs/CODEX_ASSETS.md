@@ -3,7 +3,8 @@
 Hand this whole file to Codex. It generates illustrations for the shared codex
 (section 7: NPCs, places, factions, bestiary, items & lore), processes them, and
 wires them into the app. Same workflow as the class portraits
-(`docs/ASSET_PROMPTS.md` + `tmp/process_generated_assets.py`).
+(`docs/ASSET_PROMPTS.md` §2 post-processing step; for the codex the tool is
+`scripts/process-codex-assets.py`).
 
 ## 1. Style
 
@@ -63,13 +64,19 @@ Then, per file:
 
 ## 4. Process and wire up
 
+Prerequisite: Python 3 with Pillow 9.1 or newer, built with WebP support
+(`pip install pillow`; on Windows the command may be `py` instead of `python`).
+
 In the repo root:
 
 ```bash
 python scripts/process-codex-assets.py
 ```
 
-1. Paste the printed lines into `CODEX_GALLERY` in `src/data/codexGallery.ts`.
+1. Paste the printed lines into `CODEX_GALLERY` in `src/data/codexGallery.ts`, skipping
+   any line already there. The labels are made from the file slug, so fix any label that
+   lost an apostrophe or a leading "The" to match the entry's name (for example
+   "Aldren's Tower" and "The Hollow Bridge Gang").
 2. In `demoCodex()` (`src/data/defaults.ts`), give each demo entry its image: change
    the `entry()` helper's parameter type from
    `Omit<CodexEntry, 'id' | 'image' | 'createdAt' | 'updatedAt'>` to
