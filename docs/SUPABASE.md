@@ -49,19 +49,34 @@ Dashboard → **Database** → **Replication** should list the three tables unde
 `supabase_realtime`. Without the publication the quest log still saves, but changes from other people only show
 after a reload.
 
-## 4. Example data
+## 4. Codex table and image bucket
+
+A third query: paste the whole of
+[`supabase/migrations/0003_codex.sql`](../supabase/migrations/0003_codex.sql) → *Run*.
+It must come **after** `0001_init.sql` and `0002_quests.sql`. It is safe to run again.
+
+Creates the shared codex table and the `codex` image bucket (public read; signed-in users upload).
+Concretely: `codex_entries` with the same open-to-authenticated policies as the sheets,
+added to the `supabase_realtime` publication, plus the Storage bucket `codex` with four
+policies on `storage.objects` (select, insert, update, delete for signed-in users;
+Storage `remove()` and `update()` need the select one). Without the publication the
+codex still saves, but changes from other people only show after a reload; without the
+bucket, entries save but uploading an illustration fails.
+
+## 5. Example data
 
 Two paths, whichever you prefer:
 
 - **Automatic**: on the first sign-in with an empty table, the app seeds the
   example party (Kaelith, Brann, Nyx and Sister Maren) **and the example quests**
-  (only when the quest log is empty too). It only does it once; if you delete
+  (only when the quest log is empty too) and the example codex (only when the codex is
+  empty too). It only does it once; if you delete
   them later, they do not come back. A database whose party was seeded before the
-  quest log existed gets **no example quests automatically**: run `seed.sql`
+  quest log or the codex existed gets **no examples for them automatically**: run `seed.sql`
   (below) to add them.
 - **Manual**: run [`supabase/seed.sql`](../supabase/seed.sql) in the SQL Editor, after
-  `0001` **and** `0002` (it also inserts the example quests, and the editor runs it as
-  one transaction, so without `0002` nothing is inserted). It can be run several times
+  `0001`, `0002` **and** `0003` (it also inserts the example quests and codex entries, and the
+  editor runs it as one transaction, so without `0002` or `0003` nothing is inserted). It can be run several times
   without duplicating anything.
 
 That file is generated from the TypeScript so there are never two copies of the
@@ -71,7 +86,7 @@ same data:
 node scripts/generate-seed.mjs
 ```
 
-## 5. Enable email access
+## 6. Enable email access
 
 Dashboard → **Authentication** → *Sign In / Providers* → **Email** enabled.
 
@@ -88,7 +103,7 @@ The sign-in screen offers email + password and, as an alternative, a magic link
 > (*Allow new users to sign up*). With the current permission model, anyone who
 > registers in this project sees and edits every sheet.
 
-## 6. Permission model
+## 7. Permission model
 
 As requested, **all authenticated users have the same permissions**: read,
 create, edit and delete *any* sheet. That is the natural thing for a party where
@@ -104,7 +119,7 @@ What that implies:
 To lock it down later, the strict per-owner policies are at the end of
 `0001_init.sql`, commented out and ready to use.
 
-## 7. How the code is put together
+## 8. How the code is put together
 
 ```
 src/lib/supabase.ts     Client and detection of whether credentials exist
@@ -113,6 +128,9 @@ src/store/auth.ts       Session: sign in, sign up, magic link, sign out
 src/store/roster.ts     Party state, saving and sync status
 src/lib/questStorage.ts Quest read/write per row and Realtime (local | supabase)
 src/store/quests.ts     Shared quest log state
+src/lib/codexStorage.ts Codex read/write per entry and Realtime (local | supabase)
+src/lib/codexImages.ts  Codex images: resolve, upload to the `codex` bucket, delete
+src/store/codex.ts      Shared codex state
 src/screens/LoginScreen.tsx
 ```
 
@@ -130,9 +148,9 @@ Details that matter:
   development, and without that guard the example party got seeded twice.
 - **Ids are real UUIDs**, so they can be the table's primary key.
 
-## 8. What is still missing
+## 9. What is still missing
 
-- **Portraits in Storage.** Today an uploaded image is stored as a data-url
+- **Portraits in Storage.** (Codex illustrations already use the `codex` bucket.) Today an uploaded portrait is stored as a data-url
   inside the jsonb; it is downscaled to 1000×1400 before saving so the row does
   not blow up. The right thing would be a `portraits` bucket, storing only the URL.
 - **Real time for sheets.** Quests are already live (`postgres_changes` on the three
