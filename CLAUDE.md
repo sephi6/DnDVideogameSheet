@@ -217,9 +217,11 @@ search, links, details sanitising) and is covered by `scripts/check-codex.mjs`.
   the section keys back (so `Escape` does not leave the sheet); `Escape` inside a wall
   field (Search, Attitude) only blurs it, and in the Related search with text it clears
   the query first.
-- **Touch layouts** — `codex.css` sizes controls to `--touch` under `pointer: coarse`;
-  `responsive.css` has the tablet / phone rules, and the drawer is a container
-  (`cx-drawer`) with `@container` steps at 520 px and 450 px, so the page adapts to its own width.
+- **Touch layouts** — `codex.css` gives the editor's inputs and buttons `min-height: var(--touch)`
+  unconditionally and declares the drawer an inline-size container (`cx-drawer`). `responsive.css`
+  holds the rest: the `@media (pointer: coarse)` codex rules (tabs, chips, page-bar buttons at
+  `--touch`), the tablet / phone rules, and the `@container cx-drawer` steps at 520 px and 450 px,
+  so the page adapts to its own width.
 
 **Sheet sections — `src/sections/`.** Eight components
 `({ character, update }: SectionProps) => JSX`. The order, the `1`–`8` keys, the glyphs and

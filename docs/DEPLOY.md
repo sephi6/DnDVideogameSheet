@@ -19,9 +19,10 @@ Pull Request gets its own preview URL.
 
 ## 1. Harden Supabase (before the first deploy)
 
-1. **SQL Editor** → if it is not done yet: run `supabase/migrations/0001_init.sql` and,
-   if you want the example party, `supabase/seed.sql`. Check that `characters` has
-   **RLS enabled**.
+1. **SQL Editor** → if it is not done yet: run `supabase/migrations/0001_init.sql`, then
+   `supabase/migrations/0002_quests.sql`, then `supabase/migrations/0003_codex.sql`, and,
+   if you want the example party, quests and codex, `supabase/seed.sql`. Check that
+   `characters` has **RLS enabled**.
 2. **Authentication → Sign In / Providers → Email** → **turn off "Allow new users to
    sign up"**.
    - With the current permission model, any authenticated user sees and edits **every**

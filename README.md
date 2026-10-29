@@ -18,7 +18,7 @@ credentials configured the app still boots in local mode (`localStorage`, no
 login), so it can be cloned and tried out without setting anything up.
 
 To connect it to Supabase: [`docs/SUPABASE.md`](docs/SUPABASE.md) — three steps
-(credentials in `.env.local`, run the migration, enable email access).
+(credentials in `.env.local`, run the migrations in order, enable email access).
 
 To publish it on Cloudflare Workers: [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
