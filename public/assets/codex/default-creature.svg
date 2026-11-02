@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1400" width="1000" height="1400" role="img" aria-label="creature">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#30261f"/>
+      <stop offset="0.55" stop-color="#241d18"/>
+      <stop offset="1" stop-color="#1a1512"/>
+    </radialGradient>
+    <linearGradient id="foot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.6" stop-color="#0d0a08" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0d0a08" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="1400" fill="url(#g)"/>
+  <g transform="translate(500 560) scale(5.2) translate(-50 -50)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 82 C26 50 38 30 50 30 C62 30 74 50 82 82 M34 56 L24 34 M66 56 L76 34 M40 66 L44 66 M56 66 L60 66 M44 78 L50 74 L56 78" stroke="#0d0a08" stroke-width="7" opacity="0.9"/>
+    <path d="M18 82 C26 50 38 30 50 30 C62 30 74 50 82 82 M34 56 L24 34 M66 56 L76 34 M40 66 L44 66 M56 66 L60 66 M44 78 L50 74 L56 78" stroke="#8a6d2f" stroke-width="3.6"/>
+    <path d="M18 82 C26 50 38 30 50 30 C62 30 74 50 82 82 M34 56 L24 34 M66 56 L76 34 M40 66 L44 66 M56 66 L60 66 M44 78 L50 74 L56 78" stroke="#e8d08a" stroke-width="1.4" opacity="0.85"/>
+  </g>
+  <rect width="1000" height="1400" fill="url(#foot)"/>
+</svg>

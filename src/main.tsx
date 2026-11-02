@@ -6,6 +6,7 @@ import './styles/global.css'
 import './styles/screens.css'
 import './styles/sheet.css'
 import './styles/quests.css'
+import './styles/codex.css'
 // Last: the responsive layer wins by cascade order, with no !important.
 import './styles/responsive.css'
 

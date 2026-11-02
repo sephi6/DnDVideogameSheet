@@ -39,7 +39,9 @@ npm run typecheck  # types only
 
 node scripts/generate-seed.mjs     # regenerates supabase/seed.sql from src/data/defaults.ts (uses esbuild, ships with Vite)
 node scripts/check-quests.mjs      # assertions over the pure quest rules (src/lib/quests.ts); no test runner, esbuild bundles it
-node scripts/generate-assets.mjs   # regenerates the SVG emblem portraits in public/assets/portraits/
+node scripts/check-codex.mjs      # assertions over the pure codex rules (src/lib/codex.ts) and the demo codex
+node scripts/generate-assets.mjs   # regenerates the SVG emblem portraits in public/assets/portraits/ and the codex emblems in public/assets/codex/default-<kind>.svg
+python scripts/process-codex-assets.py  # generated codex art (tmp/imagegen_raw/codex/) → public/assets/codex/*.webp; see docs/CODEX_ASSETS.md
 bash scripts/fetch-fonts.sh        # regenerates the self-hosted fonts in public/fonts/
 ```
 
@@ -181,10 +183,50 @@ progress, tab filters) and is covered by `scripts/check-quests.mjs`.
 - Demo data: `demoQuests(roster)` in `defaults.ts` (deterministic ids), also emitted into
   `seed.sql`.
 
+**Codex — shared, illustrated journal (section 7).** Like quests, codex entries are not
+part of any `Character`: one table `codex_entries` (migration `0003_codex.sql`, types in
+`src/types/codex.ts`) holds NPCs, places, factions, creatures and lore (`kind`), with
+kind-specific fields in a `details` jsonb and outgoing links in `related uuid[]`
+(incoming links are computed; dangling ids are skipped and dropped on the next save).
+`src/lib/codex.ts` holds the pure rules (the `KINDS` table drives the UI; filters,
+search, links, details sanitising) and is covered by `scripts/check-codex.mjs`.
+- **`src/lib/codexStorage.ts`** — same shape as `questStorage.ts`, one row per entry.
+- **`src/store/codex.ts`** — optimistic; whole-entry writes, serial per id (last Save
+  wins); Realtime changes to a busy entry are stashed and settled by one authoritative
+  reload; entries arriving live from someone else go to `fresh` ("New" gem, persisted
+  per viewer in `arcana:codex-fresh`). Seeded with `demoCodex(roster)` next to the demo
+  quests (`seedDemo` does nothing if the first load failed). `saveEntry(entry, discardAfter = [])`
+  queues replaced or unused Storage images per entry id (`pendingImages`) and discards them
+  only after that entry's write lands (kept for `retryFailed()` if it fails, and never the
+  image the entry still uses); `deleteEntry` discards its image only after the row delete lands.
+- **Images** — `image` is one string told apart by prefix: `codex/<uuid>.webp` (Supabase
+  Storage bucket `codex`, public read), `assets/codex/…` (repo gallery listed in
+  `src/data/codexGallery.ts`, empty until art lands), a data-url (local mode), or null
+  (kind emblem `assets/codex/default-<kind>.svg`). `src/lib/codexImages.ts` resolves,
+  uploads and best-effort deletes. The editor tracks its uploads in refs: Cancel, Delete and
+  unmount discard every upload it does not keep, an upload that lands after the editor
+  closed is discarded, and Upload is ignored while one is in flight. Art pipeline:
+  `scripts/process-codex-assets.py` + `docs/CODEX_ASSETS.md`.
+- **UI** — `src/sections/JournalSection.tsx` (tabs: the five kinds plus the private
+  **Background**, which is the old `character.journal` grid in
+  `components/codex/BackgroundTab.tsx`) and `src/components/codex/`. The wall is a grid
+  of framed cards; the page / editor slide in over the sheet body only (portal into
+  `.sheet`, positioned from the body's rect). Keys: `←/→` (`A/D`) move the selection and
+  page through entries, `Enter` opens, `Escape` closes the page / cancels the editor,
+  `[` / `]` change tab. While a page or editor is open a **capture-phase** listener holds
+  the section keys back (so `Escape` does not leave the sheet); `Escape` inside a wall
+  field (Search, Attitude) only blurs it, and in the Related search with text it clears
+  the query first.
+- **Touch layouts** — `codex.css` gives the editor's inputs and buttons `min-height: var(--touch)`
+  unconditionally and declares the drawer an inline-size container (`cx-drawer`). `responsive.css`
+  holds the rest: the `@media (pointer: coarse)` codex rules (tabs, chips, page-bar buttons at
+  `--touch`), the tablet / phone rules, and the `@container cx-drawer` steps at 520 px and 450 px,
+  so the page adapts to its own width.
+
 **Sheet sections — `src/sections/`.** Eight components
 `({ character, update }: SectionProps) => JSX`. The order, the `1`–`8` keys, the glyphs and
 the registry live in the `SECTIONS` array of `src/screens/SheetScreen.tsx` — adding or
-reordering a section is done there.
+reordering a section is done there. Section 7 (`JournalSection`) is the codex shell; the old Journal fields live in its Background tab.
 
 **UI primitives — `src/components/ui/controls.tsx`.** Every form control (`TextField`,
 `NumberField`, `SelectField`, `Button`, `CheckBox`, `ProficiencyPip`, `Chip`…). Each
@@ -236,8 +278,14 @@ Database and migrations in `supabase/` (there is no Supabase CLI project: no
   `replica identity full` (so Realtime deletes carry the old row) and adds the three
   tables to the `supabase_realtime` publication. Needs `0001` first (reuses
   `touch_updated_at`, references `characters`). `created_by` defaults to `auth.uid()`.
+- **`supabase/migrations/0003_codex.sql`** — `codex_entries` (FK `added_by` →
+  `characters`, `on delete set null`), `updated_at` trigger, the same open RLS
+  policies, `replica identity full`, Realtime publication, and the public-read Storage
+  bucket `codex` with authenticated policies on `storage.objects` (select, insert,
+  update, delete: Storage `remove()` / `update()` also need the select one). Run after
+  `0001` and `0002`.
 - **`supabase/seed.sql`** — the example party with fixed UUID ids, `on conflict do nothing`.
-  Its quest part also needs `0002` (run order: `0001` → `0002` → `seed.sql`).
+  Its quest part needs `0002` and its codex part `0003` (run order: `0001` → `0002` → `0003` → `seed.sql`).
   **Generated** by `node scripts/generate-seed.mjs` from `src/data/defaults.ts` (esbuild
   bundles the TS and imports it). Do not edit by hand.
 - These SQL files are run in the **SQL Editor** of the Supabase dashboard, in order. The
@@ -250,7 +298,7 @@ local mode. The user's project: `dtybrsbjgatjqllsdhhi.supabase.co`.
 
 **What is left to wire it up** (all on the dashboard/environment side, the code is done):
 1. `.env.local` with the URL + publishable key.
-2. Run `0001_init.sql`, then `0002_quests.sql` (and optionally `seed.sql`) in the SQL Editor.
+2. Run `0001_init.sql`, then `0002_quests.sql`, then `0003_codex.sql` (and optionally `seed.sql`) in the SQL Editor.
 3. Authentication → Email provider enabled; decide on "Confirm email"; add
    `http://localhost:5173` to the Redirect URLs for the magic link.
 4. Once the table's players all have accounts, turn off "Allow new users to sign up".

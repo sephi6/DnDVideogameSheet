@@ -10,6 +10,7 @@ import type {
   SpellEntry,
 } from '@/types/character'
 import type { QuestSnapshot } from '@/types/quest'
+import type { CodexEntry } from '@/types/codex'
 import { SCHEMA_VERSION } from '@/lib/migrate'
 import { CLASSES, SKILLS, findClass, slotsForClass } from './rules'
 
@@ -828,4 +829,62 @@ export function demoQuests(roster: Character[]): QuestSnapshot {
   if (shaman) participants.push({ questId: q(3), characterId: shaman, joined: true, tracked: true })
 
   return { quests, objectives, participants }
+}
+
+/**
+ * Example codex for the demo party, tied to the demo quests (the Greenwater
+ * fever, the Mistport escort, Aldren's grimoire, the wolves at the mill).
+ * Deterministic ids and dates so generate-seed.mjs emits a stable seed.sql.
+ * Images are null: the kind emblems show until real art is added.
+ */
+export function demoCodex(roster: Character[]): CodexEntry[] {
+  const byClass = (name: string) => roster.find((c) => c.identity.className === name)?.id ?? null
+  const mage = byClass('Mage')
+  const shaman = byClass('Shaman')
+  const wizard = byClass('Wizard')
+  const hunter = byClass('Hunter')
+  const id = (n: number) => `c1000000-0000-4000-8000-0000000000${String(n).padStart(2, '0')}`
+  const at = (day: number) => `2026-09-${String(day).padStart(2, '0')}T18:00:00.000Z`
+  const entry = (n: number, e: Omit<CodexEntry, 'id' | 'image' | 'createdAt' | 'updatedAt'>): CodexEntry => ({
+    ...e, id: id(n), image: null, createdAt: at(10 + n), updatedAt: at(10 + n),
+  })
+
+  return [
+    entry(1, { kind: 'npc', name: 'Sister Odila', subtitle: 'Healer of the Greenwater villages', attitude: 'ally', status: 'Alive',
+      notes: 'Keeps the sick in the old granary at Greyford. Believes the river is poisoned upstream, past the abandoned mill. Pays in potions, not coin.',
+      related: [id(5), id(12)], details: { metAt: 'Greyford' }, addedBy: shaman }),
+    entry(2, { kind: 'npc', name: 'Quartermaster Hale', subtitle: 'Supply master of the coast road', attitude: 'neutral', status: 'Alive',
+      notes: 'Counts every barrel twice. Wants the three wagons in Mistport before the autumn storms, and does not care how.',
+      related: [id(6), id(8)], details: { metAt: 'Mistport gate' }, addedBy: hunter }),
+    entry(3, { kind: 'npc', name: 'Master Corwen', subtitle: 'Retired scholar of the arcane', attitude: 'ally', status: 'Alive',
+      notes: "Swears Aldren's grimoire is still in the sealed tower, torn into loose pages the ravens carried across the valley. Knows more than he says.",
+      related: [id(4), id(11)], details: { metAt: "Aldren's Tower" }, addedBy: mage }),
+    entry(4, { kind: 'npc', name: 'Aldren the Grey', subtitle: 'Wizard, vanished twenty years ago', attitude: 'unknown', status: 'Unknown',
+      notes: 'Nobody saw him leave the tower. The lights in the top window still come on some nights.',
+      related: [id(7), id(11)], details: {}, addedBy: wizard }),
+    entry(5, { kind: 'place', name: 'Greenwater villages', subtitle: 'Farmland along a slow green river', attitude: 'neutral', status: null,
+      notes: 'Five hamlets and one ford. The fever started at the mill end and is moving downstream.',
+      related: [id(1), id(9)], details: { placeType: 'Region', firstVisited: 'Session 1' }, addedBy: shaman }),
+    entry(6, { kind: 'place', name: 'Mistport', subtitle: 'Harbour city at the end of the coast road', attitude: 'unknown', status: null,
+      notes: 'We have not reached it yet. Hale says the harbourmaster takes bribes in salt.',
+      related: [id(2)], details: { placeType: 'City' }, addedBy: hunter }),
+    entry(7, { kind: 'place', name: "Aldren's Tower", subtitle: 'A sealed tower above the valley', attitude: 'hostile', status: null,
+      notes: 'No door on the ground floor. Ravens nest in the arrow slits. Something answers when you knock on the stone.',
+      related: [id(4), id(11)], details: { placeType: 'Landmark', firstVisited: 'Session 3' }, addedBy: mage }),
+    entry(8, { kind: 'faction', name: 'The Hollow Bridge Gang', subtitle: 'Nobody crosses for free', attitude: 'hostile', status: null,
+      notes: 'Bandits holding the Hollow Bridge on the coast road. At least a dozen, with a crossbow nest under the arch.',
+      related: [id(2), id(6)], details: { goal: 'Toll the coast road before the storms close it' }, addedBy: hunter }),
+    entry(9, { kind: 'creature', name: 'Dire wolf', subtitle: 'Pack hunter of the old mill', attitude: 'hostile', status: 'Defeated',
+      notes: 'Three of them took the mill. They fight as a pack and go for whoever falls first.',
+      related: [id(5)], details: { creatureType: 'Beast' }, addedBy: hunter }),
+    entry(10, { kind: 'creature', name: 'River blight', subtitle: 'Something living in the Greenwater', attitude: 'hostile', status: 'Encountered',
+      notes: 'A green slick that moves against the current. Fire made it pull back; poison did nothing.',
+      related: [id(5), id(12)], details: { creatureType: 'Ooze', vulnerabilities: ['Fire'], resistances: ['Poison'], immunities: ['Acid'] }, addedBy: shaman }),
+    entry(11, { kind: 'lore', name: "Aldren's Grimoire", subtitle: 'Torn into loose pages across the valley', attitude: null, status: 'Open',
+      notes: 'Three pages found so far. Each one is warm to the touch and smells of rain.',
+      related: [id(3), id(4), id(7)], details: { loreType: 'Item' }, addedBy: mage }),
+    entry(12, { kind: 'lore', name: 'The Greenwater fever', subtitle: 'Healing magic will not touch it', attitude: null, status: 'Open',
+      notes: 'Starts as a green tinge under the nails. Odila thinks it is in the water; the blight suggests she is right.',
+      related: [id(1), id(10)], details: { loreType: 'Mystery' }, addedBy: shaman }),
+  ]
 }

@@ -1,0 +1,209 @@
+/* ── Codex (section 7) — spec 2026-10-25, mockup variant B ─────────────────
+   The cards are the one bold element: framed art, name plate, attitude gem,
+   a single gold glint on selection. Tabs, toolbar and page stay quiet. */
+
+.codex { display: flex; flex-direction: column; gap: 12px; }
+
+/* Tabs: the quest log's tab plate, with a line icon and a count. */
+.cx-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.cx-tab {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 40px; padding: 6px 14px 6px 10px;
+  font-family: var(--font-display); font-weight: 600; font-size: var(--t-small); letter-spacing: .05em;
+  color: var(--parchment-dim); background: var(--stone-2);
+  border: 1px solid var(--gold-lo);
+  box-shadow: inset 1px 1px 0 var(--gold-lo), inset -1px -1px 0 var(--gold-hi);
+  cursor: pointer;
+}
+.cx-tab svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.cx-tab b { font-family: var(--font-data); font-weight: 700; color: var(--gold); }
+.cx-tab[data-on='true'] { color: var(--gold-hi); border-color: var(--gold); box-shadow: var(--bevel); background-image: linear-gradient(var(--veil-2), var(--veil-2)); }
+.cx-tab-private { margin-left: auto; border-style: dashed; }
+@media (hover: hover) { .cx-tab:hover { color: var(--gold-hi); } }
+
+/* Toolbar: labelled search and filter, the primary action on the right. */
+.cx-tools { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.cx-search { flex: 1 1 220px; max-width: 340px; }
+.cx-filter { flex: 0 1 180px; }
+.cx-spacer { flex: 1; }
+.cx-failed { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-data); font-weight: 600; font-size: var(--t-small); color: var(--parchment); }
+.cx-empty { margin: 18px 0; font-size: var(--t-card); color: var(--parchment-dim); }
+
+/* ── Wall ── */
+.cx-wall { display: flex; flex-direction: column; gap: 12px; }
+.cx-grid { display: grid; gap: 18px 14px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.cx-wall[data-shape='landscape'] .cx-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+
+/* The band frame of the sheet portrait: three-tone gold on the border box. */
+.cx-plate {
+  position: relative; display: block; overflow: hidden;
+  border: 3px solid transparent; border-radius: 3px;
+  background:
+    linear-gradient(var(--stone-3), var(--stone-3)) padding-box,
+    linear-gradient(135deg, var(--gold-hi) 0%, var(--gold) 44%, var(--gold-lo) 100%) border-box;
+  box-shadow: 0 0 0 1px var(--seat), inset 0 0 0 1px var(--seat);
+}
+.cx-plate img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+.cx-plate[data-settled='true'] img { filter: grayscale(1) contrast(.9) brightness(.72); }
+
+.cx-card {
+  position: relative; display: block; width: 100%; padding: 0;
+  font: inherit; color: var(--parchment); text-align: center;
+  background: none; border: 0; cursor: pointer;
+}
+.cx-card .cx-plate { aspect-ratio: 5 / 7; transition: transform .14s ease-out, box-shadow .14s ease-out; }
+.cx-wall[data-shape='landscape'] .cx-card .cx-plate { aspect-ratio: 16 / 9; }
+.cx-wall[data-shape='landscape'] .cx-card .cx-plate img { object-position: 50% 50%; }
+/* The foot fade the name is printed on. */
+.cx-card .cx-plate::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, transparent 52%, color-mix(in srgb, var(--seat) 88%, transparent));
+}
+/* The glint: one sweep of light across the frame, once per selection. */
+.cx-card .cx-plate::before {
+  content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: 0;
+  background: linear-gradient(115deg, transparent 38%, color-mix(in srgb, var(--gold-hi) 55%, transparent) 50%, transparent 62%);
+  background-size: 260% 100%; background-position: 130% 0;
+}
+.cx-card[data-selected='true'] .cx-plate::before,
+.cx-card[data-fresh='true'] .cx-plate::before { animation: cx-glint 450ms ease-out 1; }
+@keyframes cx-glint {
+  from { opacity: 1; background-position: 130% 0; }
+  to { opacity: 1; background-position: -30% 0; }
+}
+
+.cx-name {
+  position: absolute; left: 6px; right: 6px; bottom: 30px; z-index: 1;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.15; letter-spacing: .03em;
+  color: var(--gold-hi); text-shadow: 0 1px 2px var(--seat);
+}
+.cx-card .cx-seal { position: absolute; left: 0; right: 0; bottom: 9px; z-index: 1; justify-content: center; color: var(--parchment); }
+
+.cx-card[data-selected='true'] .cx-plate {
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 1px var(--seat), 0 0 0 3px var(--accent), 0 10px 24px color-mix(in srgb, var(--seat) 70%, transparent);
+}
+.cx-card:focus-visible { outline: none; }
+.cx-card:focus-visible .cx-plate { outline: 2px solid var(--gold-hi); outline-offset: 3px; }
+@media (hover: hover) { .cx-card:hover .cx-plate { transform: translateY(-3px); } }
+
+/* Attitude: a gem in the attitude colour AND the word. Never colour alone. */
+.cx-seal { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-data); font-weight: 700; font-size: var(--t-label); letter-spacing: .06em; }
+.cx-seal::before {
+  content: ''; width: 9px; height: 9px; flex: none; transform: rotate(45deg); background: var(--gem);
+  box-shadow: 0 0 0 1px var(--seat), 0 0 8px color-mix(in srgb, var(--gem) 60%, transparent);
+}
+.cx-seal[data-attitude='ally'] { --gem: var(--rarity-uncommon); }
+.cx-seal[data-attitude='neutral'] { --gem: var(--gold-hi); }
+.cx-seal[data-attitude='hostile'] { --gem: var(--danger); }
+.cx-seal[data-attitude='unknown'] { --gem: var(--rarity-poor); }
+
+.cx-ribbon {
+  position: absolute; z-index: 1; left: -36px; top: 16px; width: 140px; transform: rotate(-35deg);
+  padding: 3px 0; text-align: center;
+  font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: .14em;
+  color: var(--parchment); background: color-mix(in srgb, var(--seat) 85%, transparent);
+  border-block: 1px solid var(--gold-lo);
+}
+.cx-new {
+  position: absolute; z-index: 3; top: 8px; right: 8px; padding: 2px 8px;
+  font-family: var(--font-data); font-weight: 700; font-size: var(--t-label); letter-spacing: .06em;
+  color: var(--seat); background: linear-gradient(180deg, var(--gold-hi), var(--gold));
+  box-shadow: 0 0 0 1px var(--seat), 0 0 10px color-mix(in srgb, var(--gold-hi) 60%, transparent);
+}
+
+.cx-add .cx-plate {
+  display: grid; place-items: center;
+  background: linear-gradient(var(--stone-2), var(--stone-2)) padding-box, linear-gradient(var(--gold-lo), var(--gold-lo)) border-box;
+}
+.cx-add .cx-plate::after { display: none; }
+.cx-add-label { font-family: var(--font-display); font-size: var(--t-small); color: var(--gold); }
+.cx-add-label b { display: block; font-size: 40px; font-weight: 400; line-height: 1; }
+
+/* ── Drawer: scrim and the parchment page, over the sheet body ── */
+.cx-scrim { position: fixed; z-index: 30; background: color-mix(in srgb, var(--seat) 58%, transparent); }
+.cx-drawer { position: fixed; z-index: 31; container: cx-drawer / inline-size; overflow-y: auto; overscroll-behavior: contain; scroll-padding-bottom: 96px; }
+.cx-drawer .quest-page { min-height: 100%; }
+/* The global gold-hi focus ring vanishes on parchment: inside the page it is seat-dark. */
+.cx-drawer :focus-visible { outline-color: var(--seat); }
+.cx-page-bar { display: flex; align-items: center; gap: 8px; margin: -8px -10px 10px; }
+.cx-page-bar .btn { color: var(--seat); background: color-mix(in srgb, var(--parchment) 60%, transparent); border-color: var(--gold-lo); box-shadow: none; }
+.cx-page-grid { display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 1fr); gap: 22px; align-items: start; }
+.cx-page[data-shape='landscape'] .cx-page-grid { grid-template-columns: minmax(0, 1fr); }
+.cx-page-plate { aspect-ratio: 5 / 7; }
+.cx-page[data-shape='landscape'] .cx-page-plate { aspect-ratio: 21 / 8; }
+.cx-page-plate img { object-position: 50% 20%; }
+.cx-page .qp-kicker .cx-seal { color: var(--seat); }
+.cx-page .qp-title:focus { outline: none; }
+.cx-page .qp-title:focus-visible { outline: 2px solid var(--gold-lo); outline-offset: 4px; }
+.cx-facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 10px 0 0; font-family: var(--font-data); font-size: 16px; color: var(--seat); }
+.cx-facts dt { font-weight: 700; color: color-mix(in srgb, var(--seat) 72%, var(--parchment)); }
+.cx-facts dd { margin: 0; font-weight: 600; }
+.cx-notes { max-width: 70ch; line-height: 1.6; }
+.cx-section { margin-top: 14px; }
+.cx-dmg { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; align-items: center; margin-top: 12px; }
+.cx-dmg dt { font-family: var(--font-data); font-weight: 700; font-size: var(--t-small); color: var(--seat); }
+.cx-dmg dd { display: flex; flex-wrap: wrap; gap: 5px; margin: 0; }
+.cx-dmg span { padding: 2px 8px; font-family: var(--font-data); font-weight: 700; font-size: var(--t-label); color: var(--seat); border: 1px solid var(--seat); }
+
+/* Entry chips: thumbnail, name, kind. Links on the parchment page. */
+.cx-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.cx-chip {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 3px 10px 3px 3px;
+  font-family: var(--font-data); font-weight: 600; font-size: 15px; color: var(--seat); text-align: left;
+  background: color-mix(in srgb, var(--parchment) 55%, transparent); border: 1px solid var(--gold-lo); cursor: pointer;
+}
+.cx-chip img { width: 28px; height: 28px; flex: none; object-fit: cover; object-position: 50% 20%; border: 1px solid var(--seat); }
+.cx-chip small { font-weight: 600; color: color-mix(in srgb, var(--seat) 65%, var(--parchment)); }
+@media (hover: hover) { .cx-chip:hover { background: color-mix(in srgb, var(--parchment) 85%, transparent); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .cx-card .cx-plate { transition: none; }
+  /* Same specificity as the rules that start the glint, or they would win. */
+  .cx-card[data-selected='true'] .cx-plate::before,
+  .cx-card[data-fresh='true'] .cx-plate::before { animation: none; }
+}
+
+/* ── Editor ── */
+.cx-editor { display: flex; flex-direction: column; min-height: 100%; }
+.cx-editor-grid { display: grid; grid-template-columns: minmax(150px, 230px) minmax(0, 1fr); gap: 22px; align-items: start; }
+.cx-editor[data-shape='landscape'] .cx-editor-grid { grid-template-columns: minmax(0, 1fr); }
+.cx-editor-fields { display: grid; gap: 14px; }
+.cx-editor-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: 12px; }
+.cx-editor .label { color: color-mix(in srgb, var(--seat) 78%, var(--parchment)); font-size: var(--t-small); }
+.cx-editor .input, .cx-editor .select, .cx-editor .textarea { font-size: 17px; min-height: var(--touch); }
+.cx-editor .textarea { min-height: calc(6 * 1.55em + 18px); field-sizing: content; }
+.cx-image-block { display: grid; gap: 8px; }
+.cx-image-block .cx-plate { aspect-ratio: 5 / 7; }
+.cx-editor[data-shape='landscape'] .cx-image-block .cx-plate { aspect-ratio: 16 / 9; }
+.cx-image-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.cx-image-actions .btn, .cx-editor-bar .btn { min-height: var(--touch); }
+.cx-image-error { margin: 0; font-family: var(--font-data); font-weight: 700; font-size: var(--t-small); color: var(--danger); }
+.cx-image-busy { margin: 0; font-family: var(--font-data); font-size: var(--t-small); color: var(--seat); }
+.cx-damage { margin: 0; padding: 0; border: 0; display: grid; gap: 6px; }
+.cx-damage .cx-chips .chip { min-height: 36px; }
+.cx-chip-static { cursor: default; }
+.cx-chip-remove { display: grid; place-items: center; width: 28px; height: 28px; margin-right: -6px; font-size: 18px; line-height: 1; color: var(--seat); background: none; border: 0; cursor: pointer; }
+.cx-results { list-style: none; margin: 4px 0 0; padding: 0; border: 1px solid var(--gold-lo); background: color-mix(in srgb, var(--parchment) 90%, var(--stone-3)); }
+.cx-result { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; min-height: var(--touch); padding: 4px 10px 4px 4px; font-family: var(--font-data); font-weight: 600; font-size: 16px; text-align: left; color: var(--seat); background: none; border: 0; cursor: pointer; }
+.cx-result img { width: 32px; height: 32px; object-fit: cover; object-position: 50% 20%; border: 1px solid var(--seat); }
+.cx-result small { color: color-mix(in srgb, var(--seat) 82%, var(--parchment)); }
+.cx-result[data-active='true'] { background: color-mix(in srgb, var(--gold) 30%, transparent); }
+@media (hover: hover) { .cx-result:hover { background: color-mix(in srgb, var(--gold) 20%, transparent); } }
+.cx-gallery { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+.cx-gallery[data-shape='landscape'] { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.cx-gallery-item { padding: 0; background: none; border: 0; cursor: pointer; }
+.cx-gallery-item .cx-plate { aspect-ratio: 5 / 7; }
+.cx-gallery[data-shape='landscape'] .cx-gallery-item .cx-plate { aspect-ratio: 16 / 9; }
+.cx-gallery-item[aria-pressed='true'] .cx-plate { box-shadow: 0 0 0 1px var(--seat), 0 0 0 3px var(--accent); }
+.cx-gallery-empty { margin: 0; font-size: var(--t-small); color: color-mix(in srgb, var(--seat) 78%, var(--parchment)); }
+/* The action bar stays reachable with the on-screen keyboard open. */
+.cx-editor-bar {
+  position: sticky; bottom: 0; z-index: 2;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin: 18px -30px -22px; padding: 12px 30px calc(12px + var(--safe-b));
+  background: var(--parchment); border-top: 1px solid var(--gold-lo);
+  box-shadow: 0 -8px 16px color-mix(in srgb, var(--parchment) 80%, transparent);
+}
+.cx-confirm { font-family: var(--font-data); font-weight: 700; font-size: var(--t-small); color: var(--seat); }

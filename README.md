@@ -18,7 +18,7 @@ credentials configured the app still boots in local mode (`localStorage`, no
 login), so it can be cloned and tried out without setting anything up.
 
 To connect it to Supabase: [`docs/SUPABASE.md`](docs/SUPABASE.md) — three steps
-(credentials in `.env.local`, run the migration, enable email access).
+(credentials in `.env.local`, run the migrations in order, enable email access).
 
 To publish it on Cloudflare Workers: [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
@@ -45,6 +45,11 @@ The **Quests** section is a log shared by the whole party and updated live: grou
 personal quests with ordered objectives, rewards and per-character tracking, plus a
 tracker that follows you through the other sections (the live part needs Supabase).
 
+**Journal**: a shared, illustrated codex of NPCs, places, factions, creatures and lore, with the
+character's background in its own tab. Entries link to each other, carry an optional
+illustration and show up live for the whole party (the live part and image uploads to
+Supabase Storage need Supabase; locally images are kept in the browser).
+
 ## 2024 rules already covered
 
 - Proficiency Bonus by level and proficiency/**expertise** in skills and saving throws.
@@ -66,6 +71,9 @@ src/
 ├── lib/derive.ts        Derived values (modifiers, DC, initiative…)
 ├── lib/quests.ts        Pure quest rules (difficulty, membership, progress)
 ├── lib/questStorage.ts  Quest persistence and Realtime (local | supabase)
+├── lib/codex.ts         Pure codex rules (kinds, filters, search, links)
+├── lib/codexStorage.ts  Codex persistence and Realtime (local | supabase)
+├── lib/codexImages.ts   Codex images: resolve, upload, delete
 ├── lib/sfx.ts           Menu sounds synthesized with WebAudio (no assets)
 ├── lib/supabase.ts      Supabase client and credential detection
 ├── lib/storage.ts       Read and write services (local | supabase)
@@ -73,6 +81,7 @@ src/
 ├── store/auth.ts        Session: sign in, sign up, magic link, sign out
 ├── store/roster.ts      Party state, per-sheet saving and sync status
 ├── store/quests.ts      Shared quest log: per-row writes, Realtime merge
+├── store/codex.ts       Shared codex: per-entry writes, Realtime merge
 ├── screens/             Title · Sign in · Character select · Sheet
 ├── sections/            The eight editable sections
 └── styles/              Tokens and look (self-hosted fonts)
@@ -106,4 +115,6 @@ self-hosted in `public/fonts/`; `scripts/fetch-fonts.sh` regenerates them.
 | `npm run typecheck` | Types only |
 | `node scripts/generate-seed.mjs` | Regenerates `supabase/seed.sql` from the TypeScript |
 | `node scripts/check-quests.mjs` | Assertions over the quest rules |
-| `node scripts/generate-assets.mjs` | Regenerates the provisional portraits |
+| `node scripts/check-codex.mjs` | Assertions over the codex rules and the demo codex |
+| `node scripts/generate-assets.mjs` | Regenerates the provisional portraits and the codex emblems |
+| `python scripts/process-codex-assets.py` | Turns generated codex art into WebP ([`docs/CODEX_ASSETS.md`](docs/CODEX_ASSETS.md)) |

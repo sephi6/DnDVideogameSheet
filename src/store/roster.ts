@@ -3,6 +3,7 @@ import type { Character } from '@/types/character'
 import { createCharacter, demoRoster, isUuid, newId } from '@/data/defaults'
 import { readLocalRoster, storage, usingCloud } from '@/lib/storage'
 import { readableError } from '@/lib/supabase'
+import { useCodex } from '@/store/codex'
 import { useQuests } from '@/store/quests'
 
 type Updater = (draft: Character) => void
@@ -120,6 +121,7 @@ async function hydrateOnce(set: Set_) {
     set({ characters: demo, loaded: true })
     await storage.saveMany(demo)
     await useQuests.getState().seedDemo(demo)
+    await useCodex.getState().seedDemo(demo)
     if (usingCloud) localStorage.setItem(SEEDED_KEY, '1')
     set({ sync: 'saved' })
   } catch (err) {
@@ -185,6 +187,7 @@ export const useRoster = create<RosterState>((set, get) => ({
       await storage.remove(id)
       failed.delete(id)
       useQuests.getState().removeCharacter(id)
+      useCodex.getState().forgetCharacter(id)
       set({ sync: 'saved' })
     } catch (err) {
       console.error('[arcana] could not delete the sheet', err)
@@ -211,6 +214,7 @@ export const useRoster = create<RosterState>((set, get) => ({
     try {
       await storage.saveMany(demo)
       await useQuests.getState().seedDemo(demo)
+      await useCodex.getState().seedDemo(demo)
       if (usingCloud) localStorage.setItem(SEEDED_KEY, '1')
       set({ sync: 'saved' })
     } catch (err) {

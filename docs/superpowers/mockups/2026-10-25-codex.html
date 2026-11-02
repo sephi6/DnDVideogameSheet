@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Codex mockups</title>
+<link rel="stylesheet" href="/src/styles/fonts.css">
+<link rel="stylesheet" href="/src/styles/global.css">
+<link rel="stylesheet" href="/src/styles/sheet.css">
+<link rel="stylesheet" href="/src/styles/quests.css">
+<style>
+  body { overflow: auto; }
+  .switcher { position: sticky; top: 0; z-index: 50; display: flex; gap: 8px; align-items: center; justify-content: center; padding: 10px; background: var(--seat); border-bottom: 1px solid var(--gold-lo); font-family: var(--font-data); }
+  .switcher .btn[data-on='true'] { color: var(--seat); background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, var(--gold-lo)); }
+  .switcher p { margin: 0 0 0 14px; color: var(--parchment-dim); font-size: 14px; max-width: 520px; }
+  .stage { position: relative; height: 820px; max-width: 1440px; margin: 0 auto; }
+  .stage .sheet { height: 100%; }
+
+  /* ── Shared codex pieces ───────────────────────────────────────── */
+  .cx-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .cx-tab { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 14px 6px 10px; font-family: var(--font-display); font-weight: 600; font-size: 14px; letter-spacing: .05em; color: var(--parchment-dim); background: var(--stone-2); border: 1px solid var(--gold-lo); box-shadow: inset 1px 1px 0 var(--gold-lo), inset -1px -1px 0 var(--gold-hi); cursor: pointer; }
+  .cx-tab svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+  .cx-tab b { font-family: var(--font-data); font-weight: 700; color: var(--gold); }
+  .cx-tab[data-on='true'] { color: var(--gold-hi); border-color: var(--gold); box-shadow: var(--bevel); background-image: linear-gradient(var(--veil-2), var(--veil-2)); }
+  .cx-tab.private { margin-left: auto; border-style: dashed; }
+  .cx-tools { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .cx-tools .input { max-width: 280px; }
+
+  /* Band frame for every image: gold three-tone border-box. */
+  .plate { position: relative; display: block; border: 3px solid transparent; border-radius: 3px; background: linear-gradient(var(--stone-3), var(--stone-3)) padding-box, linear-gradient(135deg, var(--gold-hi) 0%, var(--gold) 44%, var(--gold-lo) 100%) border-box; box-shadow: 0 0 0 1px var(--seat), inset 0 0 0 1px var(--seat); overflow: hidden; }
+  .plate img, .plate .scene { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .plate[data-dead='true'] img { filter: grayscale(1) contrast(.9) brightness(.75); }
+
+  /* Attitude seal: a gem on the frame plus a word. Never colour alone. */
+  .seal { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-data); font-weight: 700; font-size: 13px; letter-spacing: .06em; }
+  .seal::before { content: ''; width: 9px; height: 9px; transform: rotate(45deg); background: var(--c); box-shadow: 0 0 0 1px var(--seat), 0 0 8px color-mix(in srgb, var(--c) 60%, transparent); }
+  .seal.ally { --c: var(--rarity-uncommon); }
+  .seal.neutral { --c: var(--gold-hi); }
+  .seal.hostile { --c: var(--danger); }
+  .seal.unknown { --c: var(--rarity-poor); }
+  .ribbon { position: absolute; left: -34px; top: 16px; transform: rotate(-35deg); width: 140px; text-align: center; padding: 3px 0; font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: .14em; color: var(--parchment); background: color-mix(in srgb, var(--seat) 85%, transparent); border-block: 1px solid var(--gold-lo); }
+
+  /* Related chips with a thumbnail. */
+  .rel { display: flex; flex-wrap: wrap; gap: 6px; }
+  .rel a { display: inline-flex; align-items: center; gap: 8px; padding: 3px 10px 3px 3px; font-family: var(--font-data); font-weight: 600; font-size: 14px; color: var(--seat); text-decoration: none; background: rgba(255,255,255,.28); border: 1px solid var(--gold-lo); cursor: pointer; }
+  .rel a i { width: 26px; height: 26px; flex: none; background-size: cover; background-position: center; border: 1px solid var(--seat); }
+  .rel a small { color: color-mix(in srgb, var(--seat) 65%, var(--parchment)); font-weight: 600; }
+  @media (hover: hover) { .rel a:hover { background: rgba(255,255,255,.5); } }
+
+  /* The parchment page (reuses .quest-page) with a hero plate. */
+  .cx-page { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 22px; }
+  .cx-page .plate { aspect-ratio: 5 / 7; }
+  .cx-page.wide { grid-template-columns: minmax(0, 1fr); }
+  .cx-page.wide .plate { aspect-ratio: 21 / 8; }
+  .facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 10px 0 0; font-family: var(--font-data); font-size: 15px; color: var(--seat); }
+  .facts dt { font-weight: 700; color: color-mix(in srgb, var(--seat) 70%, var(--parchment)); }
+  .facts dd { margin: 0; font-weight: 600; }
+  .page-actions { position: absolute; top: 14px; right: 16px; display: flex; gap: 6px; }
+  .page-actions .btn { color: var(--seat); background: rgba(255,255,255,.25); border-color: var(--gold-lo); box-shadow: none; }
+  .dmg { display: flex; flex-wrap: wrap; gap: 5px; }
+  .dmg span { padding: 2px 8px; font-family: var(--font-data); font-weight: 700; font-size: 13px; border: 1px solid var(--seat); color: var(--seat); }
+  .dmg span.weak { background: color-mix(in srgb, var(--rarity-uncommon) 30%, transparent); }
+  .dmg span.res { background: color-mix(in srgb, var(--danger) 22%, transparent); }
+
+  /* ── A · Log ───────────────────────────────────────────────────── */
+  .va { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 16px; align-items: start; }
+  .va-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; padding: 6px; text-align: left; font: inherit; color: var(--parchment); background: transparent; border: 1px solid transparent; border-left: 3px solid transparent; cursor: pointer; }
+  .va-row .plate { width: 44px; height: 54px; border-width: 2px; }
+  .va-row .t { font-size: 16px; line-height: 1.2; }
+  .va-row .s { display: block; font-family: var(--font-data); font-weight: 600; font-size: 12px; color: var(--parchment-dim); }
+  .va-row[data-on='true'] { background: var(--veil-2); border-color: var(--gold-faint); border-left-color: var(--accent); }
+  @media (hover: hover) { .va-row:hover { background: var(--veil-3); } }
+
+  /* ── B · Collection wall ───────────────────────────────────────── */
+  .vb { position: relative; }
+  .vb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px 14px; }
+  .vb-card { position: relative; display: flex; flex-direction: column; gap: 0; padding: 0; text-align: center; font: inherit; color: var(--parchment); background: none; border: 0; cursor: pointer; }
+  .vb-card .plate { aspect-ratio: 5 / 7; transition: transform .14s, box-shadow .14s; }
+  .vb-card .plate::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--seat) 85%, transparent)); }
+  .vb-card .nm { position: absolute; left: 0; right: 0; bottom: 30px; z-index: 1; padding: 0 8px; font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.15; color: var(--gold-hi); text-shadow: 0 1px 2px var(--seat); }
+  .vb-card .seal { position: absolute; left: 0; right: 0; bottom: 10px; z-index: 1; justify-content: center; }
+  .vb-card[data-on='true'] .plate { transform: translateY(-4px); box-shadow: 0 0 0 1px var(--seat), 0 0 0 3px var(--accent), 0 10px 24px rgba(0,0,0,.6); }
+  @media (hover: hover) { .vb-card:hover .plate { transform: translateY(-3px); } }
+  .vb-card.add .plate { display: grid; place-items: center; background: linear-gradient(var(--stone-2), var(--stone-2)) padding-box, linear-gradient(135deg, var(--gold-lo), var(--gold-lo)) border-box; }
+  .vb-card.add .plate::after { display: none; }
+  .vb-card.add span { font-family: var(--font-display); color: var(--gold); font-size: 15px; }
+  .vb-card.add b { display: block; font-size: 40px; line-height: 1; font-weight: 400; }
+  .vb-places .vb-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .vb-places .vb-card .plate { aspect-ratio: 16 / 9; }
+  .vb-drawer { position: absolute; top: 0; right: 0; bottom: 0; width: min(640px, 70%); overflow: auto; transform: translateX(0); transition: transform .22s cubic-bezier(.35,0,.2,1), opacity .22s; z-index: 5; }
+  .vb-drawer[data-open='false'] { transform: translateX(40px); opacity: 0; pointer-events: none; }
+  .vb-scrim { position: absolute; inset: 0; z-index: 4; background: color-mix(in srgb, var(--seat) 55%, transparent); transition: opacity .22s; }
+  .vb-scrim[data-open='false'] { opacity: 0; pointer-events: none; }
+  .vb-drawer .quest-page { min-height: 100%; }
+
+  /* ── C · Spotlight ─────────────────────────────────────────────── */
+  .vc-hero { position: relative; height: 430px; }
+  .vc-hero > .plate { position: absolute; inset: 0; }
+  .vc-hero > .plate::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, color-mix(in srgb, var(--seat) 92%, transparent) 0%, color-mix(in srgb, var(--seat) 70%, transparent) 38%, transparent 70%); }
+  .vc-copy { position: absolute; left: 34px; top: 30px; bottom: 30px; width: min(470px, 52%); z-index: 1; display: flex; flex-direction: column; gap: 10px; }
+  .vc-copy h2 { margin: 0; font-family: var(--font-display); font-weight: 700; font-size: var(--t-hero); line-height: 1.02; letter-spacing: .02em; color: var(--gold-hi); text-shadow: 0 2px 6px var(--seat); }
+  .vc-copy .role { font-family: var(--font-data); font-weight: 600; font-size: 17px; color: var(--parchment); }
+  .vc-copy p { margin: 0; font-size: 17px; line-height: 1.55; color: var(--parchment); }
+  .vc-copy .rel a { color: var(--parchment); background: color-mix(in srgb, var(--stone-2) 80%, transparent); border-color: var(--gold-lo); }
+  .vc-copy .rel a small { color: var(--parchment-dim); }
+  .vc-strip { display: flex; gap: 10px; margin-top: 14px; overflow-x: auto; padding: 6px 2px 10px; }
+  .vc-strip button { flex: 0 0 92px; padding: 0; background: none; border: 0; cursor: pointer; font: inherit; color: var(--parchment-dim); text-align: center; }
+  .vc-strip .plate { height: 112px; border-width: 2px; opacity: .7; transition: opacity .14s, transform .14s; }
+  .vc-strip button[data-on='true'] .plate { opacity: 1; transform: translateY(-5px); box-shadow: 0 0 0 1px var(--seat), 0 0 0 3px var(--accent); }
+  .vc-strip button[data-on='true'] small { color: var(--gold-hi); }
+  .vc-strip small { display: block; margin-top: 4px; font-family: var(--font-data); font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .variant { display: none; }
+  .variant[data-on='true'] { display: block; }
+  .note { max-width: 1440px; margin: 10px auto 30px; padding: 0 40px; color: var(--parchment-dim); font-size: 16px; line-height: 1.5; }
+  .note b { color: var(--gold-hi); font-family: var(--font-display); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="bg-fx"></div>
+
+<div class="switcher">
+  <button class="btn small" data-v="a">A · Log</button>
+  <button class="btn small" data-v="b" data-on="true">B · Collection</button>
+  <button class="btn small" data-v="c">C · Spotlight</button>
+  <button class="btn small ghost" id="cat-toggle">Show places</button>
+  <p id="caption"></p>
+</div>
+
+<div class="stage">
+  <div class="sheet" style="--accent:#3FC7EB">
+    <div class="sheet-ident">
+      <img class="portrait" src="/assets/portraits/mage.webp" alt="">
+      <div class="who"><div class="n">Ilyra Dawnspire</div><div class="c">Lv 6 Mage</div></div>
+    </div>
+    <header class="sheet-head">
+      <div class="section-name">☙ Journal</div>
+      <div class="head-actions"><button class="btn small ghost">◂ Exit</button></div>
+    </header>
+    <nav class="sheet-nav">
+      <button class="nav-item"><span class="idx">1</span><span>◆</span><span>Character</span></button>
+      <button class="nav-item"><span class="idx">2</span><span>❖</span><span>Skills</span></button>
+      <button class="nav-item"><span class="idx">3</span><span>⚔</span><span>Combat</span></button>
+      <button class="nav-item"><span class="idx">4</span><span>❉</span><span>Spellbook</span></button>
+      <button class="nav-item"><span class="idx">5</span><span>◈</span><span>Bags</span></button>
+      <button class="nav-item"><span class="idx">6</span><span>✦</span><span>Features</span></button>
+      <button class="nav-item" data-active="true" style="transform:translateX(14px)"><span class="idx">7</span><span>☙</span><span>Journal</span></button>
+      <button class="nav-item"><span class="idx">8</span><span>❢</span><span>Quests</span></button>
+      <div class="nav-spacer"></div>
+    </nav>
+    <div class="sheet-body" id="body"></div>
+    <div class="sheet-hints"></div>
+  </div>
+</div>
+<div class="note" id="note"></div>
+
+<script>
+const P = (c) => `/assets/portraits/${c}.webp`
+// Painted scenes for places: layered ridges and a skyline, no asset files.
+const scene = (sky1, sky2, ridge, spire) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 360' preserveAspectRatio='xMidYMid slice'><defs><linearGradient id='s' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='${sky1}'/><stop offset='1' stop-color='${sky2}'/></linearGradient></defs><rect width='640' height='360' fill='url(#s)'/><circle cx='470' cy='110' r='46' fill='${sky2}' opacity='.8'/><path d='M0 250 L80 190 L150 230 L240 160 L330 220 L420 170 L520 230 L640 180 V360 H0Z' fill='${ridge}' opacity='.55'/>${spire ? `<path d='M250 300 V200 L262 170 L274 200 V300 M300 300 V150 L316 110 L332 150 V300 M352 300 V210 L362 186 L372 210 V300 M220 300 H400 V320 H220Z' fill='#0d0a08'/>` : ''}<path d='M0 300 L120 260 L230 290 L360 250 L480 290 L640 260 V360 H0Z' fill='#0d0a08'/></svg>`)}`
+
+const ICON = {
+  npcs: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 4-7 8-7s7 2 8 7"/>',
+  places: '<path d="M3 20h18M5 20V10l3-3 3 3v10M13 20V6l3-3 3 3v14"/>',
+  factions: '<path d="M6 3v18M6 4h12l-3 4 3 4H6"/>',
+  bestiary: '<path d="M4 18c2-8 6-12 8-12s6 4 8 12M8 12l-2-5M16 12l2-5M9 15h.01M15 15h.01"/>',
+  lore: '<path d="M5 4h10l4 4v12H5zM15 4v4h4M8 12h8M8 16h6"/>',
+  background: '<path d="M4 5c3-1 5-1 8 1 3-2 5-2 8-1v14c-3-1-5-1-8 1-3-2-5-2-8-1z"/>',
+}
+const CATS = [['npcs','NPCs',14],['places','Places',9],['factions','Factions',4],['bestiary','Bestiary',7],['lore','Items & lore',6]]
+
+const NPCS = [
+  { id:'n1', name:'Magister Vael Ashcroft', role:'Archivist of the Violet Hold', att:'ally', img:P('wizard'), met:'Dalaran', note:'Lent us the cipher wheel. Wants the Ashen Codex returned before the moon turns. Knows more about the Hollow Crown than he admits.', rel:[['Dalaran','places'],['The Kirin Tor','factions'],['Ashen Codex','lore']], back:[['The Sunken Archive','places']] },
+  { id:'n2', name:'Brother Halcyon', role:'Wandering priest', att:'neutral', img:P('cleric'), met:'Goldshire road', note:'Heals for coin, asks no questions. Saw the caravan burn.', rel:[['Goldshire','places']], back:[] },
+  { id:'n3', name:'Kesh the Grin', role:'Fence, Cutthroat Alley', att:'hostile', img:P('rogue'), met:'Stormwind', note:'Sold us out to the Defias. Owes Thorn a finger.', rel:[['Stormwind','places'],['The Defias Brotherhood','factions']], back:[] },
+  { id:'n4', name:'Warden Tyrasha', role:'Captain of the night watch', att:'ally', img:P('paladin'), met:'Stormwind', note:'Will look the other way once. Only once.', rel:[['Stormwind','places']], back:[] },
+  { id:'n5', name:'Old Morrow', role:'Ferryman', att:'unknown', img:P('druid'), met:'Lake Elune', note:'Never takes coin. Takes memories?', rel:[], back:[] },
+  { id:'n6', name:'Lord Caddoc Vire', role:'Baron of the Marches', att:'hostile', img:P('warlock'), met:'Vire Keep', dead:true, note:'Slain in the chapel. His signet ring is missing.', rel:[['Vire Keep','places']], back:[] },
+  { id:'n7', name:'Sister Imra', role:'Herbalist', att:'neutral', img:P('monk'), met:'Goldshire', note:'Trades in Peacebloom and rumours.', rel:[], back:[] },
+]
+const PLACES = [
+  { id:'p1', name:'Dalaran', role:'City · Floating citadel', att:'ally', img:scene('#2a1d4a','#7b5cc4','#3a2a63',true), met:'Session 3', note:'The violet city. Our rooms are at the Legerdemain Lounge. Magister Ashcroft keeps the archive under the Violet Hold.', rel:[['Magister Vael Ashcroft','npcs'],['The Kirin Tor','factions']], back:[] },
+  { id:'p2', name:'The Sunken Archive', role:'Dungeon · Flooded crypt', att:'hostile', img:scene('#0f2a2e','#3e7f7a','#1c4a4a',false), met:'Session 5', note:'Three levels, the lowest underwater. Door sealed with a violet rune.', rel:[['Ashen Codex','lore']], back:[] },
+  { id:'p3', name:'Vire Keep', role:'Castle · Ruined', att:'unknown', img:scene('#3a1a12','#c46a3a','#5a2a1a',true), met:'Session 6', note:'Burned after the baron fell. Someone is still lighting the chapel candles.', rel:[['Lord Caddoc Vire','npcs']], back:[] },
+  { id:'p4', name:'Goldshire', role:'Village', att:'neutral', img:scene('#2e3a1a','#c8a84f','#3a4a22',false), met:'Session 1', note:'The Lion\'s Pride Inn. Cheap ale, loud bards.', rel:[['Brother Halcyon','npcs'],['Sister Imra','npcs']], back:[] },
+  { id:'p5', name:'Lake Elune', role:'Region · Lake', att:'unknown', img:scene('#141e34','#4a6aa4','#22304e',false), met:'Session 4', note:'Fog every night after the second bell.', rel:[['Old Morrow','npcs']], back:[] },
+]
+const thumb = (name) => [...NPCS, ...PLACES].find(e => e.name === name)?.img ?? P('default').replace('webp','svg')
+
+let variant = 'b', cat = 'npcs', sel = 'n1', open = true
+const list = () => cat === 'npcs' ? NPCS : PLACES
+const cur = () => list().find(e => e.id === sel) ?? list()[0]
+const ATT = { ally:'Ally', neutral:'Neutral', hostile:'Hostile', unknown:'Unknown' }
+
+const tabs = () => `<div class="cx-tabs">${CATS.map(([k,l,n]) => `<button class="cx-tab" data-cat="${k}" data-on="${k===cat}"><svg viewBox="0 0 24 24">${ICON[k]}</svg>${l}<b>${n}</b></button>`).join('')}<button class="cx-tab private" title="Only on this sheet"><svg viewBox="0 0 24 24">${ICON.background}</svg>Background</button></div>`
+const tools = () => `<div class="cx-tools"><input class="input" placeholder="Search the codex"><select class="select" style="max-width:170px"><option>All attitudes</option></select><span style="flex:1"></span><button class="btn small primary">+ New ${cat==='npcs'?'NPC':'place'}</button></div>`
+const relChips = (e) => `<div class="rel">${e.rel.map(([n,k]) => `<a><i style="background-image:url('${thumb(n)}')"></i>${n} <small>${CATS.find(c=>c[0]===k)[1]}</small></a>`).join('')}</div>`
+const plate = (e, extra='') => `<span class="plate" data-dead="${!!e.dead}" ${extra}><img src="${e.img}" alt="">${e.dead ? '<span class="ribbon">Deceased</span>' : ''}</span>`
+
+function page(e) {
+  const wide = cat === 'places'
+  return `<article class="quest-page"><div class="page-actions"><button class="btn small">Edit</button></div>
+    <div class="cx-page ${wide ? 'wide' : ''}">
+      ${plate(e)}
+      <div>
+        <div class="qp-kicker"><span class="seal ${e.att}" style="color:var(--seat)">${ATT[e.att]}</span><span class="dot"></span>${wide ? 'Place' : 'NPC'}${e.dead ? '<span class="dot"></span>Deceased' : ''}</div>
+        <h2 class="qp-title">${e.name}</h2>
+        <dl class="facts"><dt>${wide ? 'Kind' : 'Role'}</dt><dd>${e.role}</dd><dt>${wide ? 'First visited' : 'Met at'}</dt><dd>${e.met}</dd><dt>Added by</dt><dd>Thorn · 2 days ago</dd></dl>
+        <div class="qp-rule"></div>
+        <p class="qp-desc">${e.note}</p>
+        <div class="qp-rule"></div>
+        <h3 class="qp-h">Related</h3>${relChips(e)}
+        ${e.back.length ? `<h3 class="qp-h" style="margin-top:14px">Mentioned in</h3><div class="rel">${e.back.map(([n]) => `<a><i style="background-image:url('${thumb(n)}')"></i>${n}</a>`).join('')}</div>` : ''}
+      </div>
+    </div></article>`
+}
+
+function A() {
+  const e = cur()
+  return tabs() + `<div class="va"><div class="panel ql-list">${tools().replace('max-width:170px','display:none').replace('class="input"','class="input" style="max-width:none"')}
+    <div class="ql-scroll"><div><div class="ql-group">${cat==='npcs'?'Allies':'Cities'}</div></div>
+    ${list().map(x => `<button class="va-row" data-id="${x.id}" data-on="${x.id===e.id}">${plate(x)}<span><span class="t">${x.name}</span><span class="s">${x.role}</span></span><span class="seal ${x.att}"></span></button>`).join('')}
+    </div></div>${page(e)}</div>`
+}
+function B() {
+  const e = cur()
+  return `<div class="vb ${cat==='places'?'vb-places':''}">` + tabs() + tools() + `<div class="vb-grid">
+    ${list().map(x => `<button class="vb-card" data-id="${x.id}" data-on="${open && x.id===e.id}">${plate(x)}<span class="nm">${x.name}</span><span class="seal ${x.att}">${ATT[x.att]}</span></button>`).join('')}
+    <button class="vb-card add"><span class="plate"><span><b>+</b>New ${cat==='npcs'?'NPC':'place'}</span></span></button>
+    </div><div class="vb-scrim" data-open="${open}"></div><div class="vb-drawer" data-open="${open}">${page(e)}</div></div>`
+}
+function C() {
+  const e = cur()
+  return tabs() + `<div class="vc-hero">${plate(e)}<div class="vc-copy">
+      <span class="seal ${e.att}">${ATT[e.att]}${e.dead ? ' · Deceased' : ''}</span>
+      <h2>${e.name}</h2><span class="role">${e.role} — ${e.met}</span>
+      <p>${e.note}</p><div style="flex:1"></div>${relChips(e)}
+      <div class="row"><button class="btn small">Edit</button><button class="btn small ghost">+ New ${cat==='npcs'?'NPC':'place'}</button></div>
+    </div></div>
+    <div class="vc-strip">${list().map(x => `<button data-id="${x.id}" data-on="${x.id===e.id}">${plate(x)}<small>${x.name}</small></button>`).join('')}</div>`
+}
+
+const CAPTION = {
+  a: 'The quest log pattern: list with thumbnails on the left, parchment page on the right. Dense, fast to scan, consistent with section 8.',
+  b: 'A collection wall of framed cards (the art is the hero). Clicking slides the parchment page in from the right; Esc or the scrim closes it.',
+  c: 'Cinematic: the selected entry fills the stage like a Dungeon Journal boss, with a filmstrip below. Most dramatic, least information per screen.',
+}
+function render() {
+  document.querySelectorAll('.switcher [data-v]').forEach(b => b.dataset.on = b.dataset.v === variant)
+  document.getElementById('cat-toggle').textContent = cat === 'npcs' ? 'Show places' : 'Show NPCs'
+  document.getElementById('caption').textContent = CAPTION[variant]
+  document.getElementById('body').innerHTML = { a:A, b:B, c:C }[variant]()
+}
+document.addEventListener('click', (ev) => {
+  const v = ev.target.closest('.switcher [data-v]'); if (v) { variant = v.dataset.v; open = true; return render() }
+  if (ev.target.closest('#cat-toggle')) { cat = cat === 'npcs' ? 'places' : 'npcs'; sel = list()[0].id; return render() }
+  const t = ev.target.closest('.cx-tab[data-cat]'); if (t && (t.dataset.cat === 'npcs' || t.dataset.cat === 'places')) { cat = t.dataset.cat; sel = list()[0].id; return render() }
+  if (ev.target.closest('.vb-scrim')) { open = false; return render() }
+  const r = ev.target.closest('[data-id]'); if (r) { sel = r.dataset.id; open = true; render() }
+})
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape') { open = false; render() } })
+render()
+</script>
+</body>
+</html>

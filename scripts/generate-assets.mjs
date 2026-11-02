@@ -106,3 +106,49 @@ for (const [key, path] of Object.entries(EMBLEMS)) {
   n++
 }
 console.log(`Generated ${n} portraits in public/assets/portraits/`)
+
+// ── Codex: one default emblem per entry kind ────────────────────────────────
+// Gold line art on warm stone, no text: shown until an entry gets real art.
+// Places are landscape (16:9); the other kinds are portrait (5:7).
+const codexDir = resolve(here, '../public/assets/codex')
+mkdirSync(codexDir, { recursive: true })
+
+const CODEX_EMBLEMS = {
+  npc: 'M50 20 A16 16 0 1 0 50 52 A16 16 0 1 0 50 20 Z M22 88 C22 66 36 56 50 56 C64 56 78 66 78 88',
+  place: 'M14 84 L86 84 M22 84 L22 46 L32 34 L42 46 L42 84 M52 84 L52 30 L64 14 L76 30 L76 84 M60 46 L68 46 M60 60 L68 60 M30 58 L34 58',
+  faction: 'M28 10 L28 92 M28 14 L78 14 L66 32 L78 50 L28 50 M42 26 L54 26 M42 38 L58 38',
+  creature: 'M18 82 C26 50 38 30 50 30 C62 30 74 50 82 82 M34 56 L24 34 M66 56 L76 34 M40 66 L44 66 M56 66 L60 66 M44 78 L50 74 L56 78',
+  lore: 'M24 14 L66 14 L80 28 L80 88 L24 88 Z M66 14 L66 28 L80 28 M34 44 L70 44 M34 56 L70 56 M34 68 L58 68',
+}
+
+function codexSvg(kind, path) {
+  const landscape = kind === 'place'
+  const [w, h] = landscape ? [1600, 900] : [1000, 1400]
+  const size = landscape ? 420 : 520
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${kind}">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#30261f"/>
+      <stop offset="0.55" stop-color="#241d18"/>
+      <stop offset="1" stop-color="#1a1512"/>
+    </radialGradient>
+    <linearGradient id="foot" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.6" stop-color="#0d0a08" stop-opacity="0"/>
+      <stop offset="1" stop-color="#0d0a08" stop-opacity="0.85"/>
+    </linearGradient>
+  </defs>
+  <rect width="${w}" height="${h}" fill="url(#g)"/>
+  <g transform="translate(${w / 2} ${h * (landscape ? 0.46 : 0.4)}) scale(${size / 100}) translate(-50 -50)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="${path}" stroke="#0d0a08" stroke-width="7" opacity="0.9"/>
+    <path d="${path}" stroke="#8a6d2f" stroke-width="3.6"/>
+    <path d="${path}" stroke="#e8d08a" stroke-width="1.4" opacity="0.85"/>
+  </g>
+  <rect width="${w}" height="${h}" fill="url(#foot)"/>
+</svg>
+`
+}
+
+for (const [kind, path] of Object.entries(CODEX_EMBLEMS)) {
+  writeFileSync(resolve(codexDir, `default-${kind}.svg`), codexSvg(kind, path))
+}
+console.log(`Generated ${Object.keys(CODEX_EMBLEMS).length} codex emblems in public/assets/codex/`)

@@ -49,6 +49,10 @@ export function readableError(error: unknown): string {
     'Email rate limit exceeded': 'Too many emails in a row. Wait a moment.',
     'Failed to fetch': 'Could not reach Supabase. Is there a connection? Is the URL right?',
   }
+  // localStorage over its ~5 MB: Chrome says "exceeded the quota", Firefox and Safari "The quota has been exceeded".
+  if ((error instanceof DOMException && error.name === 'QuotaExceededError') || /quota/i.test(raw)) {
+    return "The browser's local storage is full. Remove some uploaded images or portraits, or sign in to the cloud."
+  }
   for (const [needle, readable] of Object.entries(map)) {
     if (raw.includes(needle)) return readable
   }
