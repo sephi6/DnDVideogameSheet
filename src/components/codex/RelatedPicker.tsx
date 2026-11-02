@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { kindInfo, resolveRelated, searchEntries } from '@/lib/codex'
-import { imageUrl } from '@/lib/codexImages'
+import { emblemOnError, imageUrl } from '@/lib/codexImages'
 import { play } from '@/lib/sfx'
 import type { CodexEntry } from '@/types/codex'
 
@@ -43,7 +43,7 @@ export function RelatedPicker({ value, entries, selfId, onChange }: {
         <div className="cx-chips">
           {current.map((e) => (
             <span key={e.id} className="cx-chip cx-chip-static">
-              <img src={imageUrl(e.image, e.kind)} alt="" />
+              <img src={imageUrl(e.image, e.kind)} onError={emblemOnError(e.kind)} alt="" />
               <span>{e.name || 'Unnamed'}</span>
               <button
                 type="button"
@@ -99,7 +99,7 @@ export function RelatedPicker({ value, entries, selfId, onChange }: {
           {results.map((e, i) => (
             <li key={e.id} id={`${id}-${e.id}`} role="option" aria-selected={i === active}>
               <button type="button" className="cx-result" data-active={i === active} onClick={() => add(e.id)}>
-                <img src={imageUrl(e.image, e.kind)} alt="" />
+                <img src={imageUrl(e.image, e.kind)} onError={emblemOnError(e.kind)} alt="" />
                 <span>{e.name || 'Unnamed'}</span>
                 <small>{kindInfo(e.kind).title}</small>
               </button>

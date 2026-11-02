@@ -85,6 +85,8 @@ assert.deepEqual(
 )
 assert.deepEqual(c.sanitizeDetails('npc', { metAt: '  ', goal: 'x' }), {})
 assert.deepEqual(c.sanitizeDetails('place', { placeType: 'City', firstVisited: 'Session 2' }), { placeType: 'City', firstVisited: 'Session 2' })
+// A hand-edited row with a non-list damage field must not throw.
+assert.deepEqual(c.sanitizeDetails('creature', { resistances: 'Fire', creatureType: 'Beast' }), { creatureType: 'Beast' })
 
 // facts shown on the page, in order, empty ones skipped
 assert.deepEqual(

@@ -25,6 +25,8 @@ interface CodexState {
    */
   saveEntry: (entry: CodexEntry, discardAfter?: string[]) => string
   deleteEntry: (id: string) => void
+  /** A deleted character: the database already set `added_by` to null, so mirror it locally. */
+  forgetCharacter: (characterId: string) => void
   markSeen: (id: string) => void
   seedDemo: (roster: Character[]) => Promise<void>
   retryFailed: () => Promise<void>
@@ -274,6 +276,8 @@ export const useCodex = create<CodexState>((set, get) => ({
     const stored: CodexEntry = {
       ...entry,
       id,
+      // Not editable, and the draft's value may name a character deleted since it opened.
+      addedBy: current ? current.addedBy : entry.addedBy,
       related: cleanRelated(get().entries, entry.related, id),
       details: sanitizeDetails(entry.kind, entry.details),
       createdAt: current?.createdAt ?? (entry.createdAt || now),
@@ -290,6 +294,12 @@ export const useCodex = create<CodexState>((set, get) => ({
     set((s) => ({ entries: s.entries.filter((e) => e.id !== id), fresh: s.fresh.filter((f) => f !== id) }))
     if (gone?.image) queueDiscard(id, [gone.image])
     write(id, set, get)
+  },
+
+  forgetCharacter(characterId) {
+    set((s) => ({
+      entries: s.entries.map((e) => (e.addedBy === characterId ? { ...e, addedBy: null } : e)),
+    }))
   },
 
   markSeen(id) {

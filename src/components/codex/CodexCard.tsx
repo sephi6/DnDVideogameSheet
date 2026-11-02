@@ -1,5 +1,5 @@
 import { ATTITUDE_LABEL, isSettled } from '@/lib/codex'
-import { imageUrl } from '@/lib/codexImages'
+import { emblemOnError, imageUrl } from '@/lib/codexImages'
 import { play } from '@/lib/sfx'
 import type { CodexEntry } from '@/types/codex'
 
@@ -31,7 +31,7 @@ export function CodexCard({ entry, selected, fresh, onFocus, onOpen, cardRef }: 
       }}
     >
       <span className="cx-plate" data-settled={settled}>
-        <img src={imageUrl(entry.image, entry.kind)} alt="" loading="lazy" decoding="async" />
+        <img src={imageUrl(entry.image, entry.kind)} onError={emblemOnError(entry.kind)} alt="" loading="lazy" decoding="async" />
         {settled && <span className="cx-ribbon">{entry.status}</span>}
       </span>
       <span className="cx-name">{name}</span>

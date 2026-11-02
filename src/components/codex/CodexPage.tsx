@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import { Fragment, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/controls'
 import { ATTITUDE_LABEL, backlinks, entryFacts, isSettled, kindInfo, resolveRelated } from '@/lib/codex'
-import { imageUrl } from '@/lib/codexImages'
+import { emblemOnError, imageUrl } from '@/lib/codexImages'
 import type { Character } from '@/types/character'
 import type { CodexEntry } from '@/types/codex'
 import { EntryChips } from './EntryChips'
@@ -50,7 +50,7 @@ export function CodexPage({ entry, entries, roster, isPhone, onEdit, onClose, on
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }}
         >
-          <img src={imageUrl(entry.image, entry.kind)} alt="" />
+          <img src={imageUrl(entry.image, entry.kind)} onError={emblemOnError(entry.kind)} alt="" />
           {settled && <span className="cx-ribbon">{entry.status}</span>}
         </motion.div>
         <div>

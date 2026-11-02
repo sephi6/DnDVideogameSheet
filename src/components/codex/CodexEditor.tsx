@@ -2,7 +2,7 @@ import { type MutableRefObject, useEffect, useRef, useState } from 'react'
 import { Button, Chip, SelectField, TextAreaField, TextField } from '@/components/ui/controls'
 import { CREATURE_TYPES, DAMAGE_TYPES } from '@/data/rules'
 import { ATTITUDES, ATTITUDE_LABEL, LORE_TYPES, PLACE_TYPES, imagesToDiscard, kindInfo } from '@/lib/codex'
-import { discardImages, imageUrl, uploadImage } from '@/lib/codexImages'
+import { discardImages, emblemOnError, imageUrl, uploadImage } from '@/lib/codexImages'
 import { play } from '@/lib/sfx'
 import { readableError } from '@/lib/supabase'
 import type { CodexDetails, CodexEntry } from '@/types/codex'
@@ -142,7 +142,7 @@ export function CodexEditor({ initial, isNew, entries, cancelRef, onSave, onCanc
       <div className="qp-rule" />
       <div className="cx-editor-grid">
         <div className="cx-image-block">
-          <span className="cx-plate"><img src={shownImage} alt="" /></span>
+          <span className="cx-plate"><img src={shownImage} alt="" onError={emblemOnError(draft.kind)} /></span>
           <div className="cx-image-actions">
             <Button variant="small" onClick={() => { if (!busyRef.current) file.current?.click() }}>Upload</Button>
             <Button variant="small" onClick={() => setShowGallery((v) => !v)}>Gallery</Button>

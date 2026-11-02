@@ -187,6 +187,7 @@ export const useRoster = create<RosterState>((set, get) => ({
       await storage.remove(id)
       failed.delete(id)
       useQuests.getState().removeCharacter(id)
+      useCodex.getState().forgetCharacter(id)
       set({ sync: 'saved' })
     } catch (err) {
       console.error('[arcana] could not delete the sheet', err)

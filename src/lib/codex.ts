@@ -129,7 +129,7 @@ export function sanitizeDetails(kind: CodexKind, details: CodexDetails): CodexDe
     const value = details[key]
     if (value === undefined) continue
     if (LIST_KEYS.has(key)) {
-      const list = [...new Set((value as string[]).filter((t) => DAMAGE_TYPES.includes(t)))]
+      const list = Array.isArray(value) ? [...new Set(value.filter((t) => DAMAGE_TYPES.includes(t)))] : []
       if (list.length > 0) out[key] = list
     } else if (typeof value === 'string' && value.trim()) {
       out[key] = value.trim()

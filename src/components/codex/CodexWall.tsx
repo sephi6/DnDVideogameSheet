@@ -90,7 +90,11 @@ export function CodexWall({ kind, characterId, openId, onOpen, onNavigate }: {
     if (open) setEditing({ entry: structuredClone(open), isNew: false })
   }
   const save = (entry: CodexEntry, discardAfter: string[]) => {
-    const id = saveEntry(entry, discardAfter)
+    // Image untouched in this edit: keep the one the entry has now. Another player
+    // may have replaced it (and deleted the old file) while this editor was open.
+    const current = editing && !editing.isNew ? entries.find((e) => e.id === entry.id) : undefined
+    const image = current && entry.image === editing?.entry.image ? current.image : entry.image
+    const id = saveEntry({ ...entry, image }, discardAfter)
     setEditing(null)
     setSelectedId(id)
     onOpen(id)

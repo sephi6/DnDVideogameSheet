@@ -1,3 +1,4 @@
+import type { SyntheticEvent } from 'react'
 import { newId } from '@/data/defaults'
 import { imageSource, kindInfo } from '@/lib/codex'
 import { downscaleImage } from '@/lib/image'
@@ -9,9 +10,11 @@ const PREFIX = 'codex/'
 /** Checked before decoding: a phone photo is a few MB; 20 MB is clearly not one. */
 export const MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 
+const emblem = (kind: CodexKind) => `assets/codex/default-${kind}.svg`
+
 /** The `src` for an entry's image; the kind's emblem when there is none. */
 export function imageUrl(image: string | null, kind: CodexKind): string {
-  const fallback = `assets/codex/default-${kind}.svg`
+  const fallback = emblem(kind)
   switch (imageSource(image)) {
     case 'data':
     case 'asset':
@@ -21,6 +24,18 @@ export function imageUrl(image: string | null, kind: CodexKind): string {
       return requireSupabase().storage.from(BUCKET).getPublicUrl((image as string).slice(PREFIX.length)).data.publicUrl
     default:
       return fallback
+  }
+}
+
+/**
+ * `onError` for an entry image: a file that is gone (deleted by another player,
+ * say) shows the kind's emblem instead of a broken image. Only once, so a missing
+ * emblem cannot loop.
+ */
+export function emblemOnError(kind: CodexKind) {
+  return (e: SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget
+    if (!img.src.endsWith(emblem(kind))) img.src = emblem(kind)
   }
 }
 
